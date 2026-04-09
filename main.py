@@ -1,7 +1,8 @@
 """
 Siyadah Orchestrator v5.1.0 — Async Multi-Tenant Engine
 ========================================================
-Golden Protocol v4: IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE
+Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
+GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
 Rule: propertySettings: {} is MANDATORY in every step settings.
 Built on: 30 March 2026
 
@@ -158,29 +159,65 @@ class SiyadahEngine:
         return flow
 
     async def publish_and_enable(self, fid: str) -> dict:
-        """Golden Protocol Steps 3+4 — LOCK_AND_PUBLISH → conditional ENABLE.
+        """LOCK_AND_PUBLISH → ENABLE if needed. Strict: final GET must show ENABLED."""
 
-        AP with ENABLE_FLOW_ON_PUBLISH=True auto-enables on publish.
-        Calling CHANGE_STATUS after that creates a stale DRAFT → "Unsaved Changes".
-        So we read back the flow first and only ENABLE if still DISABLED.
-        """
+        def _assert_enabled(f: dict) -> dict:
+            st = f.get("status", "")
+            if st != "ENABLED":
+                raise HTTPException(
+                    500,
+                    detail=f"Flow {fid} not ENABLED after publish/enable. status={st}, "
+                           f"state={f.get('version', {}).get('state', '?')}",
+                )
+            return {
+                "lock": "ok",
+                "status": "ENABLED",
+                "state": f.get("version", {}).get("state", ""),
+            }
+
         await self._fop(fid, "LOCK_AND_PUBLISH", {})
         flow = await self._r("GET", f"/v1/flows/{fid}")
         current_status = flow.get("status", "DISABLED")
         version_state = flow.get("version", {}).get("state", "")
         if current_status == "ENABLED":
             log.info("[publish] Flow %s already ENABLED after publish (state=%s)", fid, version_state)
-            return {"lock": "ok", "status": "ENABLED", "state": version_state}
+            return _assert_enabled(flow)
+        last_exc: Exception | None = None
+        flow_after: dict = flow
         for attempt in range(1, 3):
             try:
-                r = await self._fop(fid, "CHANGE_STATUS", {"status": "ENABLED"})
-                return {"lock": "ok", "status": r.get("status", "ENABLED")}
+                await self._fop(fid, "CHANGE_STATUS", {"status": "ENABLED"})
+                flow_after = await self._r("GET", f"/v1/flows/{fid}")
+                if flow_after.get("status") == "ENABLED":
+                    return _assert_enabled(flow_after)
+                last_exc = None
+                if attempt == 1:
+                    log.warning(
+                        "[publish] Flow %s not ENABLED after CHANGE_STATUS (status=%s) — retrying in 1s",
+                        fid, flow_after.get("status"),
+                    )
+                    await asyncio.sleep(1)
+            except HTTPException:
+                raise
             except Exception as exc:
+                last_exc = exc
                 if attempt == 1:
                     log.warning("[publish] ENABLE attempt 1 failed for %s: %s — retrying in 1s", fid, exc)
                     await asyncio.sleep(1)
                 else:
-                    raise HTTPException(500, detail=f"ENABLE failed after 2 attempts for flow {fid}. Last error: {str(exc)[:300]}")
+                    raise HTTPException(
+                        500,
+                        detail=f"ENABLE failed after 2 attempts for flow {fid}. Last error: {str(exc)[:300]}",
+                    )
+        if last_exc:
+            raise HTTPException(
+                500,
+                detail=f"ENABLE failed after 2 attempts for flow {fid}. Last error: {str(last_exc)[:300]}",
+            )
+        raise HTTPException(
+            500,
+            detail=f"Flow {fid} not ENABLED after CHANGE_STATUS. status={flow_after.get('status', '?')}",
+        )
 
     async def update_trigger(self, fid: str, cfg: dict):
         return await self._fop(fid, "UPDATE_TRIGGER", cfg)
@@ -281,6 +318,7 @@ async def guard_connections(
 # PIECE SCHEMA CACHE + SMART PROPERTY-SETTINGS
 # ═══════════════════════════════════════════════════════════════
 _piece_schema_cache: Dict[str, dict] = {}
+PIECES_LIST_TTL_SEC = 86400  # 24h — reduce load on Activepieces pieces API
 _pieces_list_cache: Dict[str, Any] = {"data": None, "ts": 0}
 
 
@@ -386,15 +424,23 @@ async def auto_resolve_piece(engine, name: str) -> tuple:
     return name, schema or {}
 
 
-def clean_input(input_config: dict) -> dict:
-    cleaned = {}
+def clean_input_config(input_config: dict) -> dict:
+    """Drop empty-string and null-like keys before sending input to Activepieces."""
+    cleaned: Dict[str, Any] = {}
     for k, v in input_config.items():
+        if v is None:
+            continue
         if isinstance(v, list) and v == ['']:
             continue
         if isinstance(v, str) and v == '':
             continue
         cleaned[k] = v
     return cleaned
+
+
+def clean_input(input_config: dict) -> dict:
+    """Backward-compatible alias for clean_input_config."""
+    return clean_input_config(input_config)
 
 
 def get_action_props(schema: dict, action_name: str) -> dict:
@@ -642,7 +688,7 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None):
         full = piece if piece.startswith("@") else f"@activepieces/piece-{piece}"
         short = piece.replace("@activepieces/piece-", "")
         ver = spec.get("version", PIECE_VERSIONS.get(short, "~0.1.0"))
-        inp = dict(spec.get("input", spec.get("input_config", {})))
+        inp = clean_input_config(dict(spec.get("input", spec.get("input_config", {}))))
         if spec.get("connection_id"):
             inp["auth"] = C(spec["connection_id"])
         return build_action(
@@ -715,6 +761,7 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
     log.info("[golden] Created flow %s", fid)
 
     await engine.import_flow(fid, name, trigger)
+    webhook_url = f"https://activepieces-production-2499.up.railway.app/api/v1/webhooks/{fid}"
     log.info("[golden] IMPORT_FLOW → %s", fid)
 
     verified = await engine.verify_flow(fid)
@@ -733,9 +780,6 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
         raise HTTPException(500, detail=f"Flow {fid} is NOT ENABLED after Golden Protocol. status={final_status}, state={final_state}, published_match={pub_match}.")
     pub["version_state"] = final_state
     pub["published_match"] = pub_match
-
-    trigger_name = verified.get("version", {}).get("trigger", {}).get("settings", {}).get("triggerName", "")
-    webhook_url = (f"{engine.base}/api/v1/webhooks/{fid}" if trigger_name == "catch_webhook" else None)
 
     diagnosis = None
     if self_test:
@@ -1244,37 +1288,39 @@ async def v2_build_dynamic(body: DynamicBuildBody):
 
     t = body.trigger
     piece_name = t.get("piece", "@activepieces/piece-webhook")
+    resolved_t, t_schema = await auto_resolve_piece(e, piece_name)
     trigger_name = t.get("trigger_name", "catch_webhook")
-    trigger_input = t.get("input", {})
+    trigger_input = clean_input_config(dict(t.get("input", {})))
     trigger_ver = t.get("version", "")
 
     if not trigger_ver:
-        schema = await fetch_piece_schema(e, piece_name)
-        trigger_ver = resolve_piece_version(schema, piece_name)
+        trigger_ver = resolve_piece_version(t_schema, resolved_t)
 
-    action_chain = None
-    pieces_used = [piece_name]
+    full_t = resolved_t if resolved_t.startswith("@") else f"@activepieces/piece-{resolved_t}"
+    pieces_used = [full_t]
 
     specs_for_chain: List[dict] = []
     for a in body.actions:
         a_piece = a.get("piece", "")
-        pieces_used.append(a_piece)
-        short = a_piece.replace("@activepieces/piece-", "")
+        resolved_ap, sch = await auto_resolve_piece(e, a_piece)
+        full_ap = resolved_ap if resolved_ap.startswith("@") else f"@activepieces/piece-{resolved_ap}"
+        pieces_used.append(full_ap)
+        short = resolved_ap.replace("@activepieces/piece-", "")
         a_ver = a.get("version", "")
+        cleaned_in = clean_input_config(dict(a.get("input", {})))
         if not a_ver:
-            sch = await fetch_piece_schema(e, a_piece)
-            a_ver = resolve_piece_version(sch, a_piece)
+            a_ver = resolve_piece_version(sch, resolved_ap)
             ps = generate_property_settings(
                 get_action_props(sch, a.get("action_name", "")),
-                a.get("input", {}))
+                cleaned_in)
         else:
             ps = {}
-        inp = dict(a.get("input", {}))
+        inp = dict(cleaned_in)
         conn_id = a.get("connection_id", cn.get(short, ""))
         if conn_id:
             inp["auth"] = C(conn_id)
         specs_for_chain.append({
-            "type": "PIECE", "piece": a_piece,
+            "type": "PIECE", "piece": full_ap,
             "action_name": a.get("action_name", ""),
             "version": a_ver, "input": inp,
             "display_name": a.get("display_name", f"Action"),
@@ -1284,20 +1330,19 @@ async def v2_build_dynamic(body: DynamicBuildBody):
     counter = [1]
     first_action = _build_action_chain(specs_for_chain, counter)
     trigger = build_trigger(
-        piece_name if piece_name.startswith("@") else f"@activepieces/piece-{piece_name}",
+        full_t,
         trigger_ver, trigger_name, trigger_input,
         body.display_name + " — Trigger", first_action)
 
     result = await golden_build(e, pid, body.display_name, trigger)
 
-    is_webhook = "webhook" in piece_name.lower()
-    wh = (f"{AP_BASE}/api/v1/webhooks/{result['flow_id']}"
-          if is_webhook else None)
+    is_webhook = "webhook" in full_t.lower()
+    webhook_url = result.get("webhook_url") if is_webhook else None
     return {
         "status": "deployed", "flow_id": result["flow_id"],
         "display_name": body.display_name,
         "steps_count": counter[0] - 1 + 1,
-        "webhook_url": wh, "pieces_used": pieces_used,
+        "webhook_url": webhook_url, "pieces_used": pieces_used,
         "publish": result["publish"],
         "diagnosis": result.get("diagnosis"),
     }
@@ -1338,6 +1383,7 @@ async def v2_build_router(body: RouterBuildBody):
     result = await golden_build(e, pid, body.display_name, trigger)
     return {"status": "deployed", "flow_id": result["flow_id"],
             "type": "ROUTER", "branches_count": len(branch_defs),
+            "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": result.get("diagnosis")}
 
@@ -1375,6 +1421,7 @@ async def v2_build_loop(body: LoopBuildBody):
     result = await golden_build(e, pid, body.display_name, trigger)
     return {"status": "deployed", "flow_id": result["flow_id"],
             "type": "LOOP", "items_expression": body.items_expression,
+            "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": result.get("diagnosis")}
 
@@ -1392,6 +1439,7 @@ async def v2_build_complex(body: ComplexBuildBody):
     result = await golden_build(e, pid, body.display_name, trigger)
     return {"status": "deployed", "flow_id": result["flow_id"],
             "type": "COMPLEX", "steps_count": counter[0] - 1,
+            "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": result.get("diagnosis")}
 
@@ -1417,6 +1465,7 @@ async def v2_build_preset(body: PresetBuildBody):
     result = await golden_build(e, pid, name, trigger)
     return {"status": "deployed", "flow_id": result["flow_id"],
             "preset": body.preset, "display_name": name,
+            "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": result.get("diagnosis")}
 
@@ -1435,11 +1484,12 @@ async def v2_build_smart(body: SmartBuildBody):
 
     for s in body.steps:
         resolved_piece, schema = await auto_resolve_piece(e, s.piece_name)
+        cleaned_cfg = clean_input_config(dict(s.input_config))
         if schema:
             ver = resolve_piece_version(schema, resolved_piece)
             resolved_action = _fuzzy_name(s.action_name, schema.get("actions", {}))
             props = get_action_props(schema, resolved_action)
-            ps = generate_property_settings(props, s.input_config)
+            ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
                 raise HTTPException(400,
                     f"Action '{s.action_name}' not found in {resolved_piece}. "
@@ -1452,7 +1502,7 @@ async def v2_build_smart(body: SmartBuildBody):
 
         sname = f"step_{counter[0]}"
         counter[0] += 1
-        inp = clean_input(dict(s.input_config))
+        inp = dict(cleaned_cfg)
         short = resolved_piece.replace("@activepieces/piece-", "")
         conn_id = cn.get(short, "")
         if conn_id and "auth" not in inp:
@@ -1479,6 +1529,7 @@ async def v2_build_smart(body: SmartBuildBody):
     result = await golden_build(e, pid, body.display_name, trigger)
     return {"status": "deployed", "flow_id": result["flow_id"],
             "type": "SMART", "steps": steps_info,
+            "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": result.get("diagnosis")}
 
@@ -1502,11 +1553,11 @@ async def v2_validate(body: ValidateBody):
     if t_piece:
         pieces_used.append(t_piece)
         try:
-            p = await fetch_piece_schema(e, t_piece)
+            resolved_t, p = await auto_resolve_piece(e, t_piece)
             if p:
                 triggers = p.get("triggers", {})
                 if t_trigger and t_trigger not in triggers:
-                    errors.append(f"Trigger '{t_trigger}' not found in {t_piece}. "
+                    errors.append(f"Trigger '{t_trigger}' not found in {resolved_t} (requested: {t_piece}). "
                                   f"Available: {list(triggers.keys())}")
         except Exception as ex:
             errors.append(f"Cannot fetch piece {t_piece}: {str(ex)[:100]}")
@@ -1521,15 +1572,15 @@ async def v2_validate(body: ValidateBody):
         if a_piece:
             pieces_used.append(a_piece)
             try:
-                p = await fetch_piece_schema(e, a_piece)
+                resolved_ap, p = await auto_resolve_piece(e, a_piece)
                 if p:
                     actions = p.get("actions", {})
                     if a_action and a_action not in actions:
-                        errors.append(f"Action '{a_action}' not found in {a_piece}. "
+                        errors.append(f"Action '{a_action}' not found in {resolved_ap} (requested: {a_piece}). "
                                       f"Available: {list(actions.keys())}")
                     elif a_action and a_action in actions:
                         props = actions[a_action].get("props", {})
-                        a_input = a.get("input", {})
+                        a_input = clean_input_config(dict(a.get("input", {})))
                         for fname, fdef in props.items():
                             if (isinstance(fdef, dict) and fdef.get("required")
                                     and fname not in a_input and fname != "auth"):
@@ -1677,7 +1728,7 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
 async def v2_available_pieces():
     e = E()
     now = _time.time()
-    if _pieces_list_cache["data"] and (now - _pieces_list_cache["ts"]) < 3600:
+    if _pieces_list_cache["data"] and (now - _pieces_list_cache["ts"]) < PIECES_LIST_TTL_SEC:
         return _pieces_list_cache["data"]
 
     raw = await e.list_pieces()
@@ -1726,7 +1777,7 @@ async def v2_available_pieces():
 @app.get("/v2/pieces/{piece_name}/schema")
 async def v2_piece_schema(piece_name: str):
     e = E()
-    schema = await fetch_piece_schema(e, piece_name)
+    _resolved, schema = await auto_resolve_piece(e, piece_name)
     if not schema:
         raise HTTPException(404, f"Piece not found: {piece_name}")
 
@@ -1955,7 +2006,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
                            for pp in pieces]}
 
     if tool == "get_piece_schema":
-        schema = await fetch_piece_schema(e, p["piece_name"])
+        _rname, schema = await auto_resolve_piece(e, p["piece_name"])
         if not schema:
             raise HTTPException(404, f"Piece not found: {p['piece_name']}")
         return {
@@ -1982,36 +2033,39 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
     if tool == "build_dynamic_flow":
         t = p.get("trigger", {})
         piece_name = t.get("piece", "@activepieces/piece-webhook")
-        full = piece_name if piece_name.startswith("@") else f"@activepieces/piece-{piece_name}"
-        schema = await fetch_piece_schema(e, piece_name)
-        ver = resolve_piece_version(schema, piece_name)
+        resolved_t, t_schema = await auto_resolve_piece(e, piece_name)
+        full = resolved_t if resolved_t.startswith("@") else f"@activepieces/piece-{resolved_t}"
+        ver = resolve_piece_version(t_schema, resolved_t)
         specs: List[dict] = []
         for a in p.get("actions", []):
             ap = a.get("piece", "")
-            short = ap.replace("@activepieces/piece-", "")
+            resolved_ap, sch = await auto_resolve_piece(e, ap)
+            full_ap = resolved_ap if resolved_ap.startswith("@") else f"@activepieces/piece-{resolved_ap}"
+            short = resolved_ap.replace("@activepieces/piece-", "")
             a_ver = a.get("version", "")
+            cleaned_in = clean_input_config(dict(a.get("input", {})))
             if not a_ver:
-                sch = await fetch_piece_schema(e, ap)
-                a_ver = resolve_piece_version(sch, ap)
+                a_ver = resolve_piece_version(sch, resolved_ap)
                 ps = generate_property_settings(
                     get_action_props(sch, a.get("action_name", "")),
-                    a.get("input", {}))
+                    cleaned_in)
             else:
                 ps = {}
-            inp = dict(a.get("input", {}))
+            inp = dict(cleaned_in)
             cid = a.get("connection_id", cn.get(short, ""))
             if cid and "auth" not in inp:
                 inp["auth"] = C(cid)
-            specs.append({"type": "PIECE", "piece": ap,
+            specs.append({"type": "PIECE", "piece": full_ap,
                           "action_name": a.get("action_name", ""),
                           "version": a_ver, "input": inp,
                           "display_name": a.get("display_name", "Action"),
                           "property_settings": ps})
         counter = [1]
         first = _build_action_chain(specs, counter)
+        trig_in = clean_input_config(dict(t.get("input", {"authType": "none"})))
         trigger = build_trigger(full, ver,
                                 t.get("trigger_name", "catch_webhook"),
-                                t.get("input", {"authType": "none"}),
+                                trig_in,
                                 "Trigger", first)
         name = p.get("display_name", "سيادة — أتمتة مخصصة")
         result = await golden_build(e, pid, name, trigger)
@@ -2032,16 +2086,16 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
         t_piece = vb.trigger.get("piece", "")
         t_trigger = vb.trigger.get("trigger_name", "")
         if t_piece:
-            sch = await fetch_piece_schema(e, t_piece)
+            resolved_t, sch = await auto_resolve_piece(e, t_piece)
             if sch and t_trigger and t_trigger not in sch.get("triggers", {}):
-                errors.append(f"Trigger '{t_trigger}' not found in {t_piece}")
+                errors.append(f"Trigger '{t_trigger}' not found in {resolved_t} (requested: {t_piece})")
         for i, a in enumerate(vb.actions):
             ap = a.get("piece", "")
             aa = a.get("action_name", "")
             if ap:
-                sch = await fetch_piece_schema(e, ap)
+                resolved_ap, sch = await auto_resolve_piece(e, ap)
                 if sch and aa and aa not in sch.get("actions", {}):
-                    errors.append(f"Action '{aa}' not in {ap}")
+                    errors.append(f"Action '{aa}' not found in {resolved_ap} (requested: {ap})")
         return {"valid": len(errors) == 0, "errors": errors}
 
     if tool == "test_webhook":
