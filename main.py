@@ -79,7 +79,7 @@ class SiyadahEngine:
             self._client = httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {self.token}",
                          "Content-Type": "application/json"},
-                timeout=30,
+                timeout=120,
             )
         return self._client
 
@@ -757,8 +757,9 @@ def _sort_steps_info_chronological(steps_info: List[dict]) -> List[dict]:
     return sorted(steps_info, key=_key)
 
 
-def _build_step_from_spec(spec: dict, counter: list, next_action=None,
-                          steps_info: Optional[List[dict]] = None):
+async def _build_step_from_spec(
+        spec: dict, counter: list, engine: SiyadahEngine,
+        next_action=None, steps_info: Optional[List[dict]] = None):
     """Recursively build a step from a specification dict."""
     stype = spec.get("type", "PIECE")
     snum = counter[0]
@@ -766,30 +767,58 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None,
     sname = f"step_{snum}"
 
     if stype == "PIECE":
-        piece = spec.get("piece", spec.get("piece_name", ""))
-        full = piece if piece.startswith("@") else f"@activepieces/piece-{piece}"
-        short = piece.replace("@activepieces/piece-", "")
-        ver = spec.get("version", PIECE_VERSIONS.get(short, "~0.1.0"))
-        inp = clean_input_config(dict(spec.get("input", spec.get("input_config", {}))))
+        piece_raw = (spec.get("piece") or spec.get("piece_name") or "").strip()
+        if not piece_raw:
+            raise HTTPException(400, detail=f"{sname}: piece or piece_name is required")
+        resolved_piece, schema = await auto_resolve_piece(engine, piece_raw)
+        full = (resolved_piece if resolved_piece.startswith("@")
+                else f"@activepieces/piece-{resolved_piece}")
+        short = resolved_piece.replace("@activepieces/piece-", "")
+        log.info("[build] Processing %s: %s", sname, short)
+
+        cleaned_cfg = clean_input_config(
+            dict(spec.get("input", spec.get("input_config", {}))))
         if spec.get("connection_id"):
-            inp["auth"] = C(spec["connection_id"])
+            cleaned_cfg["auth"] = C(spec["connection_id"])
+
+        explicit_ver = spec.get("version")
+        if schema and schema.get("actions"):
+            ver = explicit_ver or resolve_piece_version(schema, resolved_piece)
+            resolved_action = _fuzzy_name(
+                spec.get("action_name", ""), schema.get("actions", {}))
+            props = get_action_props(schema, resolved_action)
+            ps = generate_property_settings(props, cleaned_cfg)
+            if resolved_action not in schema.get("actions", {}):
+                raise HTTPException(
+                    400,
+                    f"Action '{spec.get('action_name', '')}' not found in {resolved_piece}. "
+                    f"Available: {list(schema.get('actions', {}).keys())}")
+            extra_ps = spec.get("property_settings")
+            if isinstance(extra_ps, dict) and extra_ps:
+                ps = {**ps, **extra_ps}
+        else:
+            ver = explicit_ver or PIECE_VERSIONS.get(short, "~0.1.0")
+            resolved_action = spec.get("action_name", "")
+            extra_ps = spec.get("property_settings")
+            ps = extra_ps if isinstance(extra_ps, dict) else {}
+
         if steps_info is not None:
-            ps = spec.get("property_settings")
             steps_info.append({
                 "step": sname,
                 "piece": full,
-                "action": spec.get("action_name", ""),
+                "action": resolved_action,
                 "version": ver,
-                "schema_loaded": False,
-                "property_settings": ps if isinstance(ps, dict) else {},
+                "schema_loaded": bool(schema and schema.get("actions")),
+                "property_settings": ps,
             })
         return build_action(
             sname, full, ver,
-            spec.get("action_name", ""), inp,
-            spec.get("display_name", f"{short}: {spec.get('action_name', '')}"),
-            next_action, spec.get("property_settings"))
+            resolved_action, cleaned_cfg,
+            spec.get("display_name", f"{short}: {resolved_action}"),
+            next_action, ps)
 
     if stype == "CODE":
+        log.info("[build] Processing %s: CODE", sname)
         if steps_info is not None:
             steps_info.append({
                 "step": sname,
@@ -808,8 +837,10 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None,
             spec.get("code_input"), next_action)
 
     if stype == "ROUTER":
+        branches = spec.get("branches", [])
+        log.info("[build] Processing %s: ROUTER (%d branches)", sname,
+                 len(branches) if isinstance(branches, list) else 0)
         if steps_info is not None:
-            branches = spec.get("branches", [])
             steps_info.append({
                 "step": sname,
                 "piece": None,
@@ -823,7 +854,7 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None,
             })
         branch_defs: List[dict] = []
         children: List[Any] = []
-        for b in spec.get("branches", []):
+        for b in branches:
             bd = b if isinstance(b, dict) else (b.model_dump() if hasattr(b, "model_dump") else {})
             if bd.get("branch_type", "CONDITION") == "FALLBACK":
                 branch_defs.append(fallback_branch(bd.get("name", "Otherwise")))
@@ -840,12 +871,14 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None,
                     conds.append(group)
                 branch_defs.append(condition_branch(bd.get("name", "Branch"), conds))
             ba = bd.get("actions", [])
-            children.append(
-                _build_action_chain(ba, counter, steps_info) if ba else None)
+            child = (await _build_action_chain(ba, counter, engine, steps_info)
+                     if ba else None)
+            children.append(child)
         return build_router_step(sname, spec.get("display_name", "Router"),
                                  branch_defs, children, next_action)
 
     if stype == "LOOP":
+        log.info("[build] Processing %s: LOOP", sname)
         items = spec.get("loop_items",
                          spec.get("items_expression",
                                   "{{trigger['body']['items']}}"))
@@ -862,16 +895,17 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None,
                 "items_expression": items,
             })
         la = spec.get("loop_actions", [])
-        first_loop = (
-            _build_action_chain(la, counter, steps_info) if la else None)
+        first_loop = (await _build_action_chain(la, counter, engine, steps_info)
+                      if la else None)
         return build_loop_step(sname, spec.get("display_name", "Loop"),
                                items, first_loop, next_action)
 
     raise ValueError(f"Unknown step type: {stype}")
 
 
-def _build_action_chain(specs: list, counter: list,
-                        steps_info: Optional[List[dict]] = None):
+async def _build_action_chain(
+        specs: list, counter: list, engine: SiyadahEngine,
+        steps_info: Optional[List[dict]] = None):
     """Chain actions via nextAction links (builds last→first)."""
     if not specs:
         return None
@@ -881,8 +915,8 @@ def _build_action_chain(specs: list, counter: list,
             spec.model_dump() if hasattr(spec, "model_dump") else spec)
         if not isinstance(sdict, dict):
             raise TypeError(f"Chain step must be dict, got {type(spec).__name__}")
-        chain = _build_step_from_spec(
-            sdict, counter, next_action=chain, steps_info=steps_info)
+        chain = await _build_step_from_spec(
+            sdict, counter, engine, next_action=chain, steps_info=steps_info)
     return chain
 
 
@@ -1464,7 +1498,7 @@ async def v2_build_dynamic(body: DynamicBuildBody):
         })
 
     counter = [1]
-    first_action = _build_action_chain(specs_for_chain, counter)
+    first_action = await _build_action_chain(specs_for_chain, counter, e)
     trigger = build_trigger(
         full_t,
         trigger_ver, trigger_name, trigger_input,
@@ -1507,9 +1541,10 @@ async def v2_build_router(body: RouterBuildBody):
                 conds.append(group)
             branch_defs.append(condition_branch(b.get("name", "Branch"), conds))
         ba = b.get("actions", [])
-        children.append(_build_action_chain(ba, counter) if ba else None)
+        children.append(
+            await _build_action_chain(ba, counter, e) if ba else None)
 
-    after = (_build_action_chain(body.after_router, counter)
+    after = (await _build_action_chain(body.after_router, counter, e)
              if body.after_router else None)
     router = build_router_step(f"step_{counter[0]}", body.display_name,
                                branch_defs, children, after)
@@ -1533,11 +1568,11 @@ async def v2_build_loop(body: LoopBuildBody):
     pid = body.project_id or DEFAULT_PID
     counter = [1]
 
-    before = (_build_action_chain(body.before_loop, counter)
+    before = (await _build_action_chain(body.before_loop, counter, e)
               if body.before_loop else None)
-    first_loop = (_build_action_chain(body.loop_actions, counter)
+    first_loop = (await _build_action_chain(body.loop_actions, counter, e)
                   if body.loop_actions else None)
-    after = (_build_action_chain(body.after_loop, counter)
+    after = (await _build_action_chain(body.after_loop, counter, e)
              if body.after_loop else None)
 
     loop = build_loop_step(f"step_{counter[0]}", body.display_name,
@@ -1573,9 +1608,18 @@ async def v2_build_complex(body: ComplexBuildBody):
     counter = [1]
     steps_info: List[dict] = []
     try:
-        first_action = _build_action_chain(body.steps, counter, steps_info)
+        first_action = await _build_action_chain(
+            body.steps, counter, e, steps_info)
         trigger = wh_trigger("استقبال بيانات", first_action)
         result = await golden_build(e, pid, body.display_name, trigger)
+        if not isinstance(result, dict) or not result.get("flow_id"):
+            raise HTTPException(
+                500,
+                detail={
+                    "message": "golden_build returned an invalid payload",
+                    "diagnosis": repr(result),
+                },
+            )
     except HTTPException:
         raise
     except Exception as ex:
@@ -1842,7 +1886,7 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
                 })
             else:
                 specs.append(a)
-        first_action = _build_action_chain(specs, counter)
+        first_action = await _build_action_chain(specs, counter, e)
 
         t = body.trigger
         piece_name = t.get("piece", "@activepieces/piece-webhook")
@@ -2216,7 +2260,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
                           "display_name": a.get("display_name", "Action"),
                           "property_settings": ps})
         counter = [1]
-        first = _build_action_chain(specs, counter)
+        first = await _build_action_chain(specs, counter, e)
         trig_in = clean_input_config(dict(t.get("input", {"authType": "none"})))
         trigger = build_trigger(full, ver,
                                 t.get("trigger_name", "catch_webhook"),
@@ -2297,7 +2341,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
                                 "action_name": a.get("action_name", ""),
                                 "input": inp,
                                 "display_name": a.get("display_name", "Action")})
-            first = _build_action_chain(specs_u, counter)
+            first = await _build_action_chain(specs_u, counter, e)
             t = p["trigger"]
             pn = t.get("piece", "@activepieces/piece-webhook")
             full = pn if pn.startswith("@") else f"@activepieces/piece-{pn}"
