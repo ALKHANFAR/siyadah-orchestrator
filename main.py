@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.6.0"
+VERSION = "5.7.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -520,19 +520,19 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
         try:
             if pname == "auth" or pname not in input_config:
                 continue
+            val = input_config.get(pname)
+            if _contains_dynamic_ref(val):
+                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
+                continue
             ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
             if ptype == "DYNAMIC":
                 settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
-            val = input_config.get(pname)
-            if pname not in settings and _contains_dynamic_ref(val):
-                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
-            if pname not in settings:
-                if ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
-                    settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
-                elif ptype == "STATIC_DROPDOWN":
-                    settings[pname] = {"type": "STATIC_DROPDOWN"}
-        except Exception:
-            log.error("generate_property_settings: failed on field %r, skipping", pname, exc_info=True)
+            elif ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
+                settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
+            elif ptype == "STATIC_DROPDOWN":
+                settings[pname] = {"type": "STATIC_DROPDOWN"}
+        except Exception as e:
+            log.error(f"Error processing field {pname}: {e}")
     return settings
 
 
@@ -1684,6 +1684,7 @@ async def v2_build_complex(body: ComplexBuildBody):
     required = _extract_pieces_from_steps(body.steps)
     await guard_connections(e, pid, required, cn, strict=True)
 
+    result = {}
     counter = [1]
     steps_info: List[dict] = []
     try:
@@ -1695,6 +1696,7 @@ async def v2_build_complex(body: ComplexBuildBody):
                 detail="Action chain is empty — no steps were built",
             )
         trigger = wh_trigger("استقبال بيانات", first_action)
+        log.info("Final Payload Ready for AP")
         result = await golden_build(e, pid, body.display_name, trigger)
         if not isinstance(result, dict) or not result.get("flow_id"):
             raise HTTPException(
