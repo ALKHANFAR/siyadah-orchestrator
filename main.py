@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.4.0"
+VERSION = "5.5.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -506,28 +506,32 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
     """Generate schema-aware propertySettings for AP UI compatibility.
 
     Priority order (highest first):
-    1. Any value containing ``{{…}}`` (string, array, dict) → SHORT_TEXT / CUSTOM_INPUT
-    2. DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
-    3. DYNAMIC → CUSTOM_INPUT
+    1. DYNAMIC → always CUSTOM_INPUT (preserves complex fields like Sheets values)
+    2. Any value containing ``{{…}}`` (string, array, dict) → SHORT_TEXT / CUSTOM_INPUT
+    3. DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
     4. STATIC_DROPDOWN → type marker only
     """
     if not props:
         return {}
     settings: Dict[str, Any] = {}
     for pname, pinfo in props.items():
-        if pname == "auth" or pname not in input_config:
-            continue
-        val = input_config.get(pname)
-        if _contains_dynamic_ref(val):
-            settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
-            continue
-        ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
-        if ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
-            settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
-        elif ptype == "DYNAMIC":
-            settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
-        elif ptype == "STATIC_DROPDOWN":
-            settings[pname] = {"type": "STATIC_DROPDOWN"}
+        try:
+            if pname == "auth" or pname not in input_config:
+                continue
+            ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
+            if ptype == "DYNAMIC":
+                settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
+                continue
+            val = input_config.get(pname)
+            if _contains_dynamic_ref(val):
+                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
+                continue
+            if ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
+                settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
+            elif ptype == "STATIC_DROPDOWN":
+                settings[pname] = {"type": "STATIC_DROPDOWN"}
+        except Exception:
+            log.error("generate_property_settings: failed on field %r, skipping", pname, exc_info=True)
     return settings
 
 
@@ -1678,6 +1682,12 @@ async def v2_build_complex(body: ComplexBuildBody):
                     "diagnosis": repr(result),
                 },
             )
+        ordered = _sort_steps_info_chronological(steps_info)
+        return {"status": "deployed", "flow_id": result["flow_id"],
+                "type": "COMPLEX", "steps": ordered,
+                "webhook_url": result.get("webhook_url"),
+                "publish": result["publish"],
+                "diagnosis": result.get("diagnosis")}
     except HTTPException:
         raise
     except Exception as ex:
@@ -1693,12 +1703,6 @@ async def v2_build_complex(body: ComplexBuildBody):
                 "diagnosis": diag,
             },
         ) from ex
-    ordered = _sort_steps_info_chronological(steps_info)
-    return {"status": "deployed", "flow_id": result["flow_id"],
-            "type": "COMPLEX", "steps": ordered,
-            "webhook_url": result.get("webhook_url"),
-            "publish": result["publish"],
-            "diagnosis": result.get("diagnosis")}
 
 
 # ═══════════════════════════════════════════════════════════════
