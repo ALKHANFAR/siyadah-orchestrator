@@ -1,20 +1,22 @@
-# سيادة Orchestrator v5.1.0
+# سيادة Orchestrator v5.2.0
 
-Async Multi-Tenant Automation Engine — **ROUTER · LOOP · CODE · PIECE · PRESETS · Smart Schema · MCP Dispatcher · Re-import**
+Async Multi-Tenant Automation Engine — **ROUTER · LOOP · CODE · PIECE · PRESETS · Smart Schema · Complex async chains · MCP Dispatcher · Re-import**
 
 ## الميزات
 
 | القدرة | الوصف |
 |---|---|
-| **Async Engine** | بناء على `httpx.AsyncClient` لأداء عالٍ |
-| **Multi-Tenancy** | دعم مشاريع و اتصالات متعددة عبر `project_id` و `connection_ids` |
-| **Golden Protocol v4** | `IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE` |
+| **Async Engine** | بناء على `httpx.AsyncClient` (timeout قراءة **120 ثانية**) لسلاسل IMPORT/PUBLISH الطويلة |
+| **Multi-Tenancy** | دعم مشاريع واتصالات متعددة عبر `project_id` و `connection_ids` |
+| **Golden Protocol v5** | `IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE` مع تحقق صارم من الحالة |
+| **سلاسل معقدة (async)** | `_build_action_chain` / `_build_step_from_spec` غير متزامنة؛ `auto_resolve_piece` يُطبَّق حياً على كل خطوة PIECE (مثل Smart) |
 | **8 قوالب جاهزة** | من تنبيه إيميل بسيط إلى تقرير يومي مجدول |
 | **4 سيناريوهات متقدمة** | ROUTER, LOOP, Smart Followup, Router+Loop Combo |
 | **Smart Schema** | جلب `propertySettings` تلقائياً من مواصفات الـ Piece |
 | **MCP Dispatcher** | واجهة أدوات لـ Claude / AI agents عبر `/v2/mcp/execute` |
 | **Re-import** | تحديث بنية فلو موجود بدون إعادة إنشائه |
 | **Diagnose** | تشخيص بنية أي فلو بجميع الخطوات والأنواع |
+| **Build logging** | سجلات `[build] Processing step_N: …` لتتبع تقدم البناء |
 
 ## البنية
 
@@ -23,24 +25,24 @@ Client / Claude AI
        │
        ▼
 ┌──────────────────────────────────────┐
-│     Siyadah Orchestrator v5.1.0      │
+│     Siyadah Orchestrator v5.2.0      │
 │  ┌────────────────────────────────┐  │
-│  │  /v2/build-and-deploy         │  │
-│  │  /v2/build-dynamic            │  │
-│  │  /v2/build-router             │  │
-│  │  /v2/build-loop               │  │
-│  │  /v2/build-complex            │  │
-│  │  /v2/build-preset             │  │
-│  │  /v2/build-smart              │  │
-│  │  /v2/mcp/execute              │  │
-│  │  /v2/flows/{id}/reimport      │  │
-│  │  /v2/flows/{id}/diagnose      │  │
+│  │  /v2/build-and-deploy          │  │
+│  │  /v2/build-dynamic             │  │
+│  │  /v2/build-router              │  │
+│  │  /v2/build-loop                │  │
+│  │  /v2/build-complex             │  │
+│  │  /v2/build-preset              │  │
+│  │  /v2/build-smart               │  │
+│  │  /v2/mcp/execute               │  │
+│  │  /v2/flows/{id}/reimport       │  │
+│  │  /v2/flows/{id}/diagnose       │  │
 │  └────────────────────────────────┘  │
 └──────────────┬───────────────────────┘
                │
                ▼
         Activepieces API
-   (Golden Protocol v4 Pipeline)
+   (Golden Protocol v5 Pipeline)
 ```
 
 ## V2 Endpoints
@@ -59,7 +61,7 @@ Client / Claude AI
 | `/v2/build-dynamic` | POST | بناء مخصص بأي أدوات |
 | `/v2/build-router` | POST | بناء فلو مع تفرّع |
 | `/v2/build-loop` | POST | بناء فلو مع تكرار |
-| `/v2/build-complex` | POST | بناء أي مزيج |
+| `/v2/build-complex` | POST | بناء أي مزيج (سلسلة async + resolve) |
 | `/v2/build-preset` | POST | بناء من سيناريو جاهز |
 | `/v2/build-smart` | POST | بناء ذكي مع Schema Validation |
 | `/v2/validate-flow` | POST | التحقق قبل البناء (Dry Run) |
@@ -119,19 +121,20 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 | `GMAIL_CONNECTION_ID` | معرّف اتصال Gmail |
 | `SHEETS_CONNECTION_ID` | معرّف اتصال Google Sheets |
 | `ORCHESTRATOR_API_KEY` | مفتاح حماية endpoints الـ v2 (اختياري) |
+| `AP_MCP_SERVER_URL` | عنوان بروكسي MCP لـ Activepieces (اختياري) |
+| `AP_MCP_TOKEN` | توكن MCP (اختياري) |
 
 ## النشر
 
 ```bash
-git add . && git commit -m "v5.1.0" && git push
-# Railway auto-deploys from main branch
+git add README.md && git commit -m "docs: refresh README for v5.2.0" && git push
+# Railway (أو أي CI) يعيد النشر من الفرع main عند الدفع
 ```
 
 ## القواعد المثبتة
 
 - `propertySettings: {}` في كل step settings (فارغ أو من الـ schema)
-- `IMPORT_FLOW` الأسلوب الوحيد الموثوق لإنشاء الفلوات
-- `GET` بعد كل عملية (لا تثق بـ 200 وحده)
+- `IMPORT_FLOW` الأسلوب الموثوق لإنشاء/تحديث بنية الفلو
+- `GET` بعد العمليات الحرجة (لا تثق بـ 200 وحده)
 - `auth: {{connections['externalId']}}` لربط الاتصالات
 - `LOCK_AND_PUBLISH` ثم `CHANGE_STATUS` إذا لم يُفعّل تلقائياً
-# force rebuild
