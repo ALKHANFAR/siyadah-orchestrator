@@ -329,7 +329,61 @@ def _fuzzy_name(name: str, available: dict) -> str:
         return alt1
     if alt2 in available:
         return alt2
+    # prefix/suffix match: "create_record" → "airtable_create_record"
+    for k in available:
+        if k.endswith(name) or k.endswith(alt1) or k.endswith(alt2):
+            return k
     return name
+
+
+_raw_pieces_cache: list = []
+_raw_pieces_ts: float = 0
+
+
+async def _get_raw_pieces_list(engine) -> list:
+    global _raw_pieces_cache, _raw_pieces_ts
+    if _raw_pieces_cache and (_time.time() - _raw_pieces_ts < 3600):
+        return _raw_pieces_cache
+    raw = await engine.list_pieces()
+    _raw_pieces_cache = raw if isinstance(raw, list) else raw.get("data", [])
+    _raw_pieces_ts = _time.time()
+    return _raw_pieces_cache
+
+
+def _piece_candidates(name: str) -> list[str]:
+    clean = name.lower().strip().replace("@activepieces/piece-", "")
+    results = [clean]
+    for suffix in ["-business", "-cloud", "-online", "-api", "-v2"]:
+        if clean.endswith(suffix):
+            results.append(clean[:-len(suffix)])
+    results.append(clean.replace("_", "-"))
+    results.append(clean.replace("-", "_"))
+    return list(dict.fromkeys(results))
+
+
+async def auto_resolve_piece(engine, name: str) -> tuple:
+    """Resolve piece name. Zero-risk: returns original if no match."""
+    schema = await fetch_piece_schema(engine, name)
+    if schema and schema.get("actions"):
+        return name, schema
+    for c in _piece_candidates(name):
+        if c == name:
+            continue
+        schema = await fetch_piece_schema(engine, c)
+        if schema and schema.get("actions"):
+            log.info("[auto-resolve] '%s' -> '%s'", name, c)
+            return c, schema
+    pieces = await _get_raw_pieces_list(engine)
+    query = name.lower().replace("@activepieces/piece-", "")
+    for p in pieces:
+        short = p.get("name", "").replace("@activepieces/piece-", "").lower()
+        if query in short or short.startswith(query):
+            schema = await fetch_piece_schema(engine, short)
+            if schema and schema.get("actions"):
+                log.info("[auto-resolve] '%s' -> '%s' (list)", name, short)
+                return short, schema
+    log.warning("[auto-resolve] '%s' not resolved", name)
+    return name, schema or {}
 
 
 def clean_input(input_config: dict) -> dict:
@@ -1380,18 +1434,18 @@ async def v2_build_smart(body: SmartBuildBody):
     steps_info = []
 
     for s in body.steps:
-        schema = await fetch_piece_schema(e, s.piece_name)
+        resolved_piece, schema = await auto_resolve_piece(e, s.piece_name)
         if schema:
-            ver = resolve_piece_version(schema, s.piece_name)
+            ver = resolve_piece_version(schema, resolved_piece)
             resolved_action = _fuzzy_name(s.action_name, schema.get("actions", {}))
             props = get_action_props(schema, resolved_action)
             ps = generate_property_settings(props, s.input_config)
             if resolved_action not in schema.get("actions", {}):
                 raise HTTPException(400,
-                    f"Action '{s.action_name}' not found in {s.piece_name}. "
+                    f"Action '{s.action_name}' not found in {resolved_piece}. "
                     f"Available: {list(schema.get('actions', {}).keys())}")
         else:
-            ver = PIECE_VERSIONS.get(s.piece_name.replace("@activepieces/piece-", ""), "~0.1.0")
+            ver = PIECE_VERSIONS.get(resolved_piece.replace("@activepieces/piece-", ""), "~0.1.0")
             ps = {}
             props = {}
             resolved_action = s.action_name
@@ -1399,18 +1453,18 @@ async def v2_build_smart(body: SmartBuildBody):
         sname = f"step_{counter[0]}"
         counter[0] += 1
         inp = clean_input(dict(s.input_config))
-        short = s.piece_name.replace("@activepieces/piece-", "")
+        short = resolved_piece.replace("@activepieces/piece-", "")
         conn_id = cn.get(short, "")
         if conn_id and "auth" not in inp:
             inp["auth"] = C(conn_id)
 
-        full = (s.piece_name if s.piece_name.startswith("@")
-                else f"@activepieces/piece-{s.piece_name}")
+        full = (resolved_piece if resolved_piece.startswith("@")
+                else f"@activepieces/piece-{resolved_piece}")
         step = build_action(sname, full, ver, resolved_action, inp,
                             s.display_name or f"{short}: {resolved_action}",
                             property_settings=ps)
         built_steps.append(step)
-        steps_info.append({"step": sname, "piece": s.piece_name,
+        steps_info.append({"step": sname, "piece": resolved_piece,
                            "action": resolved_action, "version": ver,
                            "schema_loaded": bool(schema),
                            "property_settings": ps})
