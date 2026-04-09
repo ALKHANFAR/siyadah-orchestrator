@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v5.1.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v5.3.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -10,7 +10,7 @@ Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
               Multi-Tenancy, MCP Execute, Re-import, Diagnose
 """
 from __future__ import annotations
-import asyncio, logging, os, time as _time, traceback
+import asyncio, logging, os, re, time as _time, traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.2.0"
+VERSION = "5.3.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -291,11 +291,35 @@ def resolve_conns(override: Dict[str, str] | None) -> Dict[str, str]:
     return conns
 
 
+def _extract_pieces_from_steps(steps) -> List[str]:
+    """Recursively collect piece short-names from a list of step specs."""
+    pieces: List[str] = []
+    for s in (steps or []):
+        d = s if isinstance(s, dict) else (s.model_dump() if hasattr(s, "model_dump") else {})
+        stype = d.get("type", "PIECE")
+        raw = (d.get("piece") or d.get("piece_name") or "").strip()
+        if stype == "PIECE" and raw:
+            pieces.append(raw.replace("@activepieces/piece-", ""))
+        for sub_key in ("actions", "loop_actions", "before_loop", "after_loop"):
+            sub = d.get(sub_key)
+            if isinstance(sub, list):
+                pieces.extend(_extract_pieces_from_steps(sub))
+        for branch in (d.get("branches") or []):
+            bd = branch if isinstance(branch, dict) else {}
+            pieces.extend(_extract_pieces_from_steps(bd.get("actions", [])))
+    return pieces
+
+
 async def guard_connections(
     engine: SiyadahEngine, pid: str,
     required_pieces: List[str], conns: Dict[str, str],
+    *, strict: bool = False,
 ) -> List[str]:
-    """Validate that required connections exist in the target project."""
+    """Validate that required connections exist in the target project.
+
+    When *strict* is True, missing connections raise HTTPException(422)
+    instead of returning warnings.
+    """
     errors: List[str] = []
     try:
         live = await engine.list_connections(pid)
@@ -311,6 +335,13 @@ async def guard_connections(
                     f"Connection '{cid}' for {short} not found in project {pid}")
     except Exception as e:
         errors.append(f"Connection guard check failed: {str(e)[:100]}")
+    if strict and errors:
+        raise HTTPException(
+            422,
+            detail={
+                "message": "Missing connections — connect the required tools before building.",
+                "missing": errors,
+            })
     return errors
 
 
@@ -452,6 +483,20 @@ def get_trigger_props(schema: dict, trigger_name: str) -> dict:
     return schema.get("triggers", {}).get(trigger_name, {}).get("props", {})
 
 
+_DYNAMIC_RE = re.compile(r"\{\{.*?\}\}")
+
+
+def _contains_dynamic_ref(value: Any) -> bool:
+    """Recursively check if *value* contains ``{{…}}`` dynamic references."""
+    if isinstance(value, str):
+        return bool(_DYNAMIC_RE.search(value))
+    if isinstance(value, dict):
+        return any(_contains_dynamic_ref(v) for v in value.values())
+    if isinstance(value, (list, tuple)):
+        return any(_contains_dynamic_ref(v) for v in value)
+    return False
+
+
 def generate_property_settings(props: dict, input_config: dict) -> dict:
     """Generate schema-aware propertySettings for AP UI compatibility.
 
@@ -459,7 +504,9 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
     - DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
     - DYNAMIC → CUSTOM_INPUT
     - STATIC_DROPDOWN → type marker only
-    - SHORT_TEXT, LONG_TEXT, NUMBER, CHECKBOX, ARRAY, JSON → nothing needed
+    - Any field whose *value* contains ``{{…}}`` inside a nested
+      structure (Array/Dict) is promoted to CUSTOM_INPUT so AP
+      does not reject dynamically-injected expressions.
     """
     if not props:
         return {}
@@ -474,6 +521,10 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
         elif ptype == "STATIC_DROPDOWN":
             settings[pname] = {"type": "STATIC_DROPDOWN"}
+        elif pname not in settings:
+            val = input_config.get(pname)
+            if isinstance(val, (dict, list, tuple)) and _contains_dynamic_ref(val):
+                settings[pname] = {"type": ptype or "CUSTOM", "status": "CUSTOM_INPUT"}
     return settings
 
 
@@ -778,8 +829,9 @@ async def _build_step_from_spec(
 
         cleaned_cfg = clean_input_config(
             dict(spec.get("input", spec.get("input_config", {}))))
-        if spec.get("connection_id"):
-            cleaned_cfg["auth"] = C(spec["connection_id"])
+        conn_id = spec.get("connection_id") or DEFAULT_CONNECTIONS.get(short, "")
+        if conn_id and "auth" not in cleaned_cfg:
+            cleaned_cfg["auth"] = C(conn_id)
 
         explicit_ver = spec.get("version")
         if schema and schema.get("actions"):
@@ -1427,9 +1479,7 @@ async def v2_build(body: BuildBody):
     pid = body.project_id or DEFAULT_PID
     cn = resolve_conns(body.connection_ids)
 
-    conn_errors = await guard_connections(e, pid, ["gmail", "google-sheets"], cn)
-    if conn_errors:
-        log.warning("Connection guard warnings: %s", conn_errors)
+    await guard_connections(e, pid, ["gmail", "google-sheets"], cn, strict=True)
 
     log.info("BUILD template=%s name=%s pid=%s", t, body.display_name or t, pid)
     trigger = tdef["fn"](body.config, cn)
@@ -1604,7 +1654,13 @@ async def v2_build_loop(body: LoopBuildBody):
 async def v2_build_complex(body: ComplexBuildBody):
     e = E()
     pid = body.project_id or DEFAULT_PID
+    cn = resolve_conns(body.connection_ids)
     validate_complex_steps(body.steps)
+
+    required = _extract_pieces_from_steps(body.steps)
+    if required:
+        await guard_connections(e, pid, required, cn, strict=True)
+
     counter = [1]
     steps_info: List[dict] = []
     try:
@@ -1677,6 +1733,10 @@ async def v2_build_smart(body: SmartBuildBody):
     e = E()
     pid = body.project_id or DEFAULT_PID
     cn = resolve_conns(body.connection_ids)
+
+    required = [s.piece_name.replace("@activepieces/piece-", "") for s in body.steps]
+    await guard_connections(e, pid, required, cn, strict=True)
+
     counter = [1]
     built_steps = []
     steps_info = []
@@ -1860,6 +1920,11 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
     pid = body.project_id or DEFAULT_PID
     cn = resolve_conns(body.connection_ids)
 
+    if body.actions:
+        required = _extract_pieces_from_steps(body.actions)
+        if required:
+            await guard_connections(e, pid, required, cn, strict=True)
+
     if body.template and body.template in TEMPLATES:
         tdef = TEMPLATES[body.template]
         config = body.config or {}
@@ -1904,20 +1969,45 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
             detail="Provide 'template' or both 'trigger' and 'actions'")
 
     log.info("[reimport] Updating flow %s → %s", flow_id, name)
-    await e.import_flow(flow_id, name, trigger)
-    verified = await e.verify_flow(flow_id)
-    pub = await e.publish_and_enable(flow_id)
+    try:
+        await e.import_flow(flow_id, name, trigger)
+        verified = await e.verify_flow(flow_id)
+        pub = await e.publish_and_enable(flow_id)
 
-    final = await e.get_flow(flow_id)
-    final_state = final.get("version", {}).get("state", "?")
-    pub_match = final.get("publishedVersionId") == final.get("version", {}).get("id")
-    pub["version_state"] = final_state
-    pub["published_match"] = pub_match
-    diagnosis = _walk_flow_tree(final)
+        final = await e.get_flow(flow_id)
+        final_state = final.get("version", {}).get("state", "?")
+        final_status = final.get("status", "UNKNOWN")
+        pub_match = final.get("publishedVersionId") == final.get("version", {}).get("id")
+        pub["version_state"] = final_state
+        pub["published_match"] = pub_match
 
-    return {"status": "updated", "flow_id": flow_id,
-            "display_name": name, "publish": pub,
-            "diagnosis": diagnosis}
+        if final_status != "ENABLED":
+            raise HTTPException(
+                500,
+                detail=f"Flow {flow_id} is NOT ENABLED after reimport. "
+                       f"status={final_status}, state={final_state}, "
+                       f"published_match={pub_match}.")
+
+        diagnosis = _walk_flow_tree(final)
+        return {"status": "updated", "flow_id": flow_id,
+                "display_name": name, "publish": pub,
+                "diagnosis": diagnosis}
+    except HTTPException:
+        raise
+    except Exception as ex:
+        log.exception("v2_reimport failed for flow %s", flow_id)
+        diag = traceback.format_exc()
+        if len(diag) > 8000:
+            diag = diag[-8000:]
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": str(ex),
+                "exception_type": type(ex).__name__,
+                "flow_id": flow_id,
+                "diagnosis": diag,
+            },
+        ) from ex
 
 
 # ═══════════════════════════════════════════════════════════════
