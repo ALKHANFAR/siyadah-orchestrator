@@ -10,7 +10,7 @@ Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
               Multi-Tenancy, MCP Execute, Re-import, Diagnose
 """
 from __future__ import annotations
-import asyncio, logging, os, time as _time, traceback
+import asyncio, logging, os, re, time as _time, traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -452,6 +452,20 @@ def get_trigger_props(schema: dict, trigger_name: str) -> dict:
     return schema.get("triggers", {}).get(trigger_name, {}).get("props", {})
 
 
+_DYNAMIC_VAR_RE = re.compile(r"\{\{.*?\}\}")
+
+
+def _value_has_dynamic_var(val) -> bool:
+    """Return True if *val* (or any nested string inside it) contains {{...}}."""
+    if isinstance(val, str):
+        return bool(_DYNAMIC_VAR_RE.search(val))
+    if isinstance(val, dict):
+        return any(_value_has_dynamic_var(v) for v in val.values())
+    if isinstance(val, list):
+        return any(_value_has_dynamic_var(v) for v in val)
+    return False
+
+
 def generate_property_settings(props: dict, input_config: dict) -> dict:
     """Generate schema-aware propertySettings for AP UI compatibility.
 
@@ -460,6 +474,9 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
     - DYNAMIC → CUSTOM_INPUT
     - STATIC_DROPDOWN → type marker only
     - SHORT_TEXT, LONG_TEXT, NUMBER, CHECKBOX, ARRAY, JSON → nothing needed
+
+    Dynamic Injection: any value containing {{…}} is treated as a dynamic
+    reference that Activepieces must resolve at runtime → force CUSTOM_INPUT.
     """
     if not props:
         return {}
@@ -474,6 +491,15 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
         elif ptype == "STATIC_DROPDOWN":
             settings[pname] = {"type": "STATIC_DROPDOWN"}
+
+    for pname, val in input_config.items():
+        if pname == "auth" or pname in settings:
+            continue
+        if _value_has_dynamic_var(val):
+            ptype = "SHORT_TEXT"
+            if pname in props and isinstance(props[pname], dict):
+                ptype = props[pname].get("type", "SHORT_TEXT")
+            settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
     return settings
 
 
@@ -1859,65 +1885,86 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
     e = E()
     pid = body.project_id or DEFAULT_PID
     cn = resolve_conns(body.connection_ids)
+    steps_info: List[dict] = []
 
-    if body.template and body.template in TEMPLATES:
-        tdef = TEMPLATES[body.template]
-        config = body.config or {}
-        trigger = tdef["fn"](config, cn)
-        name = body.display_name or tdef["desc"]
-    elif body.trigger and body.actions is not None:
-        counter = [1]
-        specs: List[dict] = []
-        for a in body.actions:
-            stype = a.get("type", "PIECE")
-            if stype == "PIECE":
-                a_piece = a.get("piece", "")
-                short = a_piece.replace("@activepieces/piece-", "")
-                inp = dict(a.get("input", {}))
-                conn_id = a.get("connection_id", cn.get(short, ""))
-                if conn_id and "auth" not in inp:
-                    inp["auth"] = C(conn_id)
-                specs.append({
-                    "type": "PIECE", "piece": a_piece,
-                    "action_name": a.get("action_name", ""),
-                    "version": a.get("version", PIECE_VERSIONS.get(short, "~0.1.0")),
-                    "input": inp,
-                    "display_name": a.get("display_name", "Action"),
-                })
-            else:
-                specs.append(a)
-        first_action = await _build_action_chain(specs, counter, e)
+    try:
+        if body.template and body.template in TEMPLATES:
+            tdef = TEMPLATES[body.template]
+            config = body.config or {}
+            trigger = tdef["fn"](config, cn)
+            name = body.display_name or tdef["desc"]
+        elif body.trigger and body.actions is not None:
+            counter = [1]
+            specs: List[dict] = []
+            for a in body.actions:
+                stype = a.get("type", "PIECE")
+                if stype == "PIECE":
+                    a_piece = a.get("piece", "")
+                    short = a_piece.replace("@activepieces/piece-", "")
+                    inp = dict(a.get("input", {}))
+                    conn_id = a.get("connection_id", cn.get(short, ""))
+                    if conn_id and "auth" not in inp:
+                        inp["auth"] = C(conn_id)
+                    specs.append({
+                        "type": "PIECE", "piece": a_piece,
+                        "action_name": a.get("action_name", ""),
+                        "version": a.get("version", PIECE_VERSIONS.get(short, "~0.1.0")),
+                        "input": inp,
+                        "display_name": a.get("display_name", "Action"),
+                    })
+                else:
+                    specs.append(a)
+            first_action = await _build_action_chain(specs, counter, e, steps_info)
 
-        t = body.trigger
-        piece_name = t.get("piece", "@activepieces/piece-webhook")
-        full = piece_name if piece_name.startswith("@") else f"@activepieces/piece-{piece_name}"
-        trigger = build_trigger(
-            full, t.get("version", PIECE_VERSIONS.get(
-                piece_name.replace("@activepieces/piece-", ""), "~0.1.0")),
-            t.get("trigger_name", "catch_webhook"),
-            t.get("input", {"authType": "none"}),
-            (body.display_name or "Updated") + " — Trigger",
-            first_action)
-        name = body.display_name or "Updated Flow"
-    else:
-        raise HTTPException(400,
-            detail="Provide 'template' or both 'trigger' and 'actions'")
+            t = body.trigger
+            piece_name = t.get("piece", "@activepieces/piece-webhook")
+            full = piece_name if piece_name.startswith("@") else f"@activepieces/piece-{piece_name}"
+            trigger = build_trigger(
+                full, t.get("version", PIECE_VERSIONS.get(
+                    piece_name.replace("@activepieces/piece-", ""), "~0.1.0")),
+                t.get("trigger_name", "catch_webhook"),
+                t.get("input", {"authType": "none"}),
+                (body.display_name or "Updated") + " — Trigger",
+                first_action)
+            name = body.display_name or "Updated Flow"
+        else:
+            raise HTTPException(400,
+                detail="Provide 'template' or both 'trigger' and 'actions'")
 
-    log.info("[reimport] Updating flow %s → %s", flow_id, name)
-    await e.import_flow(flow_id, name, trigger)
-    verified = await e.verify_flow(flow_id)
-    pub = await e.publish_and_enable(flow_id)
+        log.info("[reimport] Updating flow %s → %s", flow_id, name)
+        await e.import_flow(flow_id, name, trigger)
+        verified = await e.verify_flow(flow_id)
+        pub = await e.publish_and_enable(flow_id)
 
-    final = await e.get_flow(flow_id)
-    final_state = final.get("version", {}).get("state", "?")
-    pub_match = final.get("publishedVersionId") == final.get("version", {}).get("id")
-    pub["version_state"] = final_state
-    pub["published_match"] = pub_match
-    diagnosis = _walk_flow_tree(final)
+        final = await e.get_flow(flow_id)
+        final_state = final.get("version", {}).get("state", "?")
+        pub_match = final.get("publishedVersionId") == final.get("version", {}).get("id")
+        pub["version_state"] = final_state
+        pub["published_match"] = pub_match
+        diagnosis = _walk_flow_tree(final)
 
-    return {"status": "updated", "flow_id": flow_id,
-            "display_name": name, "publish": pub,
-            "diagnosis": diagnosis}
+        webhook_url = f"https://activepieces-production-2499.up.railway.app/api/v1/webhooks/{flow_id}"
+        ordered = _sort_steps_info_chronological(steps_info)
+        return {"status": "updated", "flow_id": flow_id,
+                "display_name": name, "publish": pub,
+                "diagnosis": diagnosis,
+                "webhook_url": webhook_url,
+                "steps": ordered}
+    except HTTPException:
+        raise
+    except Exception as ex:
+        log.exception("v2_reimport failed for flow %s", flow_id)
+        diag = traceback.format_exc()
+        if len(diag) > 8000:
+            diag = diag[-8000:]
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": str(ex),
+                "exception_type": type(ex).__name__,
+                "diagnosis": diag,
+            },
+        ) from ex
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2375,7 +2422,7 @@ async def v2_mcp_proxy(request: Request):
     if not AP_MCP_URL:
         raise HTTPException(501, detail="AP MCP Server URL not configured")
     body = await request.json()
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=120) as client:
         r = await client.post(AP_MCP_URL, json=body,
                               headers={"Authorization": f"Bearer {AP_MCP_TOKEN}",
                                        "Content-Type": "application/json",
