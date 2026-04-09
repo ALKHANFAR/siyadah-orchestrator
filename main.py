@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v5.3.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v5.4.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.3.0"
+VERSION = "5.4.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -38,6 +38,7 @@ DEFAULT_CONNECTIONS: Dict[str, str] = {
 ORCH_API_KEY = os.getenv("ORCHESTRATOR_API_KEY", "")
 AP_MCP_URL = os.getenv("AP_MCP_SERVER_URL", "")
 AP_MCP_TOKEN = os.getenv("AP_MCP_TOKEN", "")
+ORCHESTRATOR_HTTPX_TIMEOUT = int(os.getenv("ORCHESTRATOR_HTTPX_TIMEOUT", "120"))
 
 PIECE_VERSIONS: Dict[str, str] = {
     "webhook": "~0.1.31",
@@ -79,7 +80,7 @@ class SiyadahEngine:
             self._client = httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {self.token}",
                          "Content-Type": "application/json"},
-                timeout=120,
+                timeout=ORCHESTRATOR_HTTPX_TIMEOUT,
             )
         return self._client
 
@@ -117,7 +118,7 @@ class SiyadahEngine:
 
     @staticmethod
     async def sign_in(email: str, password: str, base: str) -> dict:
-        async with httpx.AsyncClient(timeout=15) as client:
+        async with httpx.AsyncClient(timeout=ORCHESTRATOR_HTTPX_TIMEOUT) as client:
             r = await client.post(f"{base}/api/v1/authentication/sign-in",
                                   json={"email": email, "password": password})
             r.raise_for_status()
@@ -330,7 +331,11 @@ async def guard_connections(
         for piece in required_pieces:
             short = piece.replace("@activepieces/piece-", "")
             cid = conns.get(short, "")
-            if cid and cid not in available:
+            if not cid:
+                errors.append(
+                    f"No connection ID configured for '{short}' — "
+                    f"provide it via connection_ids or DEFAULT_CONNECTIONS")
+            elif cid not in available:
                 errors.append(
                     f"Connection '{cid}' for {short} not found in project {pid}")
     except Exception as e:
@@ -500,19 +505,21 @@ def _contains_dynamic_ref(value: Any) -> bool:
 def generate_property_settings(props: dict, input_config: dict) -> dict:
     """Generate schema-aware propertySettings for AP UI compatibility.
 
-    Prop types requiring special settings:
-    - DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
-    - DYNAMIC → CUSTOM_INPUT
-    - STATIC_DROPDOWN → type marker only
-    - Any field whose *value* contains ``{{…}}`` inside a nested
-      structure (Array/Dict) is promoted to CUSTOM_INPUT so AP
-      does not reject dynamically-injected expressions.
+    Priority order (highest first):
+    1. Any value containing ``{{…}}`` (string, array, dict) → SHORT_TEXT / CUSTOM_INPUT
+    2. DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
+    3. DYNAMIC → CUSTOM_INPUT
+    4. STATIC_DROPDOWN → type marker only
     """
     if not props:
         return {}
     settings: Dict[str, Any] = {}
     for pname, pinfo in props.items():
         if pname == "auth" or pname not in input_config:
+            continue
+        val = input_config.get(pname)
+        if _contains_dynamic_ref(val):
+            settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
             continue
         ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
         if ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
@@ -521,10 +528,6 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
         elif ptype == "STATIC_DROPDOWN":
             settings[pname] = {"type": "STATIC_DROPDOWN"}
-        elif pname not in settings:
-            val = input_config.get(pname)
-            if isinstance(val, (dict, list, tuple)) and _contains_dynamic_ref(val):
-                settings[pname] = {"type": ptype or "CUSTOM", "status": "CUSTOM_INPUT"}
     return settings
 
 
@@ -1658,8 +1661,7 @@ async def v2_build_complex(body: ComplexBuildBody):
     validate_complex_steps(body.steps)
 
     required = _extract_pieces_from_steps(body.steps)
-    if required:
-        await guard_connections(e, pid, required, cn, strict=True)
+    await guard_connections(e, pid, required, cn, strict=True)
 
     counter = [1]
     steps_info: List[dict] = []
@@ -2465,7 +2467,7 @@ async def v2_mcp_proxy(request: Request):
     if not AP_MCP_URL:
         raise HTTPException(501, detail="AP MCP Server URL not configured")
     body = await request.json()
-    async with httpx.AsyncClient(timeout=30) as client:
+    async with httpx.AsyncClient(timeout=ORCHESTRATOR_HTTPX_TIMEOUT) as client:
         r = await client.post(AP_MCP_URL, json=body,
                               headers={"Authorization": f"Bearer {AP_MCP_TOKEN}",
                                        "Content-Type": "application/json",
