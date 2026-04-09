@@ -10,7 +10,7 @@ Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
               Multi-Tenancy, MCP Execute, Re-import, Diagnose
 """
 from __future__ import annotations
-import asyncio, logging, os, time as _time
+import asyncio, logging, os, time as _time, traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -676,7 +676,89 @@ def sheet_read(step: str, conn_id: str, sid: str,
 # ═══════════════════════════════════════════════════════════════
 # RECURSIVE CHAIN BUILDER (from v3.1.0)
 # ═══════════════════════════════════════════════════════════════
-def _build_step_from_spec(spec: dict, counter: list, next_action=None):
+def _complex_spec_as_dict(raw: Any) -> dict:
+    if isinstance(raw, dict):
+        return raw
+    if hasattr(raw, "model_dump"):
+        return raw.model_dump()
+    raise HTTPException(400, detail=f"Invalid step: expected object, got {type(raw).__name__}")
+
+
+def validate_complex_steps(steps: list, *, path: str = "steps",
+                           allow_empty: bool = False) -> None:
+    """Recursive pre-flight validation for /v2/build-complex step trees."""
+    if not isinstance(steps, list):
+        raise HTTPException(400, detail=f"{path}: must be a list")
+    if not steps:
+        if not allow_empty:
+            raise HTTPException(400, detail=f"{path}: at least one step is required")
+        return
+    for i, raw in enumerate(steps):
+        spec = _complex_spec_as_dict(raw)
+        stype = spec.get("type", "PIECE")
+        step_label = f"Step {i + 1}" if path == "steps" else f"{path}[{i + 1}]"
+
+        if stype == "PIECE":
+            piece = (spec.get("piece") or spec.get("piece_name") or "").strip()
+            action = (spec.get("action_name") or "").strip()
+            if not piece:
+                raise HTTPException(
+                    400, detail=f"{step_label}: piece or piece_name is required")
+            if not action:
+                raise HTTPException(
+                    400, detail=f"{step_label}: action_name is missing")
+        elif stype == "ROUTER":
+            branches = spec.get("branches", [])
+            if not isinstance(branches, list):
+                raise HTTPException(
+                    400, detail=f"{step_label}: branches must be a list")
+            for j, b in enumerate(branches):
+                bd = b if isinstance(b, dict) else (
+                    b.model_dump() if hasattr(b, "model_dump") else {})
+                if not isinstance(bd, dict):
+                    raise HTTPException(
+                        400,
+                        detail=f"{step_label}.branches[{j + 1}]: invalid branch object")
+                ba = bd.get("actions") or []
+                if not isinstance(ba, list):
+                    raise HTTPException(
+                        400,
+                        detail=f"{step_label}.branches[{j + 1}].actions: must be a list")
+                validate_complex_steps(
+                    ba,
+                    path=f"{step_label}.branches[{j + 1}].actions",
+                    allow_empty=True)
+        elif stype == "LOOP":
+            la = spec.get("loop_actions") or []
+            if not isinstance(la, list):
+                raise HTTPException(
+                    400, detail=f"{step_label}.loop_actions: must be a list")
+            validate_complex_steps(
+                la, path=f"{step_label}.loop_actions", allow_empty=True)
+        elif stype == "CODE":
+            pass
+        else:
+            raise HTTPException(
+                400, detail=f"{step_label}: unknown step type: {stype}")
+
+
+def _sort_steps_info_chronological(steps_info: List[dict]) -> List[dict]:
+    """Order built-step summaries by step_N index (execution-friendly for clients)."""
+
+    def _key(row: dict) -> int:
+        s = row.get("step") or ""
+        if isinstance(s, str) and s.startswith("step_"):
+            try:
+                return int(s[5:])
+            except ValueError:
+                pass
+        return 0
+
+    return sorted(steps_info, key=_key)
+
+
+def _build_step_from_spec(spec: dict, counter: list, next_action=None,
+                          steps_info: Optional[List[dict]] = None):
     """Recursively build a step from a specification dict."""
     stype = spec.get("type", "PIECE")
     snum = counter[0]
@@ -691,6 +773,16 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None):
         inp = clean_input_config(dict(spec.get("input", spec.get("input_config", {}))))
         if spec.get("connection_id"):
             inp["auth"] = C(spec["connection_id"])
+        if steps_info is not None:
+            ps = spec.get("property_settings")
+            steps_info.append({
+                "step": sname,
+                "piece": full,
+                "action": spec.get("action_name", ""),
+                "version": ver,
+                "schema_loaded": False,
+                "property_settings": ps if isinstance(ps, dict) else {},
+            })
         return build_action(
             sname, full, ver,
             spec.get("action_name", ""), inp,
@@ -698,6 +790,17 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None):
             next_action, spec.get("property_settings"))
 
     if stype == "CODE":
+        if steps_info is not None:
+            steps_info.append({
+                "step": sname,
+                "piece": None,
+                "action": None,
+                "version": None,
+                "schema_loaded": False,
+                "property_settings": {},
+                "structure": "CODE",
+                "display_name": spec.get("display_name", "Code"),
+            })
         return build_code_step(
             sname, spec.get("display_name", "Code"),
             spec.get("code",
@@ -705,6 +808,19 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None):
             spec.get("code_input"), next_action)
 
     if stype == "ROUTER":
+        if steps_info is not None:
+            branches = spec.get("branches", [])
+            steps_info.append({
+                "step": sname,
+                "piece": None,
+                "action": None,
+                "version": None,
+                "schema_loaded": False,
+                "property_settings": {},
+                "structure": "ROUTER",
+                "display_name": spec.get("display_name", "Router"),
+                "branches_count": len(branches) if isinstance(branches, list) else 0,
+            })
         branch_defs: List[dict] = []
         children: List[Any] = []
         for b in spec.get("branches", []):
@@ -724,29 +840,49 @@ def _build_step_from_spec(spec: dict, counter: list, next_action=None):
                     conds.append(group)
                 branch_defs.append(condition_branch(bd.get("name", "Branch"), conds))
             ba = bd.get("actions", [])
-            children.append(_build_action_chain(ba, counter) if ba else None)
+            children.append(
+                _build_action_chain(ba, counter, steps_info) if ba else None)
         return build_router_step(sname, spec.get("display_name", "Router"),
                                  branch_defs, children, next_action)
 
     if stype == "LOOP":
-        la = spec.get("loop_actions", [])
-        first_loop = _build_action_chain(la, counter) if la else None
         items = spec.get("loop_items",
                          spec.get("items_expression",
                                   "{{trigger['body']['items']}}"))
+        if steps_info is not None:
+            steps_info.append({
+                "step": sname,
+                "piece": None,
+                "action": None,
+                "version": None,
+                "schema_loaded": False,
+                "property_settings": {},
+                "structure": "LOOP",
+                "display_name": spec.get("display_name", "Loop"),
+                "items_expression": items,
+            })
+        la = spec.get("loop_actions", [])
+        first_loop = (
+            _build_action_chain(la, counter, steps_info) if la else None)
         return build_loop_step(sname, spec.get("display_name", "Loop"),
                                items, first_loop, next_action)
 
     raise ValueError(f"Unknown step type: {stype}")
 
 
-def _build_action_chain(specs: list, counter: list):
+def _build_action_chain(specs: list, counter: list,
+                        steps_info: Optional[List[dict]] = None):
     """Chain actions via nextAction links (builds last→first)."""
     if not specs:
         return None
     chain = None
     for spec in reversed(specs):
-        chain = _build_step_from_spec(spec, counter, next_action=chain)
+        sdict = spec if isinstance(spec, dict) else (
+            spec.model_dump() if hasattr(spec, "model_dump") else spec)
+        if not isinstance(sdict, dict):
+            raise TypeError(f"Chain step must be dict, got {type(spec).__name__}")
+        chain = _build_step_from_spec(
+            sdict, counter, next_action=chain, steps_info=steps_info)
     return chain
 
 
@@ -1433,12 +1569,31 @@ async def v2_build_loop(body: LoopBuildBody):
 async def v2_build_complex(body: ComplexBuildBody):
     e = E()
     pid = body.project_id or DEFAULT_PID
+    validate_complex_steps(body.steps)
     counter = [1]
-    first_action = _build_action_chain(body.steps, counter)
-    trigger = wh_trigger("استقبال بيانات", first_action)
-    result = await golden_build(e, pid, body.display_name, trigger)
+    steps_info: List[dict] = []
+    try:
+        first_action = _build_action_chain(body.steps, counter, steps_info)
+        trigger = wh_trigger("استقبال بيانات", first_action)
+        result = await golden_build(e, pid, body.display_name, trigger)
+    except HTTPException:
+        raise
+    except Exception as ex:
+        log.exception("v2_build_complex failed")
+        diag = traceback.format_exc()
+        if len(diag) > 8000:
+            diag = diag[-8000:]
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": str(ex),
+                "exception_type": type(ex).__name__,
+                "diagnosis": diag,
+            },
+        ) from ex
+    ordered = _sort_steps_info_chronological(steps_info)
     return {"status": "deployed", "flow_id": result["flow_id"],
-            "type": "COMPLEX", "steps_count": counter[0] - 1,
+            "type": "COMPLEX", "steps": ordered,
             "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": result.get("diagnosis")}
