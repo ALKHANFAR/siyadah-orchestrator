@@ -26,7 +26,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.5.0"
+VERSION = "5.6.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -493,6 +493,8 @@ _DYNAMIC_RE = re.compile(r"\{\{.*?\}\}")
 
 def _contains_dynamic_ref(value: Any) -> bool:
     """Recursively check if *value* contains ``{{…}}`` dynamic references."""
+    if value is None:
+        return False
     if isinstance(value, str):
         return bool(_DYNAMIC_RE.search(value))
     if isinstance(value, dict):
@@ -521,15 +523,14 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
             if ptype == "DYNAMIC":
                 settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
-                continue
             val = input_config.get(pname)
-            if _contains_dynamic_ref(val):
+            if pname not in settings and _contains_dynamic_ref(val):
                 settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
-                continue
-            if ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
-                settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
-            elif ptype == "STATIC_DROPDOWN":
-                settings[pname] = {"type": "STATIC_DROPDOWN"}
+            if pname not in settings:
+                if ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
+                    settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
+                elif ptype == "STATIC_DROPDOWN":
+                    settings[pname] = {"type": "STATIC_DROPDOWN"}
         except Exception:
             log.error("generate_property_settings: failed on field %r, skipping", pname, exc_info=True)
     return settings
@@ -969,13 +970,29 @@ async def _build_action_chain(
     if not specs:
         return None
     chain = None
-    for spec in reversed(specs):
+    total = len(specs)
+    for idx, spec in enumerate(reversed(specs)):
+        step_num = total - idx
         sdict = spec if isinstance(spec, dict) else (
             spec.model_dump() if hasattr(spec, "model_dump") else spec)
         if not isinstance(sdict, dict):
             raise TypeError(f"Chain step must be dict, got {type(spec).__name__}")
-        chain = await _build_step_from_spec(
-            sdict, counter, engine, next_action=chain, steps_info=steps_info)
+        try:
+            chain = await _build_step_from_spec(
+                sdict, counter, engine, next_action=chain, steps_info=steps_info)
+        except HTTPException:
+            raise
+        except Exception as ex:
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed building step {step_num}/{total}: "
+                       f"{type(ex).__name__}: {ex}",
+            ) from ex
+    if chain is None:
+        raise HTTPException(
+            status_code=500,
+            detail="Action chain produced None despite non-empty specs",
+        )
     return chain
 
 
@@ -1672,6 +1689,11 @@ async def v2_build_complex(body: ComplexBuildBody):
     try:
         first_action = await _build_action_chain(
             body.steps, counter, e, steps_info)
+        if first_action is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Action chain is empty — no steps were built",
+            )
         trigger = wh_trigger("استقبال بيانات", first_action)
         result = await golden_build(e, pid, body.display_name, trigger)
         if not isinstance(result, dict) or not result.get("flow_id"):
