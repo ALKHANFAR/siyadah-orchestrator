@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v6.0.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v6.1.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.0.0"
+VERSION = "6.1.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -509,10 +509,11 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
     """Generate schema-aware propertySettings for AP UI compatibility.
 
     Priority order (highest first):
-    1. DYNAMIC → always CUSTOM_INPUT (preserves complex fields like Sheets values)
-    2. Any value containing ``{{…}}`` (string, array, dict) → SHORT_TEXT / CUSTOM_INPUT
-    3. DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
-    4. STATIC_DROPDOWN → type marker only
+    1. Any value containing ``{{…}}`` → SHORT_TEXT / CUSTOM_INPUT (before type casting)
+    2. Type Casting: ARRAY, JSON, NUMBER coercion
+    3. DYNAMIC → CUSTOM_INPUT
+    4. DROPDOWN / MULTI_SELECT_DROPDOWN → CUSTOM_INPUT
+    5. STATIC_DROPDOWN → type marker only
     """
     if not props:
         return {}
@@ -522,9 +523,15 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             if pname == "auth" or pname not in input_config:
                 continue
             val = input_config.get(pname)
+
+            # ── PRIORITY 1: Dynamic refs {{ }} — before ANY type casting ──
+            if _contains_dynamic_ref(val):
+                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
+                continue
+
             ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
 
-            # ── Type Casting: coerce value to match schema type ──
+            # ── PRIORITY 2: Type Casting (safe — no dynamic refs here) ──
             if ptype == "ARRAY" and val is not None and not isinstance(val, list):
                 val = [val]
                 input_config[pname] = val
@@ -541,10 +548,9 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
                 except (ValueError, TypeError):
                     pass
 
+            # ── PRIORITY 3: Type-based settings (DYNAMIC, DROPDOWN) ──
             if ptype == "DYNAMIC":
                 settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
-            elif _contains_dynamic_ref(val):
-                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
             elif ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
                 settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
             elif ptype == "STATIC_DROPDOWN":
@@ -1062,6 +1068,18 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
     pub["version_state"] = final_state
     pub["published_match"] = pub_match
 
+    # ── Universal Pulse: auto-trigger webhook for instant proof ──
+    pulse_sent = False
+    try:
+        await engine.test_webhook(fid, {
+            "event": "Siyadah_Activation",
+            "status": "Success",
+        })
+        pulse_sent = True
+        log.info("[golden] Universal Pulse sent to %s", fid)
+    except Exception as pulse_err:
+        log.warning("[golden] Pulse failed for %s: %s", fid, pulse_err)
+
     diagnosis = None
     if self_test:
         diagnosis = {"summary": "Verified"}
@@ -1074,7 +1092,8 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
             return None
         settings = node.get("settings", {})
         if "google-sheets" in settings.get("pieceName", ""):
-            sid = settings.get("input", {}).get("spreadsheetId")
+            inp = settings.get("input", {})
+            sid = inp.get("spreadsheetId") or inp.get("spreadsheet_id")
             if sid and not str(sid).startswith("{{"):
                 return sid
         for key in ("nextAction", "firstLoopAction"):
@@ -1087,15 +1106,40 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
                 return found
         return None
 
+    def _extract_email(node):
+        """Walk the trigger tree looking for a client email field."""
+        if not node or not isinstance(node, dict):
+            return None
+        inp = node.get("settings", {}).get("input", {})
+        for key in ("email", "to", "recipient", "send_to"):
+            val = inp.get(key)
+            if val and isinstance(val, str) and "@" in val and not val.startswith("{{"):
+                return val
+        for key in ("nextAction", "firstLoopAction"):
+            found = _extract_email(node.get(key))
+            if found:
+                return found
+        for child in (node.get("children") or []):
+            found = _extract_email(child)
+            if found:
+                return found
+        return None
+
     sheet_id = _extract_sheet_id(trigger)
     if sheet_id:
         resource_link = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit"
         log.info("[golden] Smart Link: %s", resource_link)
 
+    client_email = _extract_email(trigger)
+    if client_email:
+        log.info("[golden] Client email extracted: %s", client_email)
+
     return {"flow_id": fid, "trigger_type": ttype,
             "publish": pub, "diagnosis": diagnosis,
             "webhook_url": webhook_url,
-            "resource_link": resource_link}
+            "resource_link": resource_link,
+            "pulse_sent": pulse_sent,
+            "client_email": client_email}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1746,7 +1790,7 @@ async def v2_build_complex(body: ComplexBuildBody):
     required = _extract_pieces_from_steps(body.steps)
     await guard_connections(e, pid, required, cn, strict=True)
 
-    result = {}
+    result = {"flow_id": "unknown", "webhook_url": None, "publish": {}, "diagnosis": None}
     counter = [1]
     steps_info: List[dict] = []
     try:
@@ -1780,8 +1824,8 @@ async def v2_build_complex(body: ComplexBuildBody):
         try:
             return JSONResponse(content=jsonable_encoder(response_dict))
         except Exception:
-            return JSONResponse(content={"status": "deployed", "flow_id": fid,
-                "note": "Diagnosis omitted due to size"})
+            return JSONResponse(content=jsonable_encoder({"status": "deployed", "flow_id": fid,
+                "note": "Diagnosis omitted due to size"}))
     except HTTPException:
         raise
     except Exception as ex:
@@ -2050,6 +2094,7 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
     e = E()
     pid = body.project_id or DEFAULT_PID
     cn = resolve_conns(body.connection_ids)
+    result = {"flow_id": flow_id, "webhook_url": None, "publish": {}, "diagnosis": None}
 
     if body.actions:
         required = _extract_pieces_from_steps(body.actions)
@@ -2131,9 +2176,9 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
         try:
             return JSONResponse(content=jsonable_encoder(response_dict))
         except Exception:
-            return JSONResponse(content={"status": "updated", "flow_id": flow_id,
+            return JSONResponse(content=jsonable_encoder({"status": "updated", "flow_id": flow_id,
                 "steps": steps, "total_steps": len(steps),
-                "diagnosis": {"summary": "Verified"}})
+                "diagnosis": {"summary": "Verified"}}))
     except HTTPException:
         raise
     except Exception as ex:
