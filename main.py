@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 import httpx, uvicorn
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -26,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.7.0"
+VERSION = "5.8.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -521,12 +522,11 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             if pname == "auth" or pname not in input_config:
                 continue
             val = input_config.get(pname)
-            if _contains_dynamic_ref(val):
-                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
-                continue
             ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
             if ptype == "DYNAMIC":
                 settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
+            elif _contains_dynamic_ref(val):
+                settings[pname] = {"type": "SHORT_TEXT", "status": "CUSTOM_INPUT"}
             elif ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
                 settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
             elif ptype == "STATIC_DROPDOWN":
@@ -1707,11 +1707,19 @@ async def v2_build_complex(body: ComplexBuildBody):
                 },
             )
         ordered = _sort_steps_info_chronological(steps_info)
-        return {"status": "deployed", "flow_id": result["flow_id"],
-                "type": "COMPLEX", "steps": ordered,
-                "webhook_url": result.get("webhook_url"),
-                "publish": result["publish"],
-                "diagnosis": result.get("diagnosis")}
+        fid = result["flow_id"]
+        response_dict = {
+            "status": "deployed", "flow_id": fid,
+            "type": "COMPLEX", "steps": ordered,
+            "webhook_url": result.get("webhook_url"),
+            "publish": result["publish"],
+            "diagnosis": str(result.get("diagnosis", "")) if result.get("diagnosis") is not None else None,
+        }
+        try:
+            return JSONResponse(content=jsonable_encoder(response_dict))
+        except Exception:
+            return JSONResponse(content={"status": "deployed", "flow_id": fid,
+                "note": "Diagnosis omitted due to size"})
     except HTTPException:
         raise
     except Exception as ex:
@@ -1816,11 +1824,14 @@ async def v2_build_smart(body: SmartBuildBody):
 
     trigger = wh_trigger(body.display_name + " — Trigger", chain)
     result = await golden_build(e, pid, body.display_name, trigger)
-    return {"status": "deployed", "flow_id": result["flow_id"],
-            "type": "SMART", "steps": steps_info,
-            "webhook_url": result.get("webhook_url"),
-            "publish": result["publish"],
-            "diagnosis": result.get("diagnosis")}
+    response_dict = {
+        "status": "deployed", "flow_id": result["flow_id"],
+        "type": "SMART", "steps": steps_info,
+        "webhook_url": result.get("webhook_url"),
+        "publish": result["publish"],
+        "diagnosis": str(result.get("diagnosis", "")) if result.get("diagnosis") is not None else None,
+    }
+    return JSONResponse(content=jsonable_encoder(response_dict))
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2019,9 +2030,16 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
                        f"published_match={pub_match}.")
 
         diagnosis = _walk_flow_tree(final)
-        return {"status": "updated", "flow_id": flow_id,
-                "display_name": name, "publish": pub,
-                "diagnosis": diagnosis}
+        response_dict = {
+            "status": "updated", "flow_id": flow_id,
+            "display_name": name, "publish": pub,
+            "diagnosis": str(diagnosis) if diagnosis is not None else None,
+        }
+        try:
+            return JSONResponse(content=jsonable_encoder(response_dict))
+        except Exception:
+            return JSONResponse(content={"status": "deployed", "flow_id": flow_id,
+                "note": "Diagnosis omitted due to size"})
     except HTTPException:
         raise
     except Exception as ex:
@@ -2035,7 +2053,7 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
                 "message": str(ex),
                 "exception_type": type(ex).__name__,
                 "flow_id": flow_id,
-                "diagnosis": diag,
+                "diagnosis": str(diag),
             },
         ) from ex
 
