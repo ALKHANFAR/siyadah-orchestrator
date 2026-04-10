@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.3.0"
+VERSION = "6.4.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -40,6 +40,11 @@ ORCH_API_KEY = os.getenv("ORCHESTRATOR_API_KEY", "")
 AP_MCP_URL = os.getenv("AP_MCP_SERVER_URL", "")
 AP_MCP_TOKEN = os.getenv("AP_MCP_TOKEN", "")
 ORCHESTRATOR_HTTPX_TIMEOUT = int(os.getenv("ORCHESTRATOR_HTTPX_TIMEOUT", "120"))
+
+_BOOLEAN_FIELD_NAMES = frozenset({
+    "draft", "public", "active", "is_draft", "is_public",
+    "is_active", "enabled", "published",
+})
 
 PIECE_VERSIONS: Dict[str, str] = {
     "webhook": "~0.1.31",
@@ -373,26 +378,33 @@ async def fetch_piece_schema(engine: SiyadahEngine, piece_name: str) -> dict:
 
     api_name = (piece_name if piece_name.startswith("@activepieces/")
                 else f"@activepieces/piece-{piece_name}")
-    try:
-        data = await engine.get_piece(api_name)
-        if data and isinstance(data.get("actions", None), dict):
-            if not data["actions"]:
-                got_ver = data.get("version", "")
-                if got_ver:
-                    log.info("[schema] Empty actions dict for %s — re-fetching with version=%s", api_name, got_ver)
-                    data = await engine.get_piece(api_name, ver=got_ver)
+
+    for _attempt in range(2):
+        try:
+            data = await engine.get_piece(api_name)
             if data and isinstance(data.get("actions", None), dict):
-                _piece_schema_cache[cache_key] = data
-                log.info("Cached schema: %s v%s (%d actions)",
-                         cache_key, data.get("version", "?"),
-                         len(data.get("actions", {})))
-        else:
-            log.warning("Schema for %s returned non-dict actions, not caching",
-                        api_name)
-        return data
-    except Exception as e:
-        log.warning("Schema fetch failed for %s: %s", api_name, e)
-        return {}
+                if not data["actions"]:
+                    got_ver = data.get("version", "")
+                    if got_ver:
+                        log.info("[schema] Empty actions dict for %s — re-fetching with version=%s", api_name, got_ver)
+                        data = await engine.get_piece(api_name, ver=got_ver)
+                if data and isinstance(data.get("actions", None), dict):
+                    _piece_schema_cache[cache_key] = data
+                    log.info("Cached schema: %s v%s (%d actions)",
+                             cache_key, data.get("version", "?"),
+                             len(data.get("actions", {})))
+            else:
+                log.warning("Schema for %s returned non-dict actions, not caching",
+                            api_name)
+            return data
+        except Exception as e:
+            if _attempt == 0:
+                log.warning("Schema fetch failed for %s (attempt 1/2): %s — retrying in 1s", api_name, e)
+                await asyncio.sleep(1)
+            else:
+                log.warning("Schema fetch failed for %s (attempt 2/2): %s — giving up", api_name, e)
+
+    return {}
 
 
 def _fuzzy_name(name: str, available: dict) -> str:
@@ -906,6 +918,11 @@ async def _build_step_from_spec(
             resolved_action = spec.get("action_name", "")
             extra_ps = spec.get("property_settings")
             ps = extra_ps if isinstance(extra_ps, dict) else {}
+
+            for _fn, _fv in list(cleaned_cfg.items()):
+                if _fv in (None, "", []) and _fn.lower() in _BOOLEAN_FIELD_NAMES:
+                    cleaned_cfg[_fn] = False
+                    log.info("[fallback-autofill] %s.%s → False (assumed BOOLEAN, no schema)", sname, _fn)
 
         if steps_info is not None:
             steps_info.append({
@@ -1945,6 +1962,11 @@ async def v2_build_smart(body: SmartBuildBody):
             ps = {}
             props = {}
             resolved_action = s.action_name
+
+            for _fn, _fv in list(cleaned_cfg.items()):
+                if _fv in (None, "", []) and _fn.lower() in _BOOLEAN_FIELD_NAMES:
+                    cleaned_cfg[_fn] = False
+                    log.info("[fallback-autofill] smart-build %s → False (assumed BOOLEAN, no schema)", _fn)
 
         sname = f"step_{counter[0]}"
         counter[0] += 1
