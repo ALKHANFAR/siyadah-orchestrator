@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v6.1.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v6.2.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.1.0"
+VERSION = "6.2.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -1074,6 +1074,17 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
         await engine.test_webhook(fid, {
             "event": "Siyadah_Activation",
             "status": "Success",
+            "customer": {
+                "email": "test@siyadah.ai",
+                "name": "عميل تجريبي",
+                "phone": "+966500000000",
+            },
+            "order": {
+                "id": "ORD-TEST-001",
+                "total": 100.00,
+                "currency": "SAR",
+                "status": "created",
+            },
         })
         pulse_sent = True
         log.info("[golden] Universal Pulse sent to %s", fid)
@@ -1820,6 +1831,9 @@ async def v2_build_complex(body: ComplexBuildBody):
             "webhook_url": result.get("webhook_url"),
             "publish": result["publish"],
             "diagnosis": str(result.get("diagnosis", "")) if result.get("diagnosis") is not None else None,
+            "pulse_sent": result.get("pulse_sent"),
+            "resource_link": result.get("resource_link"),
+            "client_email": result.get("client_email"),
         }
         try:
             return JSONResponse(content=jsonable_encoder(response_dict))
@@ -2172,6 +2186,9 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
             "steps": steps,
             "total_steps": len(steps),
             "diagnosis": {"summary": "Verified"},
+            "pulse_sent": result.get("pulse_sent"),
+            "resource_link": result.get("resource_link"),
+            "client_email": result.get("client_email"),
         }
         try:
             return JSONResponse(content=jsonable_encoder(response_dict))
