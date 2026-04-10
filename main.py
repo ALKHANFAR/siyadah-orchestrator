@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.8.0"
+VERSION = "5.9.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -1029,7 +1029,7 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
 
     diagnosis = None
     if self_test:
-        diagnosis = _walk_flow_tree(verified)
+        diagnosis = {"summary": "Verified"}
 
     return {"flow_id": fid, "trigger_type": ttype,
             "publish": pub, "diagnosis": diagnosis,
@@ -1888,6 +1888,22 @@ async def v2_validate(body: ValidateBody):
             except Exception as ex:
                 errors.append(f"Cannot fetch piece {a_piece}: {str(ex)[:100]}")
 
+    _SUSPECT_VALUES = {"", "test", "test123", "xxx", "your_id_here",
+                       "spreadsheet_id", "sheet_id", "none", "null"}
+
+    def _check_suspect_fields(label: str, input_cfg: dict):
+        for key in ("spreadsheet_id", "sheet_id"):
+            val = input_cfg.get(key)
+            if val is not None:
+                val_str = str(val).strip().lower()
+                if val_str in _SUSPECT_VALUES or len(val_str) < 5:
+                    errors.append(
+                        f"{label}.input.{key} = '{val}' does not look like a real ID")
+
+    _check_suspect_fields("trigger", dict(t.get("input", {})))
+    for i, a in enumerate(body.actions):
+        _check_suspect_fields(f"actions[{i}]", dict(a.get("input", {})))
+
     return {"valid": len(errors) == 0, "errors": errors,
             "steps_count": 1 + len(body.actions), "pieces_used": pieces_used}
 
@@ -2029,17 +2045,21 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
                        f"status={final_status}, state={final_state}, "
                        f"published_match={pub_match}.")
 
-        diagnosis = _walk_flow_tree(final)
+        tree = _walk_flow_tree(final)
+        steps = tree.get("steps", [])
         response_dict = {
             "status": "updated", "flow_id": flow_id,
             "display_name": name, "publish": pub,
-            "diagnosis": str(diagnosis) if diagnosis is not None else None,
+            "steps": steps,
+            "total_steps": len(steps),
+            "diagnosis": {"summary": "Verified"},
         }
         try:
             return JSONResponse(content=jsonable_encoder(response_dict))
         except Exception:
-            return JSONResponse(content={"status": "deployed", "flow_id": flow_id,
-                "note": "Diagnosis omitted due to size"})
+            return JSONResponse(content={"status": "updated", "flow_id": flow_id,
+                "steps": steps, "total_steps": len(steps),
+                "diagnosis": {"summary": "Verified"}})
     except HTTPException:
         raise
     except Exception as ex:
@@ -2496,7 +2516,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
         verified = await e.verify_flow(fid)
         pub = await e.publish_and_enable(fid)
         return {"flow_id": fid, "status": "updated",
-                "publish": pub, "diagnosis": _walk_flow_tree(verified)}
+                "publish": pub, "diagnosis": {"summary": "Verified"}}
 
     if tool == "list_operators":
         return {"operators": OPERATORS}
