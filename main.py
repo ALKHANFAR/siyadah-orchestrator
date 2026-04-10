@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v6.2.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v6.3.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.2.0"
+VERSION = "6.3.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -880,9 +880,17 @@ async def _build_step_from_spec(
                     if (isinstance(_fi, dict) and _fi.get("required", False)
                             and (_fn not in cleaned_cfg
                                  or cleaned_cfg[_fn] in (None, "", []))):
-                        cleaned_cfg[_fn] = "Siyadah Auto-Fill"
-                        log.info("[auto-fill] %s.%s → 'Siyadah Auto-Fill'",
-                                 sname, _fn)
+                        _ptype = _fi.get("type", "")
+                        if _ptype == "BOOLEAN":
+                            cleaned_cfg[_fn] = False
+                        elif _ptype == "NUMBER":
+                            cleaned_cfg[_fn] = 0
+                        elif _ptype == "ARRAY":
+                            cleaned_cfg[_fn] = []
+                        else:
+                            cleaned_cfg[_fn] = "Siyadah Auto-Fill"
+                        log.info("[auto-fill] %s.%s → %r (type=%s)",
+                                 sname, _fn, cleaned_cfg[_fn], _ptype)
 
             ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
@@ -1105,7 +1113,7 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
         if "google-sheets" in settings.get("pieceName", ""):
             inp = settings.get("input", {})
             sid = inp.get("spreadsheetId") or inp.get("spreadsheet_id")
-            if sid and not str(sid).startswith("{{"):
+            if sid and not str(sid).startswith("{{") and sid != "Siyadah Auto-Fill":
                 return sid
         for key in ("nextAction", "firstLoopAction"):
             found = _extract_sheet_id(node.get(key))
@@ -1915,8 +1923,17 @@ async def v2_build_smart(body: SmartBuildBody):
                     if (isinstance(_fi, dict) and _fi.get("required", False)
                             and (_fn not in cleaned_cfg
                                  or cleaned_cfg[_fn] in (None, "", []))):
-                        cleaned_cfg[_fn] = "Siyadah Auto-Fill"
-                        log.info("[auto-fill] smart-build %s → 'Siyadah Auto-Fill'", _fn)
+                        _ptype = _fi.get("type", "")
+                        if _ptype == "BOOLEAN":
+                            cleaned_cfg[_fn] = False
+                        elif _ptype == "NUMBER":
+                            cleaned_cfg[_fn] = 0
+                        elif _ptype == "ARRAY":
+                            cleaned_cfg[_fn] = []
+                        else:
+                            cleaned_cfg[_fn] = "Siyadah Auto-Fill"
+                        log.info("[auto-fill] smart-build %s → %r (type=%s)",
+                                 _fn, cleaned_cfg[_fn], _ptype)
 
             ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
