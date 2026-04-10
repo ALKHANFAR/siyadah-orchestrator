@@ -1,10 +1,10 @@
 """
-Siyadah Orchestrator v6.5.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v6.6.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
 Rule: propertySettings: {} is MANDATORY in every step settings.
-Built on: 30 March 2026
+Built on: 10 April 2026
 
 Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
               Multi-Tenancy, MCP Execute, Re-import, Diagnose
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.5.0"
+VERSION = "6.6.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -574,7 +574,15 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             elif ptype in ("DROPDOWN", "MULTI_SELECT_DROPDOWN"):
                 settings[pname] = {"type": ptype, "status": "CUSTOM_INPUT"}
             elif ptype == "STATIC_DROPDOWN":
-                settings[pname] = {"type": "STATIC_DROPDOWN"}
+                _sd_opts = pinfo.get("options", []) if isinstance(pinfo, dict) else []
+                _sd_valid = {
+                    (o.get("value") if isinstance(o, dict) else o)
+                    for o in _sd_opts
+                } if _sd_opts else set()
+                if _sd_valid and val not in _sd_valid:
+                    settings[pname] = {"type": "STATIC_DROPDOWN", "status": "CUSTOM_INPUT"}
+                else:
+                    settings[pname] = {"type": "STATIC_DROPDOWN"}
         except Exception as e:
             log.error(f"Error processing field {pname}: {e}")
     return settings
@@ -907,10 +915,24 @@ async def _build_step_from_spec(
                             cleaned_cfg[_fn] = 0
                         elif _ptype == "ARRAY":
                             cleaned_cfg[_fn] = []
+                        elif _ptype in ("STATIC_DROPDOWN", "DROPDOWN"):
+                            _opts = _fi.get("options", [])
+                            if isinstance(_opts, list) and _opts:
+                                _first = _opts[0]
+                                cleaned_cfg[_fn] = _first.get("value", _first) if isinstance(_first, dict) else _first
+                            else:
+                                cleaned_cfg[_fn] = ""
                         else:
                             cleaned_cfg[_fn] = "Siyadah Auto-Fill"
                         log.info("[auto-fill] %s.%s → %r (type=%s)",
                                  sname, _fn, cleaned_cfg[_fn], _ptype)
+
+            # ── Draft Guard: inject missing boolean fields ──
+            if props:
+                for _bn in _BOOLEAN_FIELD_NAMES:
+                    if _bn not in cleaned_cfg and _bn in props:
+                        cleaned_cfg[_bn] = False
+                        log.info("[draft-guard] %s.%s → False (injected missing boolean)", sname, _bn)
 
             ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
@@ -2018,10 +2040,24 @@ async def v2_build_smart(body: SmartBuildBody):
                             cleaned_cfg[_fn] = 0
                         elif _ptype == "ARRAY":
                             cleaned_cfg[_fn] = []
+                        elif _ptype in ("STATIC_DROPDOWN", "DROPDOWN"):
+                            _opts = _fi.get("options", [])
+                            if isinstance(_opts, list) and _opts:
+                                _first = _opts[0]
+                                cleaned_cfg[_fn] = _first.get("value", _first) if isinstance(_first, dict) else _first
+                            else:
+                                cleaned_cfg[_fn] = ""
                         else:
                             cleaned_cfg[_fn] = "Siyadah Auto-Fill"
                         log.info("[auto-fill] smart-build %s → %r (type=%s)",
                                  _fn, cleaned_cfg[_fn], _ptype)
+
+            # ── Draft Guard: inject missing boolean fields ──
+            if props:
+                for _bn in _BOOLEAN_FIELD_NAMES:
+                    if _bn not in cleaned_cfg and _bn in props:
+                        cleaned_cfg[_bn] = False
+                        log.info("[draft-guard] smart-build %s → False (injected missing boolean)", _bn)
 
             ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
