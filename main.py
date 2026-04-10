@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v5.4.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v6.0.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -10,7 +10,7 @@ Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
               Multi-Tenancy, MCP Execute, Re-import, Diagnose
 """
 from __future__ import annotations
-import asyncio, logging, os, re, time as _time, traceback
+import asyncio, json, logging, os, re, time as _time, traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "5.9.0"
+VERSION = "6.0.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -523,6 +523,24 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
                 continue
             val = input_config.get(pname)
             ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
+
+            # ── Type Casting: coerce value to match schema type ──
+            if ptype == "ARRAY" and val is not None and not isinstance(val, list):
+                val = [val]
+                input_config[pname] = val
+            elif ptype == "JSON" and isinstance(val, str):
+                try:
+                    val = json.loads(val)
+                    input_config[pname] = val
+                except (ValueError, TypeError):
+                    pass
+            elif ptype == "NUMBER" and val is not None and not isinstance(val, (int, float)):
+                try:
+                    val = float(val) if "." in str(val) else int(val)
+                    input_config[pname] = val
+                except (ValueError, TypeError):
+                    pass
+
             if ptype == "DYNAMIC":
                 settings[pname] = {"type": "DYNAMIC", "status": "CUSTOM_INPUT"}
             elif _contains_dynamic_ref(val):
@@ -847,6 +865,19 @@ async def _build_step_from_spec(
             resolved_action = _fuzzy_name(
                 spec.get("action_name", ""), schema.get("actions", {}))
             props = get_action_props(schema, resolved_action)
+
+            # ── Smart Auto-Fill: populate missing required fields ──
+            if props:
+                for _fn, _fi in props.items():
+                    if _fn == "auth":
+                        continue
+                    if (isinstance(_fi, dict) and _fi.get("required", False)
+                            and (_fn not in cleaned_cfg
+                                 or cleaned_cfg[_fn] in (None, "", []))):
+                        cleaned_cfg[_fn] = "Siyadah Auto-Fill"
+                        log.info("[auto-fill] %s.%s → 'Siyadah Auto-Fill'",
+                                 sname, _fn)
+
             ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
                 raise HTTPException(
@@ -1002,6 +1033,10 @@ async def _build_action_chain(
 async def golden_build(engine: SiyadahEngine, pid: str, name: str,
                        trigger: dict, *, self_test: bool = True) -> dict:
     """Full Golden Protocol: IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE."""
+    # ── Visibility Guard: unique timestamp + fallback project ──
+    name = f"{name} ({datetime.now().strftime('%H:%M:%S')})"
+    pid = pid or DEFAULT_PID
+
     flow = await engine.create_flow(pid, name)
     fid = flow["id"]
     log.info("[golden] Created flow %s", fid)
@@ -1031,9 +1066,36 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
     if self_test:
         diagnosis = {"summary": "Verified"}
 
+    # ── Smart Link Extraction: find spreadsheetId in trigger tree ──
+    resource_link = None
+
+    def _extract_sheet_id(node):
+        if not node or not isinstance(node, dict):
+            return None
+        settings = node.get("settings", {})
+        if "google-sheets" in settings.get("pieceName", ""):
+            sid = settings.get("input", {}).get("spreadsheetId")
+            if sid and not str(sid).startswith("{{"):
+                return sid
+        for key in ("nextAction", "firstLoopAction"):
+            found = _extract_sheet_id(node.get(key))
+            if found:
+                return found
+        for child in (node.get("children") or []):
+            found = _extract_sheet_id(child)
+            if found:
+                return found
+        return None
+
+    sheet_id = _extract_sheet_id(trigger)
+    if sheet_id:
+        resource_link = f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit"
+        log.info("[golden] Smart Link: %s", resource_link)
+
     return {"flow_id": fid, "trigger_type": ttype,
             "publish": pub, "diagnosis": diagnosis,
-            "webhook_url": webhook_url}
+            "webhook_url": webhook_url,
+            "resource_link": resource_link}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1786,6 +1848,18 @@ async def v2_build_smart(body: SmartBuildBody):
             ver = resolve_piece_version(schema, resolved_piece)
             resolved_action = _fuzzy_name(s.action_name, schema.get("actions", {}))
             props = get_action_props(schema, resolved_action)
+
+            # ── Smart Auto-Fill: populate missing required fields ──
+            if props:
+                for _fn, _fi in props.items():
+                    if _fn == "auth":
+                        continue
+                    if (isinstance(_fi, dict) and _fi.get("required", False)
+                            and (_fn not in cleaned_cfg
+                                 or cleaned_cfg[_fn] in (None, "", []))):
+                        cleaned_cfg[_fn] = "Siyadah Auto-Fill"
+                        log.info("[auto-fill] smart-build %s → 'Siyadah Auto-Fill'", _fn)
+
             ps = generate_property_settings(props, cleaned_cfg)
             if resolved_action not in schema.get("actions", {}):
                 raise HTTPException(400,
