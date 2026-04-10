@@ -1,5 +1,5 @@
 """
-Siyadah Orchestrator v6.3.0 — Async Multi-Tenant Engine
+Siyadah Orchestrator v6.5.0 — Async Multi-Tenant Engine
 ========================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
@@ -27,7 +27,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.4.0"
+VERSION = "6.5.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -544,7 +544,15 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
             ptype = pinfo.get("type", "") if isinstance(pinfo, dict) else str(pinfo)
 
             # ── PRIORITY 2: Type Casting (safe — no dynamic refs here) ──
-            if ptype == "ARRAY" and val is not None and not isinstance(val, list):
+            if ptype == "BOOLEAN":
+                if val is None:
+                    val = False
+                elif isinstance(val, str):
+                    val = val.lower() in ("true", "1", "yes")
+                else:
+                    val = bool(val)
+                input_config[pname] = val
+            elif ptype == "ARRAY" and val is not None and not isinstance(val, list):
                 val = [val]
                 input_config[pname] = val
             elif ptype == "JSON" and isinstance(val, str):
@@ -1059,6 +1067,82 @@ async def _build_action_chain(
 
 
 # ═══════════════════════════════════════════════════════════════
+# SMART PULSE — Context-Aware Activation Payload
+# ═══════════════════════════════════════════════════════════════
+def _collect_pieces(node: dict, result: set):
+    """Walk the trigger tree and collect all piece short-names."""
+    if not node or not isinstance(node, dict):
+        return
+    piece_name = node.get("settings", {}).get("pieceName", "")
+    if piece_name:
+        result.add(piece_name.replace("@activepieces/piece-", ""))
+    for key in ("nextAction", "firstLoopAction"):
+        _collect_pieces(node.get(key), result)
+    for child in (node.get("children") or []):
+        _collect_pieces(child, result)
+
+
+def _build_smart_pulse(trigger: dict) -> dict:
+    """Inspect the flow tree and build a context-aware pulse payload."""
+    pulse: Dict[str, Any] = {
+        "event": "Siyadah_Activation",
+        "status": "Success",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    pieces: set = set()
+    _collect_pieces(trigger, pieces)
+
+    if "gmail" in pieces:
+        pulse["email"] = {
+            "from": "noreply@siyadah.ai",
+            "to": "test@siyadah.ai",
+            "subject": "سيادة — رسالة تفعيل تجريبية",
+            "body": "هذه رسالة تفعيل تلقائية من منسق سيادة.",
+        }
+
+    if "google-sheets" in pieces:
+        pulse["row"] = {
+            "spreadsheet_id": "SAMPLE_SHEET_ID",
+            "sheet_name": "Sheet1",
+            "values": {
+                "الاسم": "عميل تجريبي",
+                "البريد": "test@siyadah.ai",
+                "الهاتف": "+966500000000",
+                "المبلغ": 100.00,
+            },
+        }
+
+    if "slack" in pieces:
+        pulse["message"] = {
+            "channel": "#general",
+            "text": "سيادة — تم تفعيل الأتمتة بنجاح!",
+        }
+
+    if "hubspot" in pieces:
+        pulse["contact"] = {
+            "email": "test@siyadah.ai",
+            "firstname": "عميل",
+            "lastname": "تجريبي",
+            "phone": "+966500000000",
+        }
+
+    if len(pulse) <= 3:
+        pulse["customer"] = {
+            "email": "test@siyadah.ai",
+            "name": "عميل تجريبي",
+            "phone": "+966500000000",
+        }
+        pulse["order"] = {
+            "id": "ORD-TEST-001",
+            "total": 100.00,
+            "currency": "SAR",
+            "status": "created",
+        }
+
+    return pulse
+
+
+# ═══════════════════════════════════════════════════════════════
 # GOLDEN PROTOCOL PIPELINE
 # ═══════════════════════════════════════════════════════════════
 async def golden_build(engine: SiyadahEngine, pid: str, name: str,
@@ -1093,26 +1177,14 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
     pub["version_state"] = final_state
     pub["published_match"] = pub_match
 
-    # ── Universal Pulse: auto-trigger webhook for instant proof ──
+    # ── Context-Aware Smart Pulse ──
     pulse_sent = False
     try:
-        await engine.test_webhook(fid, {
-            "event": "Siyadah_Activation",
-            "status": "Success",
-            "customer": {
-                "email": "test@siyadah.ai",
-                "name": "عميل تجريبي",
-                "phone": "+966500000000",
-            },
-            "order": {
-                "id": "ORD-TEST-001",
-                "total": 100.00,
-                "currency": "SAR",
-                "status": "created",
-            },
-        })
+        pulse_payload = _build_smart_pulse(trigger)
+        await engine.test_webhook(fid, pulse_payload)
         pulse_sent = True
-        log.info("[golden] Universal Pulse sent to %s", fid)
+        ctx_keys = [k for k in pulse_payload if k not in ("event", "status", "timestamp")]
+        log.info("[golden] Smart Pulse sent to %s (context: %s)", fid, ctx_keys)
     except Exception as pulse_err:
         log.warning("[golden] Pulse failed for %s: %s", fid, pulse_err)
 
@@ -1701,14 +1773,13 @@ async def v2_build_dynamic(body: DynamicBuildBody):
                 cleaned_in)
         else:
             ps = {}
-        inp = dict(cleaned_in)
         conn_id = a.get("connection_id", cn.get(short, ""))
         if conn_id:
-            inp["auth"] = C(conn_id)
+            cleaned_in["auth"] = C(conn_id)
         specs_for_chain.append({
             "type": "PIECE", "piece": full_ap,
             "action_name": a.get("action_name", ""),
-            "version": a_ver, "input": inp,
+            "version": a_ver, "input": cleaned_in,
             "display_name": a.get("display_name", f"Action"),
             "property_settings": ps,
         })
@@ -1970,15 +2041,14 @@ async def v2_build_smart(body: SmartBuildBody):
 
         sname = f"step_{counter[0]}"
         counter[0] += 1
-        inp = dict(cleaned_cfg)
         short = resolved_piece.replace("@activepieces/piece-", "")
         conn_id = cn.get(short, "")
-        if conn_id and "auth" not in inp:
-            inp["auth"] = C(conn_id)
+        if conn_id and "auth" not in cleaned_cfg:
+            cleaned_cfg["auth"] = C(conn_id)
 
         full = (resolved_piece if resolved_piece.startswith("@")
                 else f"@activepieces/piece-{resolved_piece}")
-        step = build_action(sname, full, ver, resolved_action, inp,
+        step = build_action(sname, full, ver, resolved_action, cleaned_cfg,
                             s.display_name or f"{short}: {resolved_action}",
                             property_settings=ps)
         built_steps.append(step)
@@ -2167,15 +2237,15 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
             if stype == "PIECE":
                 a_piece = a.get("piece", "")
                 short = a_piece.replace("@activepieces/piece-", "")
-                inp = dict(a.get("input", {}))
+                cleaned_cfg = clean_input_config(dict(a.get("input", {})))
                 conn_id = a.get("connection_id", cn.get(short, ""))
-                if conn_id and "auth" not in inp:
-                    inp["auth"] = C(conn_id)
+                if conn_id and "auth" not in cleaned_cfg:
+                    cleaned_cfg["auth"] = C(conn_id)
                 specs.append({
                     "type": "PIECE", "piece": a_piece,
                     "action_name": a.get("action_name", ""),
                     "version": a.get("version", PIECE_VERSIONS.get(short, "~0.1.0")),
-                    "input": inp,
+                    "input": cleaned_cfg,
                     "display_name": a.get("display_name", "Action"),
                 })
             else:
@@ -2583,13 +2653,12 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
                     cleaned_in)
             else:
                 ps = {}
-            inp = dict(cleaned_in)
             cid = a.get("connection_id", cn.get(short, ""))
-            if cid and "auth" not in inp:
-                inp["auth"] = C(cid)
+            if cid and "auth" not in cleaned_in:
+                cleaned_in["auth"] = C(cid)
             specs.append({"type": "PIECE", "piece": full_ap,
                           "action_name": a.get("action_name", ""),
-                          "version": a_ver, "input": inp,
+                          "version": a_ver, "input": cleaned_in,
                           "display_name": a.get("display_name", "Action"),
                           "property_settings": ps})
         counter = [1]
@@ -2666,13 +2735,13 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
             for a in p.get("actions", []):
                 ap = a.get("piece", "")
                 short = ap.replace("@activepieces/piece-", "")
-                inp = dict(a.get("input", {}))
+                cleaned_cfg = clean_input_config(dict(a.get("input", {})))
                 cid = a.get("connection_id", cn.get(short, ""))
-                if cid and "auth" not in inp:
-                    inp["auth"] = C(cid)
+                if cid and "auth" not in cleaned_cfg:
+                    cleaned_cfg["auth"] = C(cid)
                 specs_u.append({"type": "PIECE", "piece": ap,
                                 "action_name": a.get("action_name", ""),
-                                "input": inp,
+                                "input": cleaned_cfg,
                                 "display_name": a.get("display_name", "Action")})
             first = await _build_action_chain(specs_u, counter, e)
             t = p["trigger"]
