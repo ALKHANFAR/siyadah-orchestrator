@@ -1110,6 +1110,10 @@ def _build_smart_pulse(trigger: dict) -> dict:
         "event": "Siyadah_Activation",
         "status": "Success",
         "timestamp": datetime.now(timezone.utc).isoformat(),
+        "receiver": ["test@siyadah.ai"],
+        "subject": "سيادة — تجربة تفعيل ناجحة",
+        "body": "تهانينا! نظام الأتمتة الخاص بك يعمل الآن بكفاءة.",
+        "values": {"A": "بيانات تجريبية", "B": "نجاح التفعيل"},
     }
     pieces: set = set()
     _collect_pieces(trigger, pieces)
