@@ -1,13 +1,15 @@
 """
-Siyadah Orchestrator v6.6.0 — Async Multi-Tenant Engine
-========================================================
+Siyadah Orchestrator v7.1.0 — The Autonomous SaaS OS
+======================================================
 Golden Protocol v5 (Immunization): IMPORT_FLOW → deterministic webhook URL →
 GET-verify → LOCK_AND_PUBLISH → ENABLE (strict GET confirmation).
 Rule: propertySettings: {} is MANDATORY in every step settings.
-Built on: 10 April 2026
+Built on: 11 April 2026
 
 Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
-              Multi-Tenancy, MCP Execute, Re-import, Diagnose
+              Multi-Tenancy, MCP Execute, MCP SSE, Re-import, Diagnose,
+              Modular Persistence (Postgres), Redis Sessions, Hints,
+              INGESTION, SAAS_ONBOARDING, CONTEXT_AWARE_MCP, PROACTIVE_LOGIC
 """
 from __future__ import annotations
 import asyncio, json, logging, os, re, time as _time, traceback
@@ -15,10 +17,10 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import httpx, uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -27,7 +29,7 @@ from pydantic import BaseModel, Field
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
-VERSION = "6.6.0"
+VERSION = "7.1.0"
 AP_BASE = os.getenv("AP_BASE_URL", "")
 AP_EMAIL = os.getenv("AP_EMAIL", "")
 AP_PASSWORD = os.getenv("AP_PASSWORD", "")
@@ -38,7 +40,7 @@ DEFAULT_CONNECTIONS: Dict[str, str] = {
 }
 ORCH_API_KEY = os.getenv("ORCHESTRATOR_API_KEY", "")
 AP_MCP_URL = os.getenv("AP_MCP_SERVER_URL", "")
-AP_MCP_TOKEN = os.getenv("AP_MCP_TOKEN", "")
+AP_MCP_TOKEN = os.getenv("AP_MCP_TOKEN") or os.getenv("AP_TOKEN", "")
 ORCHESTRATOR_HTTPX_TIMEOUT = int(os.getenv("ORCHESTRATOR_HTTPX_TIMEOUT", "120"))
 
 _BOOLEAN_FIELD_NAMES = frozenset({
@@ -247,9 +249,9 @@ class SiyadahEngine:
     async def delete_flow(self, fid: str):
         return await self._r("DELETE", f"/v1/flows/{fid}")
 
-    async def list_runs(self, pid: str):
+    async def list_runs(self, pid: str, limit: int = 50):
         d = await self._r("GET", "/v1/flow-runs/",
-                          params={"projectId": pid, "limit": "50"})
+                          params={"projectId": pid, "limit": str(limit)})
         return d if isinstance(d, list) else d.get("data", [])
 
     async def get_piece(self, name: str, ver: str | None = None):
@@ -296,6 +298,100 @@ def resolve_conns(override: Dict[str, str] | None) -> Dict[str, str]:
     if override:
         conns.update(override)
     return conns
+
+
+# ═══════════════════════════════════════════════════════════════
+# TOKEN-EFFICIENT RESPONSE COMPRESSION
+# ═══════════════════════════════════════════════════════════════
+
+def compress_response(data, max_list_items: int = 5,
+                      max_str_len: int = 500):
+    """Reduce response payload size for token-efficient AI consumption."""
+    if isinstance(data, dict):
+        return {
+            k: compress_response(v, max_list_items, max_str_len)
+            for k, v in data.items()
+            if v is not None and v != "" and v != [] and v != {}
+        }
+    if isinstance(data, list):
+        compressed = [compress_response(item, max_list_items, max_str_len)
+                      for item in data[:max_list_items]]
+        if len(data) > max_list_items:
+            compressed.append(f"... +{len(data) - max_list_items} more")
+        return compressed
+    if isinstance(data, str) and len(data) > max_str_len:
+        return data[:max_str_len] + "..."
+    return data
+
+
+# ═══════════════════════════════════════════════════════════════
+# AUTO-CONFIGURE AUTONOMOUS SETTINGS FROM ANALYSIS
+# ═══════════════════════════════════════════════════════════════
+
+async def _auto_configure_settings(project_id: str, analysis: dict) -> dict:
+    """Automatically set AutonomousSettings based on ingestion analysis.
+
+    Called after a successful SaaS registration to configure tone,
+    language, smart rules, etc. without manual intervention.
+    """
+    from database import async_session
+    from models import AutonomousSetting
+    from sqlalchemy import select
+
+    if not async_session:
+        return {"auto_configured": False, "reason": "database_offline"}
+
+    ka = analysis.get("knowledge_assets", {})
+    loc = analysis.get("localization", {})
+    bp = analysis.get("business_profile", {})
+
+    client_settings = {
+        "tone_of_voice": ka.get("tone_of_voice", "professional"),
+        "primary_language": loc.get("primary_language", "en"),
+        "sector": bp.get("sector", "general"),
+        "auto_faq_enabled": bool(ka.get("faqs")),
+        "brand_keywords": ka.get("brand_keywords", [])[:10],
+    }
+
+    smart_rules = []
+    if ka.get("faqs"):
+        smart_rules.append({
+            "type": "faq_auto_reply",
+            "enabled": True,
+            "source": "ingestion",
+            "faq_count": len(ka["faqs"]),
+        })
+    if bp.get("goals"):
+        smart_rules.append({
+            "type": "goal_tracking",
+            "enabled": True,
+            "goals": bp["goals"][:3],
+        })
+
+    async with async_session() as session:
+        async with session.begin():
+            setting = (await session.execute(
+                select(AutonomousSetting).where(
+                    AutonomousSetting.project_id == project_id)
+            )).scalar_one_or_none()
+
+            if not setting:
+                setting = AutonomousSetting(project_id=project_id)
+                session.add(setting)
+
+            setting.client_settings = client_settings
+            setting.smart_rules = smart_rules
+            setting.auto_respond = "smart"
+
+    log.info("[auto-config] Settings configured for project %s: sector=%s, rules=%d",
+             project_id, client_settings["sector"], len(smart_rules))
+    return {
+        "auto_configured": True,
+        "tone_of_voice": client_settings["tone_of_voice"],
+        "language": client_settings["primary_language"],
+        "smart_rules_count": len(smart_rules),
+        "auto_respond": "smart",
+    }
 
 
 def _extract_pieces_from_steps(steps) -> List[str]:
@@ -1621,6 +1717,8 @@ def E() -> SiyadahEngine:
 async def lifespan(app: FastAPI):
     global _engine
     log.info("Siyadah Orchestrator v%s starting", VERSION)
+
+    # 1. Authenticate with Activepieces
     if AP_EMAIL and AP_PASSWORD:
         try:
             auth = await SiyadahEngine.sign_in(AP_EMAIL, AP_PASSWORD, AP_BASE)
@@ -1632,14 +1730,39 @@ async def lifespan(app: FastAPI):
                 log.error("No token in auth response")
         except Exception as e:
             log.error("Auth failed: %s", e)
+
+    # 2. Initialize Postgres tables
+    try:
+        from database import init_db
+        await init_db()
+    except Exception as e:
+        log.error("DB init failed (non-fatal): %s", e)
+
+    # 3. Initialize Redis for SSE sessions
+    try:
+        from mcp_sse import init_redis
+        await init_redis()
+    except Exception as e:
+        log.error("Redis init failed (non-fatal): %s", e)
+
     yield
+
+    # Shutdown
     if _engine:
         await _engine.close()
+    try:
+        from mcp_sse import close_redis
+        await close_redis()
+    except Exception:
+        pass
 
 
 app = FastAPI(title="Siyadah Orchestrator", version=VERSION, lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
                    allow_methods=["*"], allow_headers=["*"])
+
+from mcp_sse import router as sse_router  # noqa: E402
+app.include_router(sse_router)
 
 
 @app.middleware("http")
@@ -1659,12 +1782,16 @@ async def api_key_check(request: Request, call_next):
 async def root():
     return {
         "service": "Siyadah Orchestrator", "version": VERSION,
-        "protocol": "Golden v4: IMPORT→VERIFY→LOCK→ENABLE",
+        "protocol": "Golden v5: IMPORT→VERIFY→LOCK→ENABLE",
         "templates": len(TEMPLATES), "presets": list(PRESETS.keys()),
         "capabilities": ["ROUTER", "LOOP", "CODE", "PIECE", "PRESETS",
-                         "SMART_SCHEMA", "MULTI_TENANT", "MCP_EXECUTE"],
+                         "SMART_SCHEMA", "MULTI_TENANT", "MCP_EXECUTE",
+                         "MCP_SSE", "PERSISTENCE", "HINTS",
+                         "INGESTION", "SAAS_ONBOARDING", "CONTEXT_AWARE_MCP"],
         "project_id": DEFAULT_PID,
         "mcp_proxy": bool(AP_MCP_URL),
+        "persistence": bool(os.getenv("DATABASE_URL")),
+        "redis": bool(os.getenv("REDIS_URL")),
         "status": "running",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -2484,12 +2611,999 @@ async def v2_test(flow_id: str, request: Request):
 
 @app.post("/v2/create-project")
 async def v2_project(request: Request):
+    """Create a new Activepieces project (TEAM workspace).
+
+    Note: Activepieces Community Edition typically exposes GET /v1/projects/ only
+    (one personal project per user). POST /v1/projects/ may return 404 — use the
+    Activepieces UI or Enterprise / Cloud API for additional workspaces.
+    """
     e = E()
     body = await request.json()
     name = body.get("client_name", "New Client")
-    return {"status": "created",
-            "project": await e._r("POST", "/v1/projects/",
-                                  {"displayName": name})}
+    try:
+        project = await e._r("POST", "/v1/projects/", {"displayName": name})
+        return {"status": "created", "project": project}
+    except HTTPException as he:
+        if he.status_code in (404, 405):
+            return JSONResponse(
+                status_code=501,
+                content={
+                    "status": "activepieces_ce_no_project_post",
+                    "message": (
+                        "This Activepieces instance did not accept POST /v1/projects/ "
+                        "(common on Community Edition: one workspace per user, no public "
+                        "create-project route). Create the workspace in the Activepieces UI "
+                        "or use Enterprise / cloud API keys."
+                    ),
+                    "requested_name": name,
+                    "detail": str(he.detail)[:500] if he.detail else None,
+                },
+            )
+        raise
+
+
+# ═══════════════════════════════════════════════════════════════
+# V2 — PROJECT MEMORY (Postgres-backed)
+# ═══════════════════════════════════════════════════════════════
+
+def _generate_hint(project_id: str) -> str:
+    """Lightweight synchronous hint — for hot-path responses."""
+    try:
+        from database import async_session
+        if not async_session:
+            return "hint:db_offline|Core automation features still work."
+    except Exception:
+        return "hint:db_offline|Database not configured."
+    return "hint:ready|Use GET /v2/project/{project_id}/hint for full guidance."
+
+
+async def _generate_smart_hint(project_id: str, trigger: str = "general") -> str:
+    """Context-aware async hint that reads DB state to suggest the next best action."""
+    from database import async_session
+    from models import ProjectIdentity, AutonomousSetting
+    from sqlalchemy import select
+
+    if not async_session:
+        return "hint:db_offline|Core features work without DB."
+
+    try:
+        async with async_session() as session:
+            identity = (await session.execute(
+                select(ProjectIdentity).where(ProjectIdentity.project_id == project_id)
+            )).scalar_one_or_none()
+            settings = (await session.execute(
+                select(AutonomousSetting).where(AutonomousSetting.project_id == project_id)
+            )).scalar_one_or_none()
+    except Exception as exc:
+        log.warning("[hint] DB read failed: %s", exc)
+        return "hint:error|Memory check failed. Core features still work."
+
+    if trigger == "post_registration":
+        return (
+            "hint:suggest_flows|"
+            "Registration complete! Call POST /v2/logic/suggest "
+            "to get personalized automation recommendations."
+        )
+
+    if not identity:
+        return "hint:needs_onboarding|Start by calling POST /v2/saas/register to set up your project."
+
+    if not identity.sector or not identity.business_description:
+        return (
+            "hint:incomplete_identity|"
+            "Identity incomplete. Use POST /v2/identity/ingest with your website URL."
+        )
+
+    if not settings or settings.auto_respond == "off":
+        return (
+            "hint:configure_settings|"
+            "Identity ready, but smart rules are off. "
+            "Call POST /v2/logic/suggest to activate sector-specific automations."
+        )
+
+    return "hint:fully_configured|System is fully configured. Build flows or check status."
+
+
+@app.get("/v2/project/{project_id}/hint")
+async def v2_project_hint(project_id: str):
+    """Return AI-facing hint based on project memory completeness."""
+    try:
+        from database import async_session
+        from models import Project, ProjectIdentity, KnowledgeAsset
+        from sqlalchemy import select
+        if not async_session:
+            return {"_hint": "Database not configured. Connect DATABASE_URL to enable memory.",
+                    "memory_status": "offline"}
+
+        async with async_session() as session:
+            proj = (await session.execute(
+                select(Project).where(Project.project_id == project_id)
+            )).scalar_one_or_none()
+
+            if not proj:
+                return {
+                    "_hint": f"Project '{project_id}' not registered. Call POST /v2/project/register first.",
+                    "memory_status": "unregistered",
+                    "next_action": "register_project",
+                }
+
+            identity = (await session.execute(
+                select(ProjectIdentity).where(ProjectIdentity.project_id == project_id)
+            )).scalar_one_or_none()
+
+            knowledge = (await session.execute(
+                select(KnowledgeAsset).where(KnowledgeAsset.project_id == project_id)
+            )).scalar_one_or_none()
+
+        missing = []
+        if not identity or not identity.business_description:
+            missing.append("business_description")
+        if not identity or not identity.sector:
+            missing.append("sector")
+        if not identity or not identity.website_url:
+            missing.append("website_url (needed for absorption)")
+        if not knowledge or not knowledge.faqs:
+            missing.append("faqs")
+        if not knowledge or not knowledge.tone_of_voice:
+            missing.append("tone_of_voice")
+
+        if not missing:
+            return {
+                "_hint": "Project identity complete. Ready for autonomous operations.",
+                "memory_status": "complete",
+                "completeness": 1.0,
+            }
+
+        completeness = 1.0 - (len(missing) / 5.0)
+        if not identity or not identity.website_url:
+            hint = f"Provide the client's website URL to start absorption. Missing: {', '.join(missing)}"
+        else:
+            hint = f"Memory incomplete. Missing: {', '.join(missing)}"
+
+        return {
+            "_hint": hint,
+            "memory_status": "incomplete",
+            "missing_fields": missing,
+            "completeness": round(completeness, 2),
+            "next_action": "provide_website_url" if "website_url" not in str(identity) else "fill_missing",
+        }
+    except Exception as exc:
+        return {"_hint": f"Memory check failed: {str(exc)[:200]}", "memory_status": "error"}
+
+
+class ProjectRegisterBody(BaseModel):
+    project_id: Optional[str] = None
+    name: str = "Siyadah Client"
+    sector: Optional[str] = None
+    language: str = "en"
+    business_description: Optional[str] = None
+    website_url: Optional[str] = None
+
+
+@app.post("/v2/project/register")
+async def v2_project_register(body: ProjectRegisterBody):
+    """Register or update a project in the Siyadah memory layer."""
+    try:
+        from database import async_session
+        from models import Project, ProjectIdentity
+        from sqlalchemy import select
+        if not async_session:
+            raise HTTPException(503, detail="Database not configured")
+
+        pid = body.project_id or DEFAULT_PID
+        async with async_session() as session:
+            async with session.begin():
+                proj = (await session.execute(
+                    select(Project).where(Project.project_id == pid)
+                )).scalar_one_or_none()
+
+                if not proj:
+                    proj = Project(project_id=pid, name=body.name)
+                    session.add(proj)
+                else:
+                    proj.name = body.name
+
+                identity = (await session.execute(
+                    select(ProjectIdentity).where(ProjectIdentity.project_id == pid)
+                )).scalar_one_or_none()
+
+                if not identity:
+                    identity = ProjectIdentity(project_id=pid)
+                    session.add(identity)
+
+                if body.sector:
+                    identity.sector = body.sector
+                if body.language:
+                    identity.language = body.language
+                if body.business_description:
+                    identity.business_description = body.business_description
+                if body.website_url:
+                    identity.website_url = body.website_url
+
+        hint_resp = await v2_project_hint(pid)
+        return {
+            "status": "registered",
+            "project_id": pid,
+            "name": body.name,
+            "_hint": hint_resp.get("_hint", ""),
+            "memory_status": hint_resp.get("memory_status", ""),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(500, detail=f"Registration failed: {str(exc)[:300]}")
+
+
+@app.get("/v2/project/{project_id}/memory")
+async def v2_project_memory(project_id: str):
+    """Full memory dump for a project — identity, knowledge, settings."""
+    try:
+        from database import async_session
+        from models import Project, ProjectIdentity, KnowledgeAsset, AutonomousSetting
+        from sqlalchemy import select
+        if not async_session:
+            raise HTTPException(503, detail="Database not configured")
+
+        async with async_session() as session:
+            proj = (await session.execute(
+                select(Project).where(Project.project_id == project_id)
+            )).scalar_one_or_none()
+            if not proj:
+                raise HTTPException(404, detail=f"Project '{project_id}' not in memory")
+
+            identity = (await session.execute(
+                select(ProjectIdentity).where(ProjectIdentity.project_id == project_id)
+            )).scalar_one_or_none()
+            knowledge = (await session.execute(
+                select(KnowledgeAsset).where(KnowledgeAsset.project_id == project_id)
+            )).scalar_one_or_none()
+            settings = (await session.execute(
+                select(AutonomousSetting).where(AutonomousSetting.project_id == project_id)
+            )).scalar_one_or_none()
+
+        hint_resp = await v2_project_hint(project_id)
+        return {
+            "project": {"id": proj.project_id, "name": proj.name,
+                        "created_at": str(proj.created_at)},
+            "identity": {
+                "sector": identity.sector if identity else None,
+                "language": identity.language if identity else "en",
+                "business_description": identity.business_description if identity else None,
+                "website_url": identity.website_url if identity else None,
+            } if identity else None,
+            "knowledge": {
+                "faqs": knowledge.faqs if knowledge else [],
+                "tone_of_voice": knowledge.tone_of_voice if knowledge else None,
+                "brand_keywords": knowledge.brand_keywords if knowledge else [],
+            } if knowledge else None,
+            "settings": {
+                "client_settings": settings.client_settings if settings else {},
+                "smart_rules": settings.smart_rules if settings else [],
+                "auto_respond": settings.auto_respond if settings else "off",
+            } if settings else None,
+            "_hint": hint_resp.get("_hint", ""),
+            "memory_status": hint_resp.get("memory_status", ""),
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(500, detail=f"Memory read failed: {str(exc)[:300]}")
+
+
+# ═══════════════════════════════════════════════════════════════
+# V2 — IDENTITY INGESTION (Absorption Engine)
+# ═══════════════════════════════════════════════════════════════
+
+class IngestBody(BaseModel):
+    url: str = Field(..., description="Website URL to absorb")
+    project_id: Optional[str] = None
+    preview: bool = Field(False, description="If true, analyze without persisting — for Smart Onboarding review")
+
+
+@app.post("/v2/identity/ingest")
+async def v2_identity_ingest(body: IngestBody):
+    """Universal Absorption Engine — scrape website, AI-analyze, persist identity.
+
+    Modes:
+      - preview=false (default): Scrape → Analyze → Persist → Wow Response
+      - preview=true: Scrape → Analyze → return results for client review (no DB write)
+    """
+    from ingestion import ingest_website, preview_website
+
+    url = body.url.strip()
+    if not url.startswith(("http://", "https://")):
+        url = f"https://{url}"
+
+    try:
+        if body.preview:
+            result = await preview_website(url=url)
+            return result
+
+        pid = body.project_id or DEFAULT_PID
+        result = await ingest_website(url=url, project_id=pid)
+        return result
+    except RuntimeError as exc:
+        raise HTTPException(422, detail=str(exc))
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(
+            502,
+            detail=f"External service error ({exc.response.status_code}): {str(exc)[:200]}",
+        )
+    except Exception as exc:
+        log.error("[ingest] Unexpected error: %s", exc, exc_info=True)
+        raise HTTPException(500, detail=f"Ingestion failed: {str(exc)[:300]}")
+
+
+# ═══════════════════════════════════════════════════════════════
+# V2 — SAAS SMART ONBOARDING
+# ═══════════════════════════════════════════════════════════════
+
+class SaaSRegisterBody(BaseModel):
+    project_name: str = Field("Siyadah Client", description="Display name for the project")
+    url: str = Field(..., description="Website URL (already analyzed via preview)")
+    project_id: Optional[str] = None
+    analysis: Optional[Dict[str, Any]] = Field(None, description="Pre-computed analysis from preview mode")
+    sector: Optional[str] = None
+    language: str = "en"
+
+
+@app.post("/v2/saas/register")
+async def v2_saas_register(body: SaaSRegisterBody):
+    """Smart Onboarding — called when the client confirms after preview.
+
+    Creates the project, persists identity + knowledge, auto-configures
+    AutonomousSettings, and returns personalized suggestions.
+    """
+    import uuid as _uuid_mod
+    from ingestion import ingest_website, persist_analysis
+
+    pid = body.project_id or str(_uuid_mod.uuid4()).replace("-", "")[:20]
+    url = body.url.strip()
+    if not url.startswith(("http://", "https://")):
+        url = f"https://{url}"
+
+    try:
+        if body.analysis:
+            saved = await persist_analysis(
+                pid, url, body.analysis, project_name=body.project_name)
+            analysis = body.analysis
+        else:
+            result = await ingest_website(url=url, project_id=pid)
+            saved = result.get("profile", {})
+            analysis = {
+                "business_profile": {
+                    "sector": saved.get("sector"),
+                    "description": saved.get("description"),
+                    "goals": saved.get("goals", []),
+                },
+                "localization": {"primary_language": saved.get("language", "en")},
+                "knowledge_assets": {
+                    "tone_of_voice": saved.get("tone_of_voice"),
+                    "faqs": [],
+                    "brand_keywords": saved.get("brand_keywords", []),
+                },
+            }
+
+        auto_result = await _auto_configure_settings(pid, analysis)
+
+        bp = analysis.get("business_profile", {})
+        lang = analysis.get("localization", {}).get("primary_language", "en")
+
+        if lang == "ar":
+            summary = (
+                f"تم تسجيل مشروع «{body.project_name}» بنجاح! "
+                f"القطاع: {bp.get('sector', 'عام')}. "
+                f"تم ضبط الإعدادات الذكية تلقائياً."
+            )
+            hint = (
+                "التسجيل مكتمل. استخدم POST /v2/logic/suggest "
+                "للحصول على اقتراحات أتمتة مخصصة لقطاعك."
+            )
+        else:
+            summary = (
+                f"Project «{body.project_name}» registered successfully! "
+                f"Sector: {bp.get('sector', 'General')}. "
+                f"Smart settings auto-configured."
+            )
+            hint = (
+                "Registration complete. Use POST /v2/logic/suggest "
+                "to get personalized automation recommendations for your sector."
+            )
+
+        return {
+            "status": "registered",
+            "project_id": pid,
+            "project_name": body.project_name,
+            "url": url,
+            "sector": bp.get("sector"),
+            "language": lang,
+            "saved": saved,
+            "auto_settings": auto_result,
+            "summary": summary,
+            "_hint": hint,
+        }
+
+    except RuntimeError as exc:
+        raise HTTPException(422, detail=str(exc))
+    except Exception as exc:
+        log.error("[saas-register] Failed: %s", exc, exc_info=True)
+        raise HTTPException(500, detail=f"Registration failed: {str(exc)[:300]}")
+
+
+# ═══════════════════════════════════════════════════════════════
+# V2 — SUGGESTION ENGINE (Sector-Aware Flow Recommendations)
+# ═══════════════════════════════════════════════════════════════
+
+SECTOR_SUGGESTIONS: Dict[str, List[Dict[str, str]]] = {
+    "E-commerce": [
+        {"name": "lead_capture", "title": "نظام التقاط العملاء المحتملين",
+         "title_en": "Lead Capture System",
+         "description": "Webhook → Google Sheets: يسجل كل عميل جديد تلقائياً",
+         "template": "gmail_sheets_logger"},
+        {"name": "smart_reply", "title": "الرد الذكي على الاستفسارات",
+         "title_en": "Smart Auto-Reply",
+         "description": "Webhook → Code (FAQ matching) → Gmail auto-reply",
+         "template": "gmail_autoresponder"},
+        {"name": "daily_report", "title": "تقرير يومي بالطلبات",
+         "title_en": "Daily Orders Report",
+         "description": "Schedule → Sheets aggregation → Gmail daily digest",
+         "template": "scheduled_report"},
+    ],
+    "Healthcare": [
+        {"name": "appointment_flow", "title": "نظام حجز المواعيد",
+         "title_en": "Appointment Booking",
+         "description": "Webhook → Sheets (booking log) → Gmail confirmation",
+         "template": "gmail_sheets_logger"},
+        {"name": "patient_followup", "title": "متابعة المرضى التلقائية",
+         "title_en": "Patient Follow-up",
+         "description": "Schedule → Sheets (patients due) → Gmail follow-up",
+         "template": "gmail_autoresponder"},
+        {"name": "weekly_report", "title": "تقرير أسبوعي",
+         "title_en": "Weekly Health Report",
+         "description": "Schedule → Aggregate data → Email summary",
+         "template": "scheduled_report"},
+    ],
+    "Education": [
+        {"name": "enrollment_tracker", "title": "متابعة التسجيلات",
+         "title_en": "Enrollment Tracker",
+         "description": "Webhook → Sheets (enrollment log) → Confirmation email",
+         "template": "gmail_sheets_logger"},
+        {"name": "student_notifier", "title": "إشعارات الطلاب",
+         "title_en": "Student Notifications",
+         "description": "Schedule → Student list → Bulk email notifications",
+         "template": "gmail_autoresponder"},
+        {"name": "attendance_report", "title": "تقرير الحضور",
+         "title_en": "Attendance Report",
+         "description": "Schedule → Sheets (attendance) → Email digest",
+         "template": "scheduled_report"},
+    ],
+    "Real Estate": [
+        {"name": "property_leads", "title": "التقاط عملاء العقارات",
+         "title_en": "Property Lead Capture",
+         "description": "Webhook → Sheets (lead log) → Agent notification",
+         "template": "gmail_sheets_logger"},
+        {"name": "viewing_scheduler", "title": "جدولة المعاينات",
+         "title_en": "Viewing Scheduler",
+         "description": "Webhook → Sheets → Gmail (viewing confirmation)",
+         "template": "gmail_autoresponder"},
+        {"name": "market_report", "title": "تقرير السوق الأسبوعي",
+         "title_en": "Weekly Market Report",
+         "description": "Schedule → Market data → Email digest",
+         "template": "scheduled_report"},
+    ],
+    "default": [
+        {"name": "lead_capture", "title": "التقاط العملاء المحتملين",
+         "title_en": "Lead Capture",
+         "description": "Webhook → Sheets: auto-log every new lead",
+         "template": "gmail_sheets_logger"},
+        {"name": "auto_responder", "title": "الرد التلقائي الذكي",
+         "title_en": "Smart Auto-Responder",
+         "description": "Webhook → FAQ-aware auto-reply via Gmail",
+         "template": "gmail_autoresponder"},
+        {"name": "scheduled_digest", "title": "تقرير دوري",
+         "title_en": "Scheduled Digest",
+         "description": "Schedule → Aggregate → Email summary",
+         "template": "scheduled_report"},
+    ],
+}
+
+
+class SuggestBody(BaseModel):
+    project_id: Optional[str] = None
+
+
+@app.post("/v2/logic/suggest")
+async def v2_logic_suggest(body: SuggestBody):
+    """Sector-aware suggestion engine — returns 3 personalized flow recommendations.
+
+    Analyzes the project's identity and proposes automation flows that
+    match its sector, language, and business goals.
+    """
+    from database import async_session
+    from models import ProjectIdentity, KnowledgeAsset
+    from sqlalchemy import select
+
+    pid = body.project_id or DEFAULT_PID
+
+    sector = "default"
+    lang = "en"
+    tone = "professional"
+    goals: List[str] = []
+
+    if async_session:
+        try:
+            async with async_session() as session:
+                identity = (await session.execute(
+                    select(ProjectIdentity).where(ProjectIdentity.project_id == pid)
+                )).scalar_one_or_none()
+                knowledge = (await session.execute(
+                    select(KnowledgeAsset).where(KnowledgeAsset.project_id == pid)
+                )).scalar_one_or_none()
+
+            if identity:
+                sector = identity.sector or "default"
+                lang = identity.language or "en"
+            if knowledge:
+                tone = knowledge.tone_of_voice or "professional"
+        except Exception as exc:
+            log.warning("[suggest] DB read failed: %s", exc)
+
+    raw_suggestions = SECTOR_SUGGESTIONS.get(sector, SECTOR_SUGGESTIONS["default"])
+
+    suggestions = []
+    for s in raw_suggestions[:3]:
+        entry = {
+            "name": s["name"],
+            "title": s["title"] if lang == "ar" else s.get("title_en", s["title"]),
+            "description": s["description"],
+            "template": s.get("template"),
+            "project_id": pid,
+            "ready_to_build": True,
+        }
+        suggestions.append(entry)
+
+    if lang == "ar":
+        hint = (
+            f"بناءً على قطاع «{sector}»، نقترح {len(suggestions)} فلوهات أتمتة. "
+            "اختر أحدها أو اطلب فلو مخصص."
+        )
+    else:
+        hint = (
+            f"Based on sector «{sector}», we suggest {len(suggestions)} automation flows. "
+            "Pick one or request a custom flow."
+        )
+
+    return {
+        "project_id": pid,
+        "sector": sector,
+        "language": lang,
+        "tone_of_voice": tone,
+        "suggestions": suggestions,
+        "_hint": hint,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════
+# V2 — PROACTIVE ENGINE (identity × Mem success patterns × flow health)
+# ═══════════════════════════════════════════════════════════════
+
+SMART_HINT_TYPES = frozenset({"OPPORTUNITY", "WARNING", "SUCCESS_STORY", "INFO"})
+
+
+def smart_hint_notification(
+    hint_type: str,
+    message: str,
+    **extra: Any,
+) -> Dict[str, Any]:
+    """Structured `_hint` for proactive UI — types: OPPORTUNITY, WARNING, SUCCESS_STORY, INFO."""
+    ht = hint_type if hint_type in SMART_HINT_TYPES else "INFO"
+    out: Dict[str, Any] = {"type": ht, "message": message}
+    if extra:
+        out["meta"] = extra
+    return out
+
+
+_V2_DEFAULT_SUCCESS_PATTERNS: List[Dict[str, Any]] = [
+    {
+        "id": "faq_intelligence_gap",
+        "sectors": ["E-commerce", "Healthcare", "Education", "Real Estate", "default"],
+        "when_missing": ["faqs"],
+        "title_en": "FAQ layer missing — peers automate first-line support",
+        "title_ar": "طبقة الأسئلة الشائعة مفقودة — الناجحون يؤتمتون الاستجابة الأولى",
+        "body_en": (
+            "Similar businesses already distilled FAQs into memory so flows can answer without human delay. "
+            "Capturing yours unlocks FAQ-aware replies and fewer ticket escalations."
+        ),
+        "body_ar": (
+            "الشركات المشابهة خزّنت أسئلة شائعة في الذاكرة لتردّ الفلوهات دون تأخير بشري. "
+            "تسجيل أسئلتك يفتح ردوداً ذكية ويقلّل تصعيد التذاكر."
+        ),
+        "related_template": "gmail_autoresponder",
+        "benchmark": (
+            "SUCCESS_STORY: Teams that ship FAQ-backed automations typically cut first-response latency sharply."
+        ),
+    },
+    {
+        "id": "tone_guardrails",
+        "sectors": ["E-commerce", "Healthcare", "Education", "Real Estate", "default"],
+        "when_missing": ["tone_of_voice"],
+        "title_en": "Brand voice not locked — automations risk sounding generic",
+        "title_ar": "صوت العلامة غير مضبوط — الأتمتة قد تبدو عامة",
+        "body_en": (
+            "High-performing clients define tone in institutional memory before scaling webhooks and email flows."
+        ),
+        "body_ar": (
+            "العملاء الأعلى أداءً يحددون نبرة الصوت في الذاكرة المؤسسية قبل توسيع الويب هوك والبريد."
+        ),
+        "related_template": "gmail_autoresponder",
+        "benchmark": (
+            "SUCCESS_STORY: Consistent tone in memory removes most rewrite cycles before go-live."
+        ),
+    },
+    {
+        "id": "lead_logging_discipline",
+        "sectors": ["E-commerce", "Real Estate", "default"],
+        "when_missing": [],
+        "title_en": "Add automatic lead logging to Sheets",
+        "title_ar": "أضف تسجيلاً تلقائياً للعملاء في Sheets",
+        "body_en": (
+            "Stores and agencies in your sector route every webhook capture into Sheets before enrichment — "
+            "a high-signal step teams often postpone."
+        ),
+        "body_ar": (
+            "المتاجر والوكالات في قطاعك يوجّهون كل التقاط ويب هوك إلى Sheets قبل الإثراء — "
+            "خطوة عالية الإشارة غالباً ما تُؤجّل."
+        ),
+        "related_template": "gmail_sheets_logger",
+        "benchmark": (
+            "SUCCESS_STORY: Central lead logs make downstream AI routing and QA far easier."
+        ),
+    },
+    {
+        "id": "scheduled_digest_maturity",
+        "sectors": ["Healthcare", "Education", "E-commerce", "default"],
+        "when_missing": [],
+        "title_en": "No scheduled executive digest yet",
+        "title_ar": "لا يوجد ملخص مجدول لصنع القرار بعد",
+        "body_en": (
+            "Mature ops stacks add a gentle scheduled digest so owners see drift before customers complain."
+        ),
+        "body_ar": (
+            "العمليات الناضجة تضيف ملخصاً مجدولاً ليرى المالك الانحراف قبل شكوى العملاء."
+        ),
+        "related_template": "scheduled_report",
+        "benchmark": (
+            "SUCCESS_STORY: Scheduled digests correlate with fewer silent automation failures."
+        ),
+    },
+    {
+        "id": "website_absorption_stale",
+        "sectors": ["E-commerce", "Healthcare", "Education", "Real Estate", "default"],
+        "when_missing": ["website_url_fresh"],
+        "title_en": "Refresh website absorption",
+        "title_ar": "حدّث امتصاص الموقع",
+        "body_en": (
+            "Your public site evolves — re-absorbing keeps sector signals, tone, and FAQs aligned with reality."
+        ),
+        "body_ar": (
+            "الموقع العلني يتغيّر — إعادة الامتصاص تحافظ على القطاع والنبرة والأسئلة الشائعة واقعية."
+        ),
+        "related_template": "gmail_sheets_logger",
+        "benchmark": (
+            "SUCCESS_STORY: Quarterly absorption refreshes keep proactive logic eerily accurate."
+        ),
+    },
+]
+
+
+def _pattern_sector_match(pattern: Dict[str, Any], sector: str) -> bool:
+    sectors = pattern.get("sectors") or ["default"]
+    if "default" in sectors:
+        return True
+    return sector in sectors
+
+
+def _identity_missing_signals(identity: Any, knowledge: Any) -> Dict[str, bool]:
+    """True means 'missing or stale' for pattern matching."""
+    missing: Dict[str, bool] = {
+        "faqs": True,
+        "tone_of_voice": True,
+        "website_url_fresh": True,
+    }
+    if knowledge and knowledge.faqs and len(knowledge.faqs) > 0:
+        missing["faqs"] = False
+    if knowledge and getattr(knowledge, "tone_of_voice", None):
+        missing["tone_of_voice"] = False
+    if identity and identity.website_url and identity.absorbed_at:
+        age = datetime.now(timezone.utc) - identity.absorbed_at
+        if age < timedelta(days=90):
+            missing["website_url_fresh"] = False
+    elif identity and identity.website_url and not identity.absorbed_at:
+        missing["website_url_fresh"] = True
+    elif identity and identity.website_url:
+        missing["website_url_fresh"] = True
+    return missing
+
+
+def _misses_pattern(
+    pattern: Dict[str, Any],
+    sector: str,
+    signals: Dict[str, bool],
+    adopted_templates: set[str],
+) -> bool:
+    if not _pattern_sector_match(pattern, sector):
+        return False
+    inner_wm = list(pattern.get("when_missing") or [])
+    for field in inner_wm:
+        if signals.get(field):
+            return True
+    if not inner_wm:
+        tpl = pattern.get("related_template") or ""
+        return bool(tpl) and tpl not in adopted_templates
+    return False
+
+
+async def _load_merged_success_patterns(project_id: str) -> List[Dict[str, Any]]:
+    from database import async_session
+    from models import AutonomousSetting
+    from sqlalchemy import select
+
+    merged = [dict(p) for p in _V2_DEFAULT_SUCCESS_PATTERNS]
+    if not async_session:
+        return merged
+    try:
+        async with async_session() as session:
+            setting = (await session.execute(
+                select(AutonomousSetting).where(AutonomousSetting.project_id == project_id)
+            )).scalar_one_or_none()
+        extra = (setting.client_settings or {}).get("success_patterns") if setting else None
+        if isinstance(extra, list):
+            for row in extra:
+                if isinstance(row, dict) and row.get("id"):
+                    merged.append(row)
+    except Exception as exc:
+        log.warning("[proactive] mem patterns load failed: %s", exc)
+    return merged
+
+
+async def _load_adopted_templates(project_id: str) -> set[str]:
+    from database import async_session
+    from models import AutonomousSetting
+    from sqlalchemy import select
+
+    if not async_session:
+        return set()
+    try:
+        async with async_session() as session:
+            setting = (await session.execute(
+                select(AutonomousSetting).where(AutonomousSetting.project_id == project_id)
+            )).scalar_one_or_none()
+        raw = (setting.client_settings or {}).get("adopted_templates") if setting else None
+        if isinstance(raw, list):
+            return {str(x) for x in raw}
+    except Exception as exc:
+        log.warning("[proactive] adopted_templates load failed: %s", exc)
+    return set()
+
+
+async def proactive_flow_health_scan(project_id: str) -> List[Dict[str, Any]]:
+    """Last up to 10 runs per flow; emit WARNING `_hint` when failure rate > 50% (≥5 samples)."""
+    alerts: List[Dict[str, Any]] = []
+    if not project_id:
+        return alerts
+    try:
+        e = E()
+        flows = await e.list_flows(project_id)
+        runs = await e.list_runs(project_id, limit=300)
+    except Exception as exc:
+        log.warning("[proactive] health scan AP error: %s", exc)
+        return alerts
+
+    by_flow: Dict[str, List[dict]] = {}
+    for r in runs or []:
+        fid = r.get("flowId") or r.get("flow_id")
+        if not fid:
+            continue
+        by_flow.setdefault(str(fid), []).append(r)
+
+    flow_meta = {str(f.get("id")): f for f in flows if f.get("id")}
+
+    fail_status = frozenset(s.upper() for s in ("FAILED", "FAILURE", "CRASHED"))
+
+    for fid, fruns in by_flow.items():
+        fruns.sort(key=lambda x: str(x.get("created") or ""), reverse=True)
+        sample = fruns[:10]
+        if len(sample) < 5:
+            continue
+        failed = sum(1 for x in sample if str(x.get("status", "")).upper() in fail_status)
+        rate = failed / len(sample)
+        if rate <= 0.5:
+            continue
+        meta = flow_meta.get(fid, {})
+        ver = meta.get("version") if isinstance(meta.get("version"), dict) else {}
+        name = ver.get("displayName") or meta.get("displayName") or fid
+        msg_en = (
+            f"Flow «{name}» failed {failed}/{len(sample)} of the last runs (>50%). "
+            "Repair steps or connections, then re-test the webhook or trigger."
+        )
+        msg_ar = (
+            f"الفلو «{name}» فشل {failed} من {len(sample)} في آخر التشغيلات (>50٪). "
+            "راجع الخطوات أو الاتصالات ثم أعد اختبار الويب هوك أو المحفّز."
+        )
+        alerts.append({
+            "flow_id": fid,
+            "flow_name": name,
+            "sample_size": len(sample),
+            "failed_count": failed,
+            "failure_rate": round(rate, 3),
+            "hint_type": "WARNING",
+            "_hint": smart_hint_notification("WARNING", msg_en, flow_id=fid, flow_name=name),
+            "_hint_ar": smart_hint_notification("WARNING", msg_ar, flow_id=fid, flow_name=name),
+        })
+    return alerts
+
+
+def _benchmark_to_success_story(benchmark: str, pattern_id: str) -> Dict[str, Any]:
+    msg = benchmark.replace("SUCCESS_STORY: ", "", 1).strip()
+    return {
+        "pattern_id": pattern_id,
+        "hint_type": "SUCCESS_STORY",
+        "message": msg,
+        "_hint": smart_hint_notification("SUCCESS_STORY", msg, pattern_id=pattern_id),
+    }
+
+
+async def _build_missed_opportunities(
+    project_id: str,
+    lang: str,
+) -> tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    """Return (missed_opportunities, success_stories)."""
+    from database import async_session
+    from models import ProjectIdentity, KnowledgeAsset
+    from sqlalchemy import select
+
+    missed: List[Dict[str, Any]] = []
+    stories: List[Dict[str, Any]] = []
+
+    sector = "default"
+    identity = None
+    knowledge = None
+
+    if async_session:
+        try:
+            async with async_session() as session:
+                identity = (await session.execute(
+                    select(ProjectIdentity).where(ProjectIdentity.project_id == project_id)
+                )).scalar_one_or_none()
+                knowledge = (await session.execute(
+                    select(KnowledgeAsset).where(KnowledgeAsset.project_id == project_id)
+                )).scalar_one_or_none()
+        except Exception as exc:
+            log.warning("[proactive] identity read failed: %s", exc)
+
+    if identity and identity.sector:
+        sector = identity.sector
+    signals = _identity_missing_signals(identity, knowledge)
+    patterns = await _load_merged_success_patterns(project_id)
+    adopted = await _load_adopted_templates(project_id)
+
+    for p in patterns:
+        if not _misses_pattern(p, sector, signals, adopted):
+            continue
+        title = p["title_ar"] if lang == "ar" else p.get("title_en", p.get("title_ar", ""))
+        body = p["body_ar"] if lang == "ar" else p.get("body_en", p.get("body_ar", ""))
+        missed.append({
+            "pattern_id": p["id"],
+            "title": title,
+            "description": body,
+            "related_template": p.get("related_template"),
+            "hint_type": "OPPORTUNITY",
+            "_hint": smart_hint_notification(
+                "OPPORTUNITY",
+                f"{title} — {body}"[:900],
+                pattern_id=p["id"],
+                related_template=p.get("related_template"),
+            ),
+        })
+        bench = p.get("benchmark")
+        if bench and len(stories) < 4:
+            stories.append(_benchmark_to_success_story(str(bench), str(p["id"])))
+
+    if not missed:
+        if lang == "ar":
+            stories.append({
+                "pattern_id": "baseline_delight_ar",
+                "hint_type": "SUCCESS_STORY",
+                "message": (
+                    "الذاكرة المؤسسية متناغمة مع أنماط النجاح — الخطوة التالية: ربط الويب هوك بمراقبة جودة صامتة."
+                ),
+                "_hint": smart_hint_notification(
+                    "SUCCESS_STORY",
+                    "الذاكرة المؤسسية متناغمة مع أنماط النجاح — ربط الويب هوك بمراقبة جودة صامتة.",
+                ),
+            })
+        else:
+            stories.append({
+                "pattern_id": "baseline_delight_en",
+                "hint_type": "SUCCESS_STORY",
+                "message": (
+                    "Institutional memory already matches proven success patterns — "
+                    "next winners wire webhooks into silent quality monitors."
+                ),
+                "_hint": smart_hint_notification(
+                    "SUCCESS_STORY",
+                    (
+                        "Institutional memory already matches proven success patterns — "
+                        "next winners wire webhooks into silent quality monitors."
+                    ),
+                ),
+            })
+
+    return missed, stories
+
+
+@app.get("/v2/logic/proactive-suggestions")
+async def v2_logic_proactive_suggestions(
+    project_id: Optional[str] = Query(
+        default=None,
+        description="Tenant project id (defaults to AP_PROJECT_ID).",
+    ),
+):
+    """Compare ProjectIdentity + knowledge to success patterns in Mem; add per-flow health WARNING hints."""
+    pid = project_id or DEFAULT_PID
+    lang = "en"
+    from database import async_session
+    from models import ProjectIdentity
+    from sqlalchemy import select
+    if async_session:
+        try:
+            async with async_session() as session:
+                ident = (await session.execute(
+                    select(ProjectIdentity).where(ProjectIdentity.project_id == pid)
+                )).scalar_one_or_none()
+            if ident and ident.language:
+                lang = ident.language
+        except Exception:
+            pass
+
+    missed, stories = await _build_missed_opportunities(pid, lang)
+    health = await proactive_flow_health_scan(pid)
+
+    if health:
+        h0 = health[0]
+        primary = h0.get("_hint_ar") if lang == "ar" else h0["_hint"]
+        agg = smart_hint_notification(
+            "WARNING",
+            primary["message"],
+            flows_in_alarm=len(health),
+        )
+    elif missed:
+        m0 = missed[0]
+        agg = dict(m0["_hint"])
+        if lang == "ar":
+            agg = smart_hint_notification(
+                "OPPORTUNITY",
+                f"{m0['title']} — {m0['description']}"[:900],
+                pattern_id=m0["pattern_id"],
+            )
+    elif stories:
+        agg = dict(stories[0]["_hint"])
+    else:
+        msg = (
+            "لا توجد تنبيهات صحية بارزة؛ راقب لوحة التشغيل للمزيد."
+            if lang == "ar"
+            else "No urgent health signals — keep an eye on runs for new patterns."
+        )
+        agg = smart_hint_notification("INFO", msg)
+
+    return {
+        "project_id": pid,
+        "language": lang,
+        "missed_opportunities": missed,
+        "flow_health_alerts": health,
+        "success_stories": stories[:6],
+        "_hint": agg,
+    }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2586,21 +3700,43 @@ async def v2_mcp_tools():
         {"name": "list_operators",
          "description": "List available condition operators for ROUTER branches",
          "parameters": {"type": "object", "properties": {}, "required": []}},
+        {"name": "ingest_website",
+         "description": "Absorb a website: scrape it, AI-analyze it, and save the business identity to memory",
+         "parameters": {"type": "object", "properties": {
+             "url": {"type": "string", "description": "Website URL to absorb"},
+             "project_id": {"type": "string", "description": "Optional project override"},
+         }, "required": ["url"]}},
+        {"name": "get_institutional_memory",
+         "description": "Read the company's full identity from memory: sector, FAQs, tone of voice, brand keywords, and smart rules. Use when you need business context for any decision.",
+         "parameters": {"type": "object", "properties": {
+             "project_id": {"type": "string", "description": "Optional project override"},
+         }, "required": []}},
     ]}
+
+
+_DB_ONLY_TOOLS = frozenset({"get_institutional_memory", "list_operators", "list_templates", "list_presets"})
 
 
 @app.post("/v2/mcp/execute")
 async def v2_mcp_execute(body: MCPExecuteBody):
-    """Live MCP Tool Dispatcher — Claude calls tools here."""
-    e = E()
+    """Live MCP Tool Dispatcher — Claude calls tools here.
+    Also used by mcp_sse._execute_mcp_tool for SSE transport.
+    """
     tool = body.tool
     p = body.parameters
     pid = body.project_id or p.get("project_id") or DEFAULT_PID
     cn = resolve_conns(body.connection_ids or p.get("connection_ids"))
 
+    if tool in _DB_ONLY_TOOLS:
+        e = _engine  # may be None — these tools don't need AP
+    else:
+        e = E()
+
     try:
         result = await _mcp_dispatch(e, tool, p, pid, cn)
-        return {"tool": tool, "success": True, "result": result}
+        hint = await _generate_smart_hint(pid)
+        return {"tool": tool, "success": True,
+                "result": compress_response(result), "_hint": hint}
     except HTTPException as he:
         return {"tool": tool, "success": False,
                 "error": he.detail, "status_code": he.status_code}
@@ -2804,6 +3940,62 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
 
     if tool == "list_operators":
         return {"operators": OPERATORS}
+
+    if tool == "ingest_website":
+        from ingestion import ingest_website
+        url = p.get("url", "")
+        if not url:
+            raise HTTPException(400, "url is required for ingest_website")
+        if not url.startswith(("http://", "https://")):
+            url = f"https://{url}"
+        return await ingest_website(url=url, project_id=pid)
+
+    if tool == "get_institutional_memory":
+        from database import async_session as _db_session
+        from models import ProjectIdentity, KnowledgeAsset, AutonomousSetting
+        from sqlalchemy import select as _sel
+
+        if not _db_session:
+            return {"memory_available": False, "reason": "database_offline"}
+
+        async with _db_session() as session:
+            identity = (await session.execute(
+                _sel(ProjectIdentity).where(ProjectIdentity.project_id == pid)
+            )).scalar_one_or_none()
+            knowledge = (await session.execute(
+                _sel(KnowledgeAsset).where(KnowledgeAsset.project_id == pid)
+            )).scalar_one_or_none()
+            settings = (await session.execute(
+                _sel(AutonomousSetting).where(AutonomousSetting.project_id == pid)
+            )).scalar_one_or_none()
+
+        if not identity:
+            return {
+                "memory_available": False,
+                "project_id": pid,
+                "_hint": "No identity found. Use POST /v2/saas/register or POST /v2/identity/ingest first.",
+            }
+
+        return {
+            "memory_available": True,
+            "project_id": pid,
+            "identity": {
+                "sector": identity.sector,
+                "language": identity.language,
+                "description": identity.business_description,
+                "website_url": identity.website_url,
+            },
+            "knowledge": {
+                "faqs": knowledge.faqs if knowledge else [],
+                "tone_of_voice": knowledge.tone_of_voice if knowledge else None,
+                "brand_keywords": knowledge.brand_keywords if knowledge else [],
+            },
+            "settings": {
+                "auto_respond": settings.auto_respond if settings else "off",
+                "smart_rules": settings.smart_rules if settings else [],
+                "client_settings": settings.client_settings if settings else {},
+            },
+        }
 
     raise HTTPException(400, f"Unknown tool: {tool}")
 
