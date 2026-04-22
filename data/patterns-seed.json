@@ -1,0 +1,4302 @@
+{
+  "source": {
+    "origin": "https://cloud.activepieces.com/api/v1/flow-templates (mirrored via AP_TEMPLATES_SOURCE_URL)",
+    "method": "structural_hash",
+    "algorithm": "sha256(type|piece|action traversal)[:12]",
+    "template_count": 420,
+    "extracted_at": "2026-04-22",
+    "note": "Superseded the 147-live-flow extraction. Templates are AP-team-curated, production quality."
+  },
+  "summary": {
+    "unique_signatures": 358,
+    "pattern_candidates": 57,
+    "singleton_templates": 301,
+    "templates_matched_to_patterns": 119,
+    "coverage_pct": 28.3,
+    "templates_with_router": 181,
+    "templates_with_loop": 114,
+    "templates_with_code": 77,
+    "unique_pieces_across_templates": 114
+  },
+  "top_categories": {
+    "Marketing": 62,
+    "Operations": 57,
+    "Sales": 49,
+    "✨ Everyday": 29,
+    "HR": 25,
+    "Customer Service": 24,
+    "Finance": 23,
+    "IT": 21,
+    "Product": 14,
+    "Featured": 13,
+    "Engineering": 12,
+    "Legal": 7,
+    "Agents": 3
+  },
+  "top_pieces": {
+    "google-sheets": 192,
+    "ai": 155,
+    "gmail": 153,
+    "schedule": 115,
+    "slack": 111,
+    "text-ai": 97,
+    "date-helper": 80,
+    "google-drive": 63,
+    "forms": 61,
+    "store": 58,
+    "utility-ai": 54,
+    "http": 51,
+    "data-mapper": 46,
+    "hubspot": 39,
+    "text-helper": 32,
+    "tables": 32,
+    "notion": 31,
+    "openai": 30,
+    "telegram-bot": 29,
+    "salesforce": 26,
+    "pipedrive": 25,
+    "firecrawl": 22,
+    "google-calendar": 20,
+    "perplexity-ai": 19,
+    "google-docs": 18,
+    "delay": 18,
+    "agent": 17,
+    "webhook": 16,
+    "file-helper": 14,
+    "typeform": 14
+  },
+  "patterns": [
+    {
+      "pattern_id": "P01_a13c52e0dcfe",
+      "signature": "a13c52e0dcfe",
+      "rank": 1,
+      "instance_count": 4,
+      "instance_template_ids": [
+        "LZpb2r6vBm4vrRopyfwLD",
+        "QpTPQC175Or6U1yJTg0xj",
+        "fKxjpucSvDV53OImzV6j9",
+        "ty4JUZYqm7pyocJ1Oxnm4"
+      ],
+      "canonical_name": "Monitor Inventory for Low Stock and Expiry",
+      "top_names": {
+        "Monitor Inventory for Low Stock and Expiry": 1,
+        "Inventory Alerts for Low Stock & Expiring Items": 1,
+        "Monitor Pharmacy Stock and Expiry Dates": 1
+      },
+      "categories": {
+        "Operations": 2
+      },
+      "tags": {
+        "null": 6
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        }
+      ],
+      "step_count": 7,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": true,
+      "primary_pieces": [
+        "date-helper",
+        "gmail",
+        "google-sheets"
+      ]
+    },
+    {
+      "pattern_id": "P02_e91b24e21962",
+      "signature": "e91b24e21962",
+      "rank": 2,
+      "instance_count": 3,
+      "instance_template_ids": [
+        "9CV7tn6PEWs9UcRxy8lzm",
+        "UNMkMxq24ywQZOCzp1c4z",
+        "n1SRg67jrHggnjXYRWE75"
+      ],
+      "canonical_name": "Create Odoo CRM Leads from Typeform Responses",
+      "top_names": {
+        "Create Odoo CRM Leads from Typeform Responses": 2,
+        "Create Odoo CRM leads from Typeform responses": 1
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "typeform",
+        "trigger_name": "new_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "odoo",
+          "action": "create_record"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "odoo"
+      ]
+    },
+    {
+      "pattern_id": "P03_76f1079e1ae2",
+      "signature": "76f1079e1ae2",
+      "rank": 3,
+      "instance_count": 3,
+      "instance_template_ids": [
+        "9CssQ40xsg1WT0cR6mzYU",
+        "9FOLnCaWh6q70jYnHDggE",
+        "fdW2nXGk6VzcH5AezjxaG"
+      ],
+      "canonical_name": "Answer Employee Policy Questions Instantly",
+      "top_names": {
+        "Answer Employee Policy Questions Instantly": 1,
+        "Slack Q&A & Summarization Bot": 1,
+        "Linear Support Agent": 1
+      },
+      "categories": {
+        "Customer Service": 2,
+        "HR": 1,
+        "Operations": 1
+      },
+      "tags": {
+        "null": 6
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "slack",
+        "trigger_name": "new_mention"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "ai",
+          "action": "run_agent"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "ai"
+      ]
+    },
+    {
+      "pattern_id": "P04_c7cae0f1d9dd",
+      "signature": "c7cae0f1d9dd",
+      "rank": 4,
+      "instance_count": 3,
+      "instance_template_ids": [
+        "ujGWIsqLHgwnsbQttRb8a",
+        "yOZdeVV02AAPLGbKPm3Wz",
+        "yViDSbjD0m6XliNbTz973"
+      ],
+      "canonical_name": "Crawl a Website Sitemap and Extract All URLs to Google Sheets",
+      "top_names": {
+        "Crawl a Website Sitemap and Extract All URLs to Google Sheets": 1,
+        "Extract URLs From Sitemaps": 1,
+        "Extract Website URLs from Sitemap.XML for SEO Analysis": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "forms",
+        "trigger_name": "form_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        }
+      ],
+      "step_count": 8,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": true,
+      "primary_pieces": [
+        "google-sheets",
+        "http"
+      ]
+    },
+    {
+      "pattern_id": "P05_58f20f2befce",
+      "signature": "58f20f2befce",
+      "rank": 5,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "0YC648max5Da4hfmwfoSp",
+        "yTAIOCrf6tyJUxhej738C"
+      ],
+      "canonical_name": "Auto-Generate and Auto-Fill Business Documents with Google Sheets & Gmail",
+      "top_names": {
+        "Auto-Generate and Auto-Fill Business Documents with Google Sheets & Gmail": 1,
+        "Generate Business Documents from Google Sheets": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "duplicate_file"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-docs",
+          "action": "create_document_based_on_template"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "save_file_as_pdf"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "set_public_access"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        }
+      ],
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "gmail",
+        "google-docs",
+        "google-drive",
+        "google-sheets"
+      ]
+    },
+    {
+      "pattern_id": "P06_6dc4f0d070ee",
+      "signature": "6dc4f0d070ee",
+      "rank": 6,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "2aWqWin0VPLdn10VVTDDN",
+        "6EoGKTWkx4LX5lkaGuqKm"
+      ],
+      "canonical_name": "Convert Audio To Text",
+      "top_names": {
+        "Convert Audio To Text": 1,
+        "Create a Speech-to-Text API with OpenAI GPT4o-mini Transcribe": 1
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "webhook",
+        "trigger_name": "catch_webhook"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "openai",
+          "action": "transcribe"
+        },
+        {
+          "type": "PIECE",
+          "piece": "webhook",
+          "action": "return_response"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "openai",
+        "webhook"
+      ]
+    },
+    {
+      "pattern_id": "P07_14b29ca70616",
+      "signature": "14b29ca70616",
+      "rank": 7,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "5rAMJagGZ3mdf7FjDk0nk",
+        "VkQs1VuAFKlOmInybboR2"
+      ],
+      "canonical_name": "Weekly HubSpot Lead Report to Slack",
+      "top_names": {
+        "Weekly HubSpot Lead Report to Slack": 2
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_week"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "hubspot",
+          "action": "find-contact"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "data-summarizer",
+          "action": "countUniques"
+        },
+        {
+          "type": "PIECE",
+          "piece": "slack",
+          "action": "send_channel_message"
+        }
+      ],
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": true,
+      "primary_pieces": [
+        "data-summarizer",
+        "hubspot",
+        "slack"
+      ]
+    },
+    {
+      "pattern_id": "P08_d5dbf52ef0fd",
+      "signature": "d5dbf52ef0fd",
+      "rank": 8,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "5tmT6B3orQCEqT6cI7YZv",
+        "HTTelIizBlplGCVvVZYWu"
+      ],
+      "canonical_name": "Email Autoresponder",
+      "top_names": {
+        "Email Autoresponder": 1,
+        "Generate Customer Service Replies Automatically": 1
+      },
+      "categories": {
+        "Featured": 1,
+        "Customer Service": 1,
+        "Operations": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "gmail",
+        "trigger_name": "gmail_new_email_received"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "agent",
+        "gmail"
+      ]
+    },
+    {
+      "pattern_id": "P09_3b2b65a16050",
+      "signature": "3b2b65a16050",
+      "rank": 9,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "65UnwXM6jFMMJrLvglLFL",
+        "A99HRfe9WHNPuC5Nnb7BS"
+      ],
+      "canonical_name": "Route GitHub Pull Requests to Discord",
+      "top_names": {
+        "Route GitHub Pull Requests to Discord": 1,
+        "Post Github Pull Requests To Discord": 1
+      },
+      "categories": {
+        "Engineering": 1
+      },
+      "tags": {
+        "null": 5
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "github",
+        "trigger_name": "trigger_pull_request"
+      },
+      "steps": [
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "discord",
+          "action": "sendMessageWithBot"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "put"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "put"
+        },
+        {
+          "type": "PIECE",
+          "piece": "discord",
+          "action": "sendMessageWithBot"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "put"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "put"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "get"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "get"
+        },
+        {
+          "type": "PIECE",
+          "piece": "discord",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "get"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "get"
+        },
+        {
+          "type": "PIECE",
+          "piece": "discord",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "remove_value"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "remove_value"
+        }
+      ],
+      "step_count": 16,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "discord",
+        "store"
+      ]
+    },
+    {
+      "pattern_id": "P10_7167f8f55437",
+      "signature": "7167f8f55437",
+      "rank": 10,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "71gZO0fNzDjf7Zn4uPAlU",
+        "ucHCRVL5Ha1oK81kdHN2Z"
+      ],
+      "canonical_name": "Review Tally Applications",
+      "top_names": {
+        "Review Tally Applications": 1,
+        "Screen Tally Applications and Schedule Interviews": 1
+      },
+      "categories": {
+        "HR": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "webhook",
+        "trigger_name": "catch_webhook"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        },
+        {
+          "type": "PIECE",
+          "piece": "todos",
+          "action": "createTodo"
+        },
+        {
+          "type": "PIECE",
+          "piece": "todos",
+          "action": "wait_for_approval"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        },
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        }
+      ],
+      "step_count": 12,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "agent",
+        "gmail",
+        "google-sheets",
+        "todos"
+      ]
+    },
+    {
+      "pattern_id": "P11_ddae5f993388",
+      "signature": "ddae5f993388",
+      "rank": 11,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "7U0dddyyomgbyMHJxjKzt",
+        "UCUdYbcD51mI3ffAjGU6z"
+      ],
+      "canonical_name": "Daily Task Deadline Reminders",
+      "top_names": {
+        "Daily Task Deadline Reminders": 1,
+        "Deadline Reminders": 1
+      },
+      "categories": {
+        "Featured": 1,
+        "✨ Everyday": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "notion-find-database-item"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "date_difference"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "slack",
+          "action": "send_direct_message"
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "date_difference"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "slack",
+          "action": "send_direct_message"
+        }
+      ],
+      "step_count": 11,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper",
+        "google-sheets",
+        "notion",
+        "slack"
+      ]
+    },
+    {
+      "pattern_id": "P12_114d63d7e5d4",
+      "signature": "114d63d7e5d4",
+      "rank": 12,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "7hFb7aGpciywZ0zuyxGB6",
+        "ZHblvMlS4OAqJDNeIX0aB"
+      ],
+      "canonical_name": "Send Slack Messages for New Trello Cards",
+      "top_names": {
+        "Send Slack Messages for New Trello Cards": 2
+      },
+      "categories": {
+        "✨ Everyday": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "trello",
+        "trigger_name": "new_card"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "slack",
+          "action": "send_direct_message"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "slack"
+      ]
+    },
+    {
+      "pattern_id": "P13_76afdb171fdf",
+      "signature": "76afdb171fdf",
+      "rank": 13,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "98v541o71tUlKyi3HdrZQ",
+        "TwH7lcOk4Ad5imde2rcro"
+      ],
+      "canonical_name": "Send Telegram Notification for New WooCommerce Orders",
+      "top_names": {
+        "Send Telegram Notification for New WooCommerce Orders": 2
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "woocommerce",
+        "trigger_name": "$woocommerce_trigger_order_created"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "telegram-bot",
+          "action": "send_text_message"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "telegram-bot"
+      ]
+    },
+    {
+      "pattern_id": "P14_2776ef6cd8b4",
+      "signature": "2776ef6cd8b4",
+      "rank": 14,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "9yRyypGj5XEnkU3TjfGxk",
+        "mRUBFiGtn6WrqjDKjQXfN"
+      ],
+      "canonical_name": "Gather Complete YouTube Channel Data to Google Sheets",
+      "top_names": {
+        "Gather Complete YouTube Channel Data to Google Sheets": 1,
+        "Track YouTube Channel Data": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "youtube",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        }
+      ],
+      "step_count": 6,
+      "has_router": false,
+      "has_loop": true,
+      "has_code": true,
+      "primary_pieces": [
+        "google-sheets",
+        "youtube"
+      ]
+    },
+    {
+      "pattern_id": "P15_529a57f663ba",
+      "signature": "529a57f663ba",
+      "rank": 15,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "A1KFRYu4Y35a3lFteeM2V",
+        "LW75SRA1Fkvfa0sYAx6RN"
+      ],
+      "canonical_name": "Sync Google Contacts to ActiveCampaign ",
+      "top_names": {
+        "Sync Google Contacts to ActiveCampaign ": 1,
+        "Create new rows in Google Sheets and new contacts in ActiveCampaign from new Google Contacts": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-contacts",
+        "trigger_name": "new_or_updated_contact"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "data-mapper",
+          "action": "advanced_mapping"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "activecampaign",
+          "action": "activecampaign_update_contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        },
+        {
+          "type": "PIECE",
+          "piece": "activecampaign",
+          "action": "activecampaign_create_contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        }
+      ],
+      "step_count": 7,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "activecampaign",
+        "data-mapper",
+        "google-sheets"
+      ]
+    },
+    {
+      "pattern_id": "P16_d8f7acf17c47",
+      "signature": "d8f7acf17c47",
+      "rank": 16,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "C5byjN85o2N6gHZotWy8t",
+        "wfMbN3gTudGz37xb506EV"
+      ],
+      "canonical_name": "Salesforce Lead Capture with GPT-4 Personalized Email & SMS Follow-Up",
+      "top_names": {
+        "Salesforce Lead Capture with GPT-4 Personalized Email & SMS Follow-Up": 1,
+        "Score Salesforce Leads Securely": 1
+      },
+      "categories": {
+        "Sales": 2
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "forms",
+        "trigger_name": "form_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "create_lead"
+        },
+        {
+          "type": "PIECE",
+          "piece": "ai",
+          "action": "askAi"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "seven",
+          "action": "send-sms"
+        }
+      ],
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "salesforce",
+        "seven"
+      ]
+    },
+    {
+      "pattern_id": "P17_833a1043258d",
+      "signature": "833a1043258d",
+      "rank": 17,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "CamVBTBZJlA1fVpa70heH",
+        "ReEH4KO3DuvNGgB5ZFsDF"
+      ],
+      "canonical_name": "Create Trello cards from new Google Forms responses",
+      "top_names": {
+        "Create Trello cards from new Google Forms responses": 1,
+        "Create Trello Cards from New Google Forms Responses": 1
+      },
+      "categories": {
+        "✨ Everyday": 1,
+        "Product": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-forms",
+        "trigger_name": "new_response"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "trello",
+          "action": "create_card"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "trello"
+      ]
+    },
+    {
+      "pattern_id": "P18_fddb3aa699fa",
+      "signature": "fddb3aa699fa",
+      "rank": 18,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "Cs0XfftENN4kaTbuFImu8",
+        "RjiVKR1P3m5MrpclcA8o3"
+      ],
+      "canonical_name": "Salesforce Lead Capture with GPT-5 Personalized Email & SMS Follow-Up",
+      "top_names": {
+        "Salesforce Lead Capture with GPT-5 Personalized Email & SMS Follow-Up": 1,
+        "Salesforce Lead Capture with GPT-4 Personalized Email & SMS Follow-Up": 1
+      },
+      "categories": {},
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "forms",
+        "trigger_name": "form_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "create_lead"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-ai",
+          "action": "askAi"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "seven",
+          "action": "send-sms"
+        }
+      ],
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "gmail",
+        "salesforce",
+        "seven",
+        "text-ai"
+      ]
+    },
+    {
+      "pattern_id": "P19_04b88b600f2b",
+      "signature": "04b88b600f2b",
+      "rank": 19,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "EYdB2GfNhkT5PGkNd17AG",
+        "FWByFHajLTj5OsfR4DTgs"
+      ],
+      "canonical_name": "Lead Generation",
+      "top_names": {
+        "Lead Generation": 1,
+        "Lead-Gen Flow": 1
+      },
+      "categories": {},
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "slack",
+        "trigger_name": "new-message-in-channel"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "utility-ai",
+          "action": "extractStructuredData"
+        },
+        {
+          "type": "PIECE",
+          "piece": "serp-api",
+          "action": "google_search"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "exa",
+          "action": "generate_answer"
+        },
+        {
+          "type": "PIECE",
+          "piece": "utility-ai",
+          "action": "extractStructuredData"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "utility-ai",
+          "action": "extractStructuredData"
+        },
+        {
+          "type": "PIECE",
+          "piece": "json",
+          "action": "convert_text_to_json"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "tables",
+          "action": "tables-create-records"
+        },
+        {
+          "type": "PIECE",
+          "piece": "utility-ai",
+          "action": "extractStructuredData"
+        },
+        {
+          "type": "PIECE",
+          "piece": "tables",
+          "action": "tables-create-records"
+        }
+      ],
+      "step_count": 12,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "exa",
+        "gmail",
+        "json",
+        "serp-api",
+        "tables",
+        "utility-ai"
+      ]
+    },
+    {
+      "pattern_id": "P20_42531cafb453",
+      "signature": "42531cafb453",
+      "rank": 20,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "GVivn5s07wlSWwCurhmxZ",
+        "OSOvCTgSh6SrVuaKXRjoj"
+      ],
+      "canonical_name": "Automatic Scraping of Company Information Before Call",
+      "top_names": {
+        "Automatic Scraping of Company Information Before Call": 1,
+        "Gather Company Insights Before Sales Calls": 1
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-calendar",
+          "action": "google_calendar_get_events"
+        },
+        {
+          "type": "PIECE",
+          "piece": "perplexity-ai",
+          "action": "ask-ai"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-docs",
+          "action": "create_document"
+        }
+      ],
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper",
+        "google-calendar",
+        "google-docs",
+        "perplexity-ai"
+      ]
+    },
+    {
+      "pattern_id": "P21_08b071f74d43",
+      "signature": "08b071f74d43",
+      "rank": 21,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "GXatxWVoQyW8GQMTRHl22",
+        "hcQF9OmMe4Ks3Goosw4yv"
+      ],
+      "canonical_name": "Create Zendesk tickets from new Typeform responses",
+      "top_names": {
+        "Create Zendesk tickets from new Typeform responses": 1,
+        "Create Zendesk Tickets From Typeform Responses": 1
+      },
+      "categories": {
+        "Customer Service": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "typeform",
+        "trigger_name": "new_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "zendesk",
+          "action": "create-ticket"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "zendesk"
+      ]
+    },
+    {
+      "pattern_id": "P22_1cf873a75fd0",
+      "signature": "1cf873a75fd0",
+      "rank": 22,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "GbWrCfYHBVYWxSe7Xluza",
+        "uEGsIS7rOi0F1KWjDqQhS"
+      ],
+      "canonical_name": "Extract Facebook Group Posts with Apify",
+      "top_names": {
+        "Extract Facebook Group Posts with Apify": 2
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "forms",
+        "trigger_name": "form_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "apify",
+          "action": "startActor"
+        },
+        {
+          "type": "PIECE",
+          "piece": "delay",
+          "action": "delayFor"
+        },
+        {
+          "type": "PIECE",
+          "piece": "apify",
+          "action": "getDatasetItems"
+        },
+        {
+          "type": "PIECE",
+          "piece": "csv",
+          "action": "convert_json_to_csv"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "google-sheets-insert-multiple-rows"
+        }
+      ],
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "apify",
+        "csv",
+        "delay",
+        "google-sheets"
+      ]
+    },
+    {
+      "pattern_id": "P23_d698f2513bbd",
+      "signature": "d698f2513bbd",
+      "rank": 23,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "IE3ACLxAV9hlgdpNVckvK",
+        "husI8DAKQIexILYxftb3w"
+      ],
+      "canonical_name": "Weekly overview of JIRA Cloud Platform issues in Notion",
+      "top_names": {
+        "Weekly overview of JIRA Cloud Platform issues in Notion": 2
+      },
+      "categories": {
+        "Product": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_week"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "jira-cloud",
+          "action": "search_issues"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "create_database_item"
+        }
+      ],
+      "step_count": 3,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": true,
+      "primary_pieces": [
+        "jira-cloud",
+        "notion"
+      ]
+    },
+    {
+      "pattern_id": "P24_9105265f199b",
+      "signature": "9105265f199b",
+      "rank": 24,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "Ivhquby8IKEvwFlCSdK29",
+        "mgbCUZGFgkyhHGp7ssCdq"
+      ],
+      "canonical_name": "Create SEO Titles for Shorts/Reels",
+      "top_names": {
+        "Create SEO Titles for Shorts/Reels": 1,
+        "Youtube Shorts SEO Describer + Title": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-drive",
+        "trigger_name": "new_file"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "openai",
+          "action": "transcribe"
+        },
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "agent",
+        "openai"
+      ]
+    },
+    {
+      "pattern_id": "P25_aaf8e3a291ef",
+      "signature": "aaf8e3a291ef",
+      "rank": 25,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "JRUHG8aJsyg4SBJywy1jc",
+        "OCNYsRQmFsNiSjrCNAYr6"
+      ],
+      "canonical_name": "Pipedrive to ClickUp",
+      "top_names": {
+        "Pipedrive to ClickUp": 1,
+        "Create ClickUp Tasks From Pipedrive Deals": 1
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "pipedrive",
+        "trigger_name": "new_deal"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "pipedrive",
+          "action": "find-organization"
+        },
+        {
+          "type": "PIECE",
+          "piece": "clickup",
+          "action": "create_task"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "clickup",
+        "pipedrive"
+      ]
+    },
+    {
+      "pattern_id": "P26_1fdc3d72f083",
+      "signature": "1fdc3d72f083",
+      "rank": 26,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "LVdvWrf7BFaOsDTO56SHy",
+        "pOAEng0GqgaZk3mDSSzEq"
+      ],
+      "canonical_name": "Download TikTok Videos without Watermarks and Upload to Google Drive",
+      "top_names": {
+        "Download TikTok Videos without Watermarks and Upload to Google Drive": 2
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "forms",
+        "trigger_name": "form_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-helper",
+          "action": "split"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "upload_gdrive_file"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "set_public_access"
+        },
+        {
+          "type": "PIECE",
+          "piece": "forms",
+          "action": "return_response"
+        }
+      ],
+      "step_count": 7,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": true,
+      "primary_pieces": [
+        "forms",
+        "google-drive",
+        "http",
+        "text-helper"
+      ]
+    },
+    {
+      "pattern_id": "P27_ebd38743f640",
+      "signature": "ebd38743f640",
+      "rank": 27,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "M7HSNDiMR4rUyAGcogtQr",
+        "yPgNywBvKuMvboodO9UKx"
+      ],
+      "canonical_name": "Gather Latest Industry News",
+      "top_names": {
+        "Gather Latest Industry News": 1,
+        "Daily Industry News Digest": 1
+      },
+      "categories": {
+        "Marketing": 1,
+        "Product": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "firecrawl",
+          "action": "scrape"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "get"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "remove_value"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "firecrawl",
+          "action": "scrape"
+        },
+        {
+          "type": "PIECE",
+          "piece": "store",
+          "action": "append"
+        }
+      ],
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper",
+        "firecrawl",
+        "gmail",
+        "store"
+      ]
+    },
+    {
+      "pattern_id": "P28_e2adcf6e82fb",
+      "signature": "e2adcf6e82fb",
+      "rank": 28,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "MOa0hB9Y6BbfZaxpVV2XO",
+        "MhiomYTNvisNfMpWI6AEv"
+      ],
+      "canonical_name": "Create Google Calendar events from new Trello cards",
+      "top_names": {
+        "Create Google Calendar events from new Trello cards": 2
+      },
+      "categories": {
+        "Operations": 1,
+        "Sales": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "trello",
+        "trigger_name": "new_card"
+      },
+      "steps": [
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-helper",
+          "action": "defaultValue"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-calendar",
+          "action": "create_google_calendar_event"
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "add_subtract_date"
+        }
+      ],
+      "step_count": 4,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper",
+        "google-calendar",
+        "text-helper"
+      ]
+    },
+    {
+      "pattern_id": "P29_bef6ed275df0",
+      "signature": "bef6ed275df0",
+      "rank": 29,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "NXNPUnDXD4RFXICNBP6ce",
+        "dVPyb7uTGCHWpl02fcV5R"
+      ],
+      "canonical_name": "Auto-Validate Email & Send Event Invites",
+      "top_names": {
+        "Auto-Validate Email & Send Event Invites": 1,
+        "Event Invite Sender": 1
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "fillout-forms",
+        "trigger_name": "new-form-response"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "zerobounce",
+          "action": "validateEmail"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-calendar",
+          "action": "google-calendar-add-attendees"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        }
+      ],
+      "step_count": 4,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "gmail",
+        "google-calendar",
+        "zerobounce"
+      ]
+    },
+    {
+      "pattern_id": "P30_5ea334676ef1",
+      "signature": "5ea334676ef1",
+      "rank": 30,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "O2sUCWMP5B75xzHqbuB2b",
+        "OoVXGrHvgJYAsKA7EtEq6"
+      ],
+      "canonical_name": "Index Documents from Google Drive to Pinecone with OpenAI Embeddings for RAG",
+      "top_names": {
+        "Index Documents from Google Drive to Pinecone with OpenAI Embeddings for RAG": 2
+      },
+      "categories": {
+        "IT": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-drive",
+        "trigger_name": "new_file"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "list-files"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "pdf",
+          "action": "extractText"
+        },
+        {
+          "type": "PIECE",
+          "piece": "openai",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "PIECE",
+          "piece": "pinecone",
+          "action": "upsert_vector"
+        },
+        {
+          "type": "PIECE",
+          "piece": "file-helper",
+          "action": "read_file"
+        },
+        {
+          "type": "PIECE",
+          "piece": "openai",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "PIECE",
+          "piece": "pinecone",
+          "action": "upsert_vector"
+        }
+      ],
+      "step_count": 10,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": true,
+      "primary_pieces": [
+        "file-helper",
+        "google-drive",
+        "openai",
+        "pdf",
+        "pinecone"
+      ]
+    },
+    {
+      "pattern_id": "P31_d8238da7156c",
+      "signature": "d8238da7156c",
+      "rank": 31,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "OJlxgJHjeGvYISC5EVKi2",
+        "fA2SB6s9B0uu7aZWfQBjV"
+      ],
+      "canonical_name": "New Google Event --> Asana Task",
+      "top_names": {
+        "New Google Event --> Asana Task": 2
+      },
+      "categories": {},
+      "tags": {},
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-calendar",
+        "trigger_name": "new_or_updated_event"
+      },
+      "steps": [
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "asana",
+          "action": "create_task"
+        }
+      ],
+      "step_count": 2,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "asana"
+      ]
+    },
+    {
+      "pattern_id": "P32_fe2431932fa1",
+      "signature": "fe2431932fa1",
+      "rank": 32,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "P0A2fAyU6EALvCq6jca6D",
+        "Pxbf6DuNflZyl23GbC0Qz"
+      ],
+      "canonical_name": "Scalable Event Details Scraper To Google Sheet",
+      "top_names": {
+        "Scalable Event Details Scraper To Google Sheet": 1,
+        "Scrape Events Data Into Google Sheets": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "firecrawl",
+          "action": "scrape"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        }
+      ],
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "firecrawl",
+        "google-sheets"
+      ]
+    },
+    {
+      "pattern_id": "P33_af59f2ab9aad",
+      "signature": "af59f2ab9aad",
+      "rank": 33,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "QMtmwxZ0CxnBRO9EIP6oD",
+        "XWiHDe9EHn8Xf9MdO3m9C"
+      ],
+      "canonical_name": "Daily Website Data Extraction with Firecrawl and Telegram Alerts",
+      "top_names": {
+        "Daily Website Data Extraction with Firecrawl and Telegram Alerts": 2
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "firecrawl",
+          "action": "scrape"
+        },
+        {
+          "type": "PIECE",
+          "piece": "telegram-bot",
+          "action": "send_text_message"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "firecrawl",
+        "telegram-bot"
+      ]
+    },
+    {
+      "pattern_id": "P34_37f539a94ace",
+      "signature": "37f539a94ace",
+      "rank": 34,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "QkEb52V4iLRdX6gIFSyY0",
+        "p8aV1cAyITwKLJTjHoZx6"
+      ],
+      "canonical_name": "Automate Research Paper Collection with Bright Data",
+      "top_names": {
+        "Automate Research Paper Collection with Bright Data": 1,
+        "Collect Research Papers Automatically": 1
+      },
+      "categories": {
+        "Engineering": 1,
+        "Operations": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "data-mapper",
+          "action": "advanced_mapping"
+        },
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        }
+      ],
+      "step_count": 10,
+      "has_router": false,
+      "has_loop": true,
+      "has_code": true,
+      "primary_pieces": [
+        "data-mapper",
+        "google-sheets",
+        "http"
+      ]
+    },
+    {
+      "pattern_id": "P35_4df13fd17d57",
+      "signature": "4df13fd17d57",
+      "rank": 35,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "RJxgOgvED4myo109y5svy",
+        "cNLXbG0L1AASRoeYVeSGP"
+      ],
+      "canonical_name": "Create Salesforce accounts based on Excel File data",
+      "top_names": {
+        "Create Salesforce accounts based on Excel File data": 2
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-sheets",
+        "trigger_name": "googlesheets_new_row_added"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "text-helper",
+          "action": "replace"
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "find_records_by_query"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "find_records_by_query"
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "find_records_by_query"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "create_contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "update_contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "create_record"
+        }
+      ],
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "salesforce",
+        "text-helper"
+      ]
+    },
+    {
+      "pattern_id": "P36_f305e5b176de",
+      "signature": "f305e5b176de",
+      "rank": 36,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "Ruq5QenV5qa2Y0aBtMpJf",
+        "zQG6U6a91l8VRpidheSGh"
+      ],
+      "canonical_name": "Create Notion Database Items from New Google Sheets Rows",
+      "top_names": {
+        "Create Notion Database Items from New Google Sheets Rows": 1,
+        "Create Notion database items from new Google Sheets rows": 1
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-sheets",
+        "trigger_name": "googlesheets_new_row_added"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "create_database_item"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "notion"
+      ]
+    },
+    {
+      "pattern_id": "P37_88ba69e2c496",
+      "signature": "88ba69e2c496",
+      "rank": 37,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "SS9atDQsXC0XDLv1tazFE",
+        "t5BcVQjUPLHxa1NxZCzL4"
+      ],
+      "canonical_name": "Markdown to Notion Page Converter",
+      "top_names": {
+        "Markdown to Notion Page Converter": 1,
+        "Convert Markdown  Content to Notion Pages": 1
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "forms",
+        "trigger_name": "chat_submission"
+      },
+      "steps": [
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "PIECE",
+          "piece": "forms",
+          "action": "return_response"
+        }
+      ],
+      "step_count": 3,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": true,
+      "primary_pieces": [
+        "forms",
+        "notion"
+      ]
+    },
+    {
+      "pattern_id": "P38_bcc324060a48",
+      "signature": "bcc324060a48",
+      "rank": 38,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "U7uI2hZomgKNj8BoCLuxP",
+        "zoSZlMcXmnQSmlC1OIjkL"
+      ],
+      "canonical_name": "LinkedIn Content Idea Generator ",
+      "top_names": {
+        "LinkedIn Content Idea Generator ": 1,
+        "RSS Feed Reader (Daily Digest Creator)": 1
+      },
+      "categories": {},
+      "tags": {},
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-ai",
+          "action": "askAi"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-ai",
+          "action": "askAi"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "clear_sheet"
+        }
+      ],
+      "step_count": 6,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper",
+        "gmail",
+        "google-sheets",
+        "text-ai"
+      ]
+    },
+    {
+      "pattern_id": "P39_ad9980264b27",
+      "signature": "ad9980264b27",
+      "rank": 39,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "UOjPuEkehUaw5MwqVLLvO",
+        "XAiuhvWEtnd4cpLHt3xYC"
+      ],
+      "canonical_name": "Logging Survey Answers to Table (Enterprise task recommender Part 1)",
+      "top_names": {
+        "Logging Survey Answers to Table (Enterprise task recommender Part 1)": 1,
+        "Store Survey Results in a Table": 1
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "typeform",
+        "trigger_name": "new_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "tables",
+          "action": "tables-create-records"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "tables"
+      ]
+    },
+    {
+      "pattern_id": "P40_64910488a264",
+      "signature": "64910488a264",
+      "rank": 40,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "UjVdWwi5KGs02SLHDX8TF",
+        "UslzViNdWBKKKprQuIA64"
+      ],
+      "canonical_name": "Polyglot Publisher",
+      "top_names": {
+        "Polyglot Publisher": 1,
+        "Translate Blog Posts": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "notion",
+        "trigger_name": "updated_database_item"
+      },
+      "steps": [
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "getPageOrBlockChildren"
+        },
+        {
+          "type": "PIECE",
+          "piece": "eden-ai",
+          "action": "detect_language"
+        },
+        {
+          "type": "PIECE",
+          "piece": "eden-ai",
+          "action": "translate_text"
+        },
+        {
+          "type": "PIECE",
+          "piece": "eden-ai",
+          "action": "translate_text"
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "createPage"
+        },
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "append_to_page"
+        }
+      ],
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": true,
+      "primary_pieces": [
+        "eden-ai",
+        "notion"
+      ]
+    },
+    {
+      "pattern_id": "P41_1b17c01f372e",
+      "signature": "1b17c01f372e",
+      "rank": 41,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "WTOLByoCOOTE5fmpJl5As",
+        "hr4b7mg4jxLct3a5CAsb0"
+      ],
+      "canonical_name": "Import CSV Contacts to Notion Database from Google Drive",
+      "top_names": {
+        "Import CSV Contacts to Notion Database from Google Drive": 2
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-drive",
+        "trigger_name": "new_file"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "read-file"
+        },
+        {
+          "type": "PIECE",
+          "piece": "file-helper",
+          "action": "read_file"
+        },
+        {
+          "type": "PIECE",
+          "piece": "csv",
+          "action": "convert_csv_to_json"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "notion",
+          "action": "create_database_item"
+        }
+      ],
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "csv",
+        "file-helper",
+        "google-drive",
+        "notion"
+      ]
+    },
+    {
+      "pattern_id": "P42_0d007c51ef9f",
+      "signature": "0d007c51ef9f",
+      "rank": 42,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "WntHsuvHrVUkIslVxKF58",
+        "lGxsczce76uiXQjfyyMnl"
+      ],
+      "canonical_name": "date-adder",
+      "top_names": {
+        "date-adder": 1,
+        "parsing webhook body data": 1
+      },
+      "categories": {},
+      "tags": {},
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "webhook",
+        "trigger_name": "catch_request"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "add_subtract_date"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper"
+      ]
+    },
+    {
+      "pattern_id": "P43_bef5f8fc5b10",
+      "signature": "bef5f8fc5b10",
+      "rank": 43,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "X4wciZpftQSLYorzK54LY",
+        "g90gIcoRLKBmKi8SJBAP7"
+      ],
+      "canonical_name": "Track Top YouTube Videos ",
+      "top_names": {
+        "Track Top YouTube Videos ": 1,
+        "Add Popular Youtube Videos to Google Sheets": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "youtube",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        }
+      ],
+      "step_count": 7,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "google-sheets",
+        "youtube"
+      ]
+    },
+    {
+      "pattern_id": "P44_2d5376fb72f0",
+      "signature": "2d5376fb72f0",
+      "rank": 44,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "aDM74fl76t0MANCpHuIWq",
+        "bLiXVGvLZbstgrZD70da5"
+      ],
+      "canonical_name": "Collect & Store Restaurant Customer Feedback",
+      "top_names": {
+        "Collect & Store Restaurant Customer Feedback": 2
+      },
+      "categories": {
+        "Marketing": 2
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-sheets",
+        "trigger_name": "google-sheets-new-or-updated-row"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "ai",
+          "action": "askAi"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "ai",
+        "gmail"
+      ]
+    },
+    {
+      "pattern_id": "P45_8e5b8f716667",
+      "signature": "8e5b8f716667",
+      "rank": 45,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "bPXammibDNCmbpFsWVroH",
+        "beXO2X4dlEFefFjAk1giz"
+      ],
+      "canonical_name": "Create Active Campaign contacts from new Google Form responses",
+      "top_names": {
+        "Create Active Campaign contacts from new Google Form responses": 1,
+        "Create ActiveCampaign Contacts From Form": 1
+      },
+      "categories": {
+        "Sales": 1,
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-forms",
+        "trigger_name": "new_response"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "activecampaign",
+          "action": "activecampaign_create_contact"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "activecampaign"
+      ]
+    },
+    {
+      "pattern_id": "P46_d125edee1c9f",
+      "signature": "d125edee1c9f",
+      "rank": 46,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "bS8iCyVmWmLM9u1fOmxch",
+        "h4z89rcy7PaO0Zn0tusj1"
+      ],
+      "canonical_name": "Create Zendesk Tickets From Slack",
+      "top_names": {
+        "Create Zendesk Tickets From Slack": 1,
+        "Create tickets on Zendesk from direct messages on Slack": 1
+      },
+      "categories": {
+        "Customer Service": 1
+      },
+      "tags": {
+        "null": 3
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "slack",
+        "trigger_name": "new-direct-message"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "zendesk",
+          "action": "create-ticket"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "zendesk"
+      ]
+    },
+    {
+      "pattern_id": "P47_e044bdff88fe",
+      "signature": "e044bdff88fe",
+      "rank": 47,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "cfhRf7B0V3Zeog1wKEzPk",
+        "uP6AKiCEwVtnWD3pqUAal"
+      ],
+      "canonical_name": "Learn Customer Onboarding Automation ",
+      "top_names": {
+        "Learn Customer Onboarding Automation ": 1,
+        "Customer Onboarding Automation with HubSpot, Email Sequences and Team Alerts": 1
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "webhook",
+        "trigger_name": "catch_webhook"
+      },
+      "steps": [
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "hubspot",
+          "action": "create-or-update-contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "telegram-bot",
+          "action": "send_text_message"
+        },
+        {
+          "type": "PIECE",
+          "piece": "smtp",
+          "action": "send-email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "delay",
+          "action": "delayFor"
+        },
+        {
+          "type": "PIECE",
+          "piece": "smtp",
+          "action": "send-email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "delay",
+          "action": "delayFor"
+        },
+        {
+          "type": "PIECE",
+          "piece": "hubspot",
+          "action": "update-contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "delay",
+          "action": "delayFor"
+        },
+        {
+          "type": "PIECE",
+          "piece": "smtp",
+          "action": "send-email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "hubspot",
+          "action": "update-contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "telegram-bot",
+          "action": "send_text_message"
+        },
+        {
+          "type": "PIECE",
+          "piece": "telegram-bot",
+          "action": "send_text_message"
+        }
+      ],
+      "step_count": 13,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "delay",
+        "hubspot",
+        "smtp",
+        "telegram-bot"
+      ]
+    },
+    {
+      "pattern_id": "P48_e7d9a18bb988",
+      "signature": "e7d9a18bb988",
+      "rank": 48,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "ekFOiRhIAgzGZ3qlcxEiR",
+        "qHMwEt2YOGaVWeAoYMuza"
+      ],
+      "canonical_name": "Create Zoho CRM leads from Google Calendar events enriched with Google Contacts",
+      "top_names": {
+        "Create Zoho CRM leads from Google Calendar events enriched with Google Contacts": 2
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-calendar",
+        "trigger_name": "new_event"
+      },
+      "steps": [
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-contacts",
+          "action": "search_contact"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-helper",
+          "action": "defaultValue"
+        },
+        {
+          "type": "PIECE",
+          "piece": "zoho-crm",
+          "action": "custom_api_call"
+        }
+      ],
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "google-contacts",
+        "text-helper",
+        "zoho-crm"
+      ]
+    },
+    {
+      "pattern_id": "P49_c8ae9eddfe1f",
+      "signature": "c8ae9eddfe1f",
+      "rank": 49,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "g5mq1ypXRrp3aaqvGLdg8",
+        "nFDYGQYQeHyCpfb5reztr"
+      ],
+      "canonical_name": "Extract YouTube  Comments to Google Sheets",
+      "top_names": {
+        "Extract YouTube  Comments to Google Sheets": 1,
+        "Extract and Store YouTube Video Comments in Google Sheets": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "find_rows"
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "get_current_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-helper",
+          "action": "find"
+        },
+        {
+          "type": "PIECE",
+          "piece": "youtube",
+          "action": "custom_api_call"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "LOOP_ON_ITEMS",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "date-helper",
+          "action": "format_date"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "insert_row"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-sheets",
+          "action": "update_row"
+        }
+      ],
+      "step_count": 13,
+      "has_router": true,
+      "has_loop": true,
+      "has_code": false,
+      "primary_pieces": [
+        "date-helper",
+        "google-sheets",
+        "text-helper",
+        "youtube"
+      ]
+    },
+    {
+      "pattern_id": "P50_77d163a9ca21",
+      "signature": "77d163a9ca21",
+      "rank": 50,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "gT7EBfJY6y1yGcmzDHX0Z",
+        "iKZ7lgJd5d7J2fHoQMxpG"
+      ],
+      "canonical_name": "Create Client Onboarding Tasks From Typeform",
+      "top_names": {
+        "Create Client Onboarding Tasks From Typeform": 1,
+        "Client Onboarding": 1
+      },
+      "categories": {
+        "Customer Service": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "typeform",
+        "trigger_name": "new_submission"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        },
+        {
+          "type": "PIECE",
+          "piece": "asana",
+          "action": "create_task"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "agent",
+        "asana"
+      ]
+    },
+    {
+      "pattern_id": "P51_d2a3bb390b05",
+      "signature": "d2a3bb390b05",
+      "rank": 51,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "hHpAPbRMsP94Dpo3YyYCc",
+        "lAvIEpIJDO7NTJdq369pm"
+      ],
+      "canonical_name": "Automated AI Lead Enrichment: Enrich Salesforce Leads With Apollo",
+      "top_names": {
+        "Automated AI Lead Enrichment: Enrich Salesforce Leads With Apollo": 1,
+        "Automated AI Lead Enrichment: Salesforce to Apollo for Enhanced Prospect Data": 1
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "salesforce",
+        "trigger_name": "new_lead"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "apollo",
+          "action": "matchPerson"
+        },
+        {
+          "type": "PIECE",
+          "piece": "salesforce",
+          "action": "update_lead"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "apollo",
+        "salesforce"
+      ]
+    },
+    {
+      "pattern_id": "P52_2d50474422cd",
+      "signature": "2d50474422cd",
+      "rank": 52,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "kT0wDzt1G1z6mMpCFo3pt",
+        "puGDBwIs7Dqq8vpBeuZ4m"
+      ],
+      "canonical_name": " Brief to Action Plan ",
+      "top_names": {
+        " Brief to Action Plan ": 1,
+        "Transform Long Brief Into Clear Action Plan": 1
+      },
+      "categories": {},
+      "tags": {
+        "null": 1
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-drive",
+        "trigger_name": "new_file"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "google-drive",
+          "action": "read-file"
+        },
+        {
+          "type": "PIECE",
+          "piece": "pdf",
+          "action": "extractText"
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-ai",
+          "action": "askAi"
+        },
+        {
+          "type": "PIECE",
+          "piece": "approval",
+          "action": "create_approval_links"
+        },
+        {
+          "type": "PIECE",
+          "piece": "gmail",
+          "action": "send_email"
+        },
+        {
+          "type": "PIECE",
+          "piece": "approval",
+          "action": "wait_for_approval"
+        },
+        {
+          "type": "ROUTER",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "text-ai",
+          "action": "askAi"
+        },
+        {
+          "type": "PIECE",
+          "piece": "slack",
+          "action": "send_direct_message"
+        }
+      ],
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "approval",
+        "gmail",
+        "google-drive",
+        "pdf",
+        "slack",
+        "text-ai"
+      ]
+    },
+    {
+      "pattern_id": "P53_3cf19daf283e",
+      "signature": "3cf19daf283e",
+      "rank": 53,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "kcEm6u2ZTM8ZriJeMibSs",
+        "tZhGx5kQug3dJ7zvQ2IyT"
+      ],
+      "canonical_name": "Forward Zendesk Tickets To Slack",
+      "top_names": {
+        "Forward Zendesk Tickets To Slack": 1,
+        "Get Slack notifications for new Zendesk tickets": 1
+      },
+      "categories": {
+        "Customer Service": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "zendesk",
+        "trigger_name": "new_ticket"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "slack",
+          "action": "send_channel_message"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "slack"
+      ]
+    },
+    {
+      "pattern_id": "P54_59c881adea1f",
+      "signature": "59c881adea1f",
+      "rank": 54,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "olIsabZ0wKAuSGs33OXdU",
+        "yBfGGa7bmX7HGM9HoSitk"
+      ],
+      "canonical_name": "Add Google Sheets Leads to Odoo CRM",
+      "top_names": {
+        "Add Google Sheets Leads to Odoo CRM": 1,
+        "Create Odoo CRM Leads from New Google Sheets Rows": 1
+      },
+      "categories": {
+        "Sales": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "google-sheets",
+        "trigger_name": "googlesheets_new_row_added"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "odoo",
+          "action": "create_record"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "odoo"
+      ]
+    },
+    {
+      "pattern_id": "P55_93d0b3274d27",
+      "signature": "93d0b3274d27",
+      "rank": 55,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "qHxSCf5odr8BzB7R0RyDY",
+        "zebhxZfmykfYRLilbQnWF"
+      ],
+      "canonical_name": "Tweet new WordPress posts with ChatGPT",
+      "top_names": {
+        "Tweet new WordPress posts with ChatGPT": 2
+      },
+      "categories": {},
+      "tags": {},
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "wordpress",
+        "trigger_name": "new_post"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "openai",
+          "action": "ask_chatgpt"
+        },
+        {
+          "type": "PIECE",
+          "piece": "twitter",
+          "action": "create-tweet"
+        }
+      ],
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "openai",
+        "twitter"
+      ]
+    },
+    {
+      "pattern_id": "P56_de4d29f8dcb8",
+      "signature": "de4d29f8dcb8",
+      "rank": 56,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "qT2oZCAWpsxapNN7bV714",
+        "w4rttSRZpwxHXs1rchifK"
+      ],
+      "canonical_name": "Add Microsoft Power BI dataset records from new Microsoft Excel spreadsheets",
+      "top_names": {
+        "Add Microsoft Power BI dataset records from new Microsoft Excel spreadsheets": 2
+      },
+      "categories": {
+        "Operations": 1
+      },
+      "tags": {
+        "null": 4
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "microsoft-excel-365",
+        "trigger_name": "new_row"
+      },
+      "steps": [
+        {
+          "type": "PIECE",
+          "piece": "microsoft-power-bi",
+          "action": "push_rows_to_dataset_table"
+        }
+      ],
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": false,
+      "primary_pieces": [
+        "microsoft-power-bi"
+      ]
+    },
+    {
+      "pattern_id": "P57_b527befeab08",
+      "signature": "b527befeab08",
+      "rank": 57,
+      "instance_count": 2,
+      "instance_template_ids": [
+        "t7Wb8a6o1SEcUe2ck9ku1",
+        "vpBNBX6EwoLHiUcA42PFB"
+      ],
+      "canonical_name": "Automate SEO blog automation",
+      "top_names": {
+        "Automate SEO blog automation": 1,
+        "Create SEO Blogs From Topic Lists": 1
+      },
+      "categories": {
+        "Marketing": 1
+      },
+      "tags": {
+        "null": 2
+      },
+      "trigger": {
+        "type": "PIECE_TRIGGER",
+        "piece": "schedule",
+        "trigger_name": "every_day"
+      },
+      "steps": [
+        {
+          "type": "CODE",
+          "piece": "",
+          "action": ""
+        },
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "PIECE",
+          "piece": "agent",
+          "action": "run_agent"
+        },
+        {
+          "type": "PIECE",
+          "piece": "http",
+          "action": "send_request"
+        },
+        {
+          "type": "PIECE",
+          "piece": "google-docs",
+          "action": "create_document"
+        }
+      ],
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": false,
+      "has_code": true,
+      "primary_pieces": [
+        "agent",
+        "google-docs",
+        "http"
+      ]
+    }
+  ],
+  "singletons_sample": [
+    {
+      "signature": "1f0226743bbf",
+      "template_id": "07OX2PJBTt6TGnEOIJa8b",
+      "name": "Automated Content Strategy with Google Trends, News, Firecrawl & Claude AI",
+      "trigger_piece": "schedule",
+      "step_count": 21,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "data-mapper",
+        "date-helper",
+        "firecrawl",
+        "google-sheets",
+        "schedule",
+        "serp-api",
+        "text-ai",
+        "text-helper",
+        "utility-ai"
+      ]
+    },
+    {
+      "signature": "81310d087995",
+      "template_id": "0EXbdv4YpvLRrgC4iiRld",
+      "name": "Task-Triggered Slack Alerts",
+      "trigger_piece": "clickup",
+      "step_count": 6,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "clickup",
+        "slack",
+        "tables"
+      ]
+    },
+    {
+      "signature": "6432467bd2a6",
+      "template_id": "0jpBKfJf6p50ieBRhqf6R",
+      "name": "Manage Tasks in Telegram",
+      "trigger_piece": "telegram-bot",
+      "step_count": 7,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "agent",
+        "file-helper",
+        "openai",
+        "telegram-bot",
+        "text-helper"
+      ]
+    },
+    {
+      "signature": "299bd08829a7",
+      "template_id": "0m0tsIVh9WocHwt9aaAf5",
+      "name": "Release Notes Automator",
+      "trigger_piece": "github",
+      "step_count": 6,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "data-mapper",
+        "github",
+        "notion",
+        "slack"
+      ]
+    },
+    {
+      "signature": "bcf94207380f",
+      "template_id": "0zt2olyWGVk7TFAk2yO0Z",
+      "name": "Create Deals From LinkedIn Leads",
+      "trigger_piece": "google-forms",
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "google-forms",
+        "pipedrive"
+      ]
+    },
+    {
+      "signature": "2397fe070aaf",
+      "template_id": "1AbaQ6RdTZPb7Ahwl3ccG",
+      "name": "Update Notion with Toggl Time Entries",
+      "trigger_piece": "toggl-track",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "notion",
+        "toggl-track"
+      ]
+    },
+    {
+      "signature": "3c1d474e77c1",
+      "template_id": "1PpgGYD0SqLzN3qnadkUR",
+      "name": "Slack: Channel Integrity Scanner",
+      "trigger_piece": "slack",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "slack"
+      ]
+    },
+    {
+      "signature": "785fdfeec7db",
+      "template_id": "1QSI0iJfEVtAKkxEUbkw9",
+      "name": "Competitor Pricing Change Alert",
+      "trigger_piece": "schedule",
+      "step_count": 8,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "firecrawl",
+        "gmail",
+        "google-sheets",
+        "schedule",
+        "store",
+        "utility-ai"
+      ]
+    },
+    {
+      "signature": "3e4077d8189c",
+      "template_id": "1TPst6qx7bNcQ2jV2ZZ61",
+      "name": "Generate Presentations Automatically",
+      "trigger_piece": "forms",
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "delay",
+        "forms",
+        "gamma",
+        "google-sheets"
+      ]
+    },
+    {
+      "signature": "eaafdb1dd74c",
+      "template_id": "1rNCxyibXzyvQe1tOztel",
+      "name": "Test Mautic",
+      "trigger_piece": "webhook",
+      "step_count": 2,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "data-mapper",
+        "http"
+      ]
+    },
+    {
+      "signature": "b0b58b23944d",
+      "template_id": "27tOXDWoABlzPHlRckCHP",
+      "name": "Generate YouTube Thumbnails",
+      "trigger_piece": "forms",
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "forms",
+        "http",
+        "slack"
+      ]
+    },
+    {
+      "signature": "0c6d2e129930",
+      "template_id": "2PzcU26J168QfGxnLga4i",
+      "name": "Log Zendesk Tickets To Airtable",
+      "trigger_piece": "zendesk",
+      "step_count": 3,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "airtable",
+        "zendesk"
+      ]
+    },
+    {
+      "signature": "15cb7d5d24ea",
+      "template_id": "2X9cnRbvzxOkxjrwqSNDN",
+      "name": "Create Investor Update Deck",
+      "trigger_piece": "schedule",
+      "step_count": 7,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "google-sheets",
+        "hubspot",
+        "notion",
+        "presentation",
+        "schedule",
+        "stripe"
+      ]
+    },
+    {
+      "signature": "383fe6b9a6c0",
+      "template_id": "2YzTAZ2idsa1o1YmQbv8f",
+      "name": "Client Health Dashboard (Scoring)",
+      "trigger_piece": "schedule",
+      "step_count": 6,
+      "has_router": false,
+      "has_loop": true,
+      "primary_pieces": [
+        "google-sheets",
+        "schedule",
+        "text-ai"
+      ]
+    },
+    {
+      "signature": "4fa8c4310f3c",
+      "template_id": "3Ao6huAWNAe4otcDSJNU9",
+      "name": "Generate Research Questions From PDFs",
+      "trigger_piece": "forms",
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "forms",
+        "http",
+        "math-helper",
+        "pdf"
+      ]
+    },
+    {
+      "signature": "2090a52215f7",
+      "template_id": "3AzxIABbHE7PBCsBZfP3m",
+      "name": "Process and Validate Compliance Documents ",
+      "trigger_piece": "gmail",
+      "step_count": 11,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-drive",
+        "google-sheets",
+        "slack",
+        "todos"
+      ]
+    },
+    {
+      "signature": "e7835a81db1d",
+      "template_id": "3EVSVdPU0tW2PsUCIOeQZ",
+      "name": "Create GitLab Issues From Linear",
+      "trigger_piece": "linear",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "gitlab",
+        "linear"
+      ]
+    },
+    {
+      "signature": "6d7576ef25e2",
+      "template_id": "3SLQtcd1KjZ1KfRcR210b",
+      "name": "Automate Upselling/Cross-selling",
+      "trigger_piece": "schedule",
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-sheets",
+        "schedule"
+      ]
+    },
+    {
+      "signature": "0603aa58d4bd",
+      "template_id": "3ScIP4W1ByRRHsmDlQSha",
+      "name": "Inbox → Auto Resume Parser",
+      "trigger_piece": "gmail",
+      "step_count": 3,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-sheets",
+        "slack"
+      ]
+    },
+    {
+      "signature": "e8cc1db2879f",
+      "template_id": "3vCdHGHN7dafzVrpwR2LV",
+      "name": "Lead Nurturing",
+      "trigger_piece": "schedule",
+      "step_count": 6,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "delay",
+        "gmail",
+        "google-sheets",
+        "schedule",
+        "text-ai"
+      ]
+    },
+    {
+      "signature": "d3e5a7e25263",
+      "template_id": "4EogKQgXUDqf92CgxvjOC",
+      "name": "Find Trending YouTube Video Ideas",
+      "trigger_piece": "forms",
+      "step_count": 17,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "date-helper",
+        "forms",
+        "google-sheets",
+        "youtube"
+      ]
+    },
+    {
+      "signature": "1119480569ca",
+      "template_id": "4P0pXXQkLwEsDcAAlcx9V",
+      "name": "PBM Law Change Monitoring",
+      "trigger_piece": "rss",
+      "step_count": 6,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-sheets",
+        "http",
+        "rss",
+        "text-helper"
+      ]
+    },
+    {
+      "signature": "ad35a61a4590",
+      "template_id": "4RELR57MStkyOxmjq9DzE",
+      "name": "Email Categorization",
+      "trigger_piece": "gmail",
+      "step_count": 7,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "date-helper",
+        "gmail",
+        "google-sheets",
+        "text-ai"
+      ]
+    },
+    {
+      "signature": "2fc4db1de9ba",
+      "template_id": "4UWOfYZWzp1xUGM0uWO5O",
+      "name": "Enrich Company Data for Leads",
+      "trigger_piece": "google-sheets",
+      "step_count": 6,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "data-mapper",
+        "google-sheets",
+        "magical-api",
+        "slack"
+      ]
+    },
+    {
+      "signature": "7ea35f7dbccf",
+      "template_id": "4Xo577tbWqlN1KPfP4XMx",
+      "name": "Create Trello Cards From GitLab Issues",
+      "trigger_piece": "gitlab",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "gitlab",
+        "trello"
+      ]
+    },
+    {
+      "signature": "a35cac5bb2c7",
+      "template_id": "4gX7RNw0VD2rrOZ6HmAMi",
+      "name": "Sync Notion Databases to Google Calendar",
+      "trigger_piece": "notion",
+      "step_count": 6,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "google-calendar",
+        "notion"
+      ]
+    },
+    {
+      "signature": "6682b4a12f1e",
+      "template_id": "4veZ6D5iCSk2tBvtOI0wB",
+      "name": "Create Zoho Invoice Contacts From HubSpot",
+      "trigger_piece": "hubspot",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "http-oauth2",
+        "hubspot"
+      ]
+    },
+    {
+      "signature": "0ab42cbfd36e",
+      "template_id": "4xdubS0pGb9eW1bqinQOT",
+      "name": "Twitter Virtual AI Influencer",
+      "trigger_piece": "schedule",
+      "step_count": 3,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "data-mapper",
+        "schedule",
+        "twitter"
+      ]
+    },
+    {
+      "signature": "7d180b9d49f1",
+      "template_id": "59AvIOqDwpJk7zotWb3Pu",
+      "name": "Generate Client KPI Reports as PDFs",
+      "trigger_piece": "schedule",
+      "step_count": 7,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-sheets",
+        "microsoft-power-bi",
+        "pdfcrowd",
+        "schedule"
+      ]
+    },
+    {
+      "signature": "4e7d690a438d",
+      "template_id": "5FNz4WOcQREqvLNKK2i1e",
+      "name": "Automate Reddit Trend Analysis with GPT-4 and Slack/Gmail Distribution",
+      "trigger_piece": "schedule",
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": true,
+      "primary_pieces": [
+        "gmail",
+        "reddit",
+        "schedule",
+        "slack",
+        "text-ai"
+      ]
+    },
+    {
+      "signature": "5c4034268499",
+      "template_id": "5tiPc8fMOlPSmfnyRf1qB",
+      "name": "Budget Variance Monitoring",
+      "trigger_piece": "schedule",
+      "step_count": 15,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "data-mapper",
+        "data-summarizer",
+        "date-helper",
+        "gmail",
+        "google-sheets",
+        "math-helper",
+        "schedule"
+      ]
+    },
+    {
+      "signature": "1adc6a0b5357",
+      "template_id": "5uyoPjWDc2xxKv5E31XYV",
+      "name": "Notify Teams of New Responses",
+      "trigger_piece": "typeform",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "gmail",
+        "typeform"
+      ]
+    },
+    {
+      "signature": "e3d7ace5d2a3",
+      "template_id": "6CdPtgfGk6vZ2XWPe8UMi",
+      "name": "AI-Powered Lead Scoring with Salesforce, GPT-5, and Slack with Data Masking",
+      "trigger_piece": "salesforce",
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "data-mapper",
+        "salesforce",
+        "slack"
+      ]
+    },
+    {
+      "signature": "16045b613508",
+      "template_id": "6DtM1u7lnUe8AFmlm04js",
+      "name": "Create Jira Issues From Form",
+      "trigger_piece": "google-forms",
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "data-mapper",
+        "google-forms",
+        "jira-cloud"
+      ]
+    },
+    {
+      "signature": "7642454bc07e",
+      "template_id": "6IQyRhIKzabmIA3OIeBsX",
+      "name": "Discover and Repurpose LinkedIn Content Automatically",
+      "trigger_piece": "schedule",
+      "step_count": 10,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "apify",
+        "delay",
+        "perplexity-ai",
+        "schedule",
+        "tables"
+      ]
+    },
+    {
+      "signature": "06b0df2c78cc",
+      "template_id": "6lS5tyLK7wR6GMdnAMefz",
+      "name": "Generate and Share Professional PDFs",
+      "trigger_piece": "forms",
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "forms",
+        "google-drive",
+        "pdf-co",
+        "text-helper"
+      ]
+    },
+    {
+      "signature": "dd245de6d9e9",
+      "template_id": "7Js4K8WufOaSSSd2uPpdg",
+      "name": "Newsletter Approval Workflow",
+      "trigger_piece": "google-sheets",
+      "step_count": 7,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-sheets"
+      ]
+    },
+    {
+      "signature": "b8134e28a8d4",
+      "template_id": "7PjXTIcbqjVQCkc1yI2fs",
+      "name": "Generate Newsletters From Daily News",
+      "trigger_piece": "schedule",
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "firecrawl",
+        "gmail",
+        "google-sheets",
+        "schedule",
+        "store"
+      ]
+    },
+    {
+      "signature": "839ba1b41e74",
+      "template_id": "7bk6LPQc08z1L49BE5ACr",
+      "name": "Client Health Tracker",
+      "trigger_piece": "gmail",
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "google-sheets",
+        "text-helper"
+      ]
+    },
+    {
+      "signature": "8fe01eedd386",
+      "template_id": "7hM0lKqCyK4dLFuJDw4fk",
+      "name": "Log Won Deals With Commission",
+      "trigger_piece": "hubspot",
+      "step_count": 1,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "hubspot",
+        "microsoft-excel-365"
+      ]
+    },
+    {
+      "signature": "e193a1fcd236",
+      "template_id": "8IyMl3PsTgxzf1EwU3cg3",
+      "name": "Smart Auto-Screen & Rate Candidates",
+      "trigger_piece": "workable",
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "magical-api",
+        "slack",
+        "workable"
+      ]
+    },
+    {
+      "signature": "dccd04125389",
+      "template_id": "8Vm5nLR5NRINOFw5e1rdk",
+      "name": "AI Email Reply Based on HubSpot Data + Slack Approval",
+      "trigger_piece": "gmail",
+      "step_count": 12,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "gmail",
+        "hubspot",
+        "slack",
+        "text-ai"
+      ]
+    },
+    {
+      "signature": "953124e538af",
+      "template_id": "8czrh4CyMV9XrEgVaUwe3",
+      "name": "Analyze Reddit Posts with AI to Identify Business Opportunities",
+      "trigger_piece": "schedule",
+      "step_count": 9,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "ai",
+        "data-mapper",
+        "google-sheets",
+        "reddit",
+        "schedule"
+      ]
+    },
+    {
+      "signature": "d7f39693fae2",
+      "template_id": "8hyXTVZhdcFrK3hYlA6sM",
+      "name": "Score and Qualify Inbound Leads",
+      "trigger_piece": "webhook",
+      "step_count": 12,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "date-helper",
+        "gmail",
+        "google-sheets",
+        "http",
+        "perplexity-ai",
+        "slack",
+        "webhook"
+      ]
+    },
+    {
+      "signature": "d52c7dfde85e",
+      "template_id": "92dgjquXsdyjMWs0DRmSr",
+      "name": "Table Data to Email (Enterprise task recommender Part 2) ",
+      "trigger_piece": "schedule",
+      "step_count": 3,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "gmail",
+        "schedule",
+        "tables",
+        "text-ai"
+      ]
+    },
+    {
+      "signature": "3522a9deeb69",
+      "template_id": "99HIeG8BnvEdMwr2VAQCX",
+      "name": " Assign Tasks From Meeting Transcript",
+      "trigger_piece": "fireflies-ai",
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": true,
+      "primary_pieces": [
+        "fireflies-ai",
+        "jira-cloud",
+        "utility-ai"
+      ]
+    },
+    {
+      "signature": "55ed07078bc6",
+      "template_id": "9Al2dcqRwZCB5rj1yYPQt",
+      "name": "Enrich Company Data In Sheets",
+      "trigger_piece": "schedule",
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": true,
+      "primary_pieces": [
+        "agent",
+        "data-mapper",
+        "google-sheets",
+        "schedule"
+      ]
+    },
+    {
+      "signature": "9ca8e40dd6e4",
+      "template_id": "9D3Wz7eBF9uEun0BVLLkH",
+      "name": "Draft and Send Client Email Replies",
+      "trigger_piece": "gmail",
+      "step_count": 5,
+      "has_router": true,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "gmail",
+        "slack"
+      ]
+    },
+    {
+      "signature": "ff112122e033",
+      "template_id": "9IyrEfK2i0GjLl8WIgUP0",
+      "name": "Export Amazon Reviews to Sheets",
+      "trigger_piece": "forms",
+      "step_count": 5,
+      "has_router": false,
+      "has_loop": true,
+      "primary_pieces": [
+        "forms",
+        "google-sheets",
+        "http"
+      ]
+    },
+    {
+      "signature": "4415b1d5b4d9",
+      "template_id": "9Lvt15KCzv2D8ewureoU3",
+      "name": "Weekly KPI Review",
+      "trigger_piece": "schedule",
+      "step_count": 4,
+      "has_router": false,
+      "has_loop": false,
+      "primary_pieces": [
+        "ai",
+        "google-sheets",
+        "presentation",
+        "schedule",
+        "slack"
+      ]
+    }
+  ]
+}
