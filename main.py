@@ -1522,6 +1522,434 @@ def T8(c, cn):
                        c.get("timezone", "Asia/Riyadh"), next_action=s1)
 
 
+# ═══════════════════════════════════════════════════════════════
+# SAICO INSURANCE COLLECTION — Sarah voice agent pipeline
+# ═══════════════════════════════════════════════════════════════
+# T_SAICO_TRIGGER: CRM/campaign webhook → enrich lead → log attempt →
+#   send WhatsApp warm-up → fire Sondos outbound call with Sarah skill.
+# T_SAICO_OUTCOME: Sondos post-call webhook → parse outcome → log →
+#   ROUTER(5): paid_full | plan_or_promise | callback_scheduled |
+#   transferred | fallback(no_contact/refused).
+# Arabic collection skill (system prompt, KB, objection matrix) lives
+# in skills/saico_collection_sarah.md and is loaded into Sondos, not AP.
+
+_SAICO_ENRICH_CODE = """
+export const code = async (inputs) => {
+  const b = inputs.body || {};
+  const amount = Number(b.outstanding_amount || 0);
+  const days = Number(b.days_overdue || 0);
+  const attempt = Number(b.contact_attempt || 1);
+  let urgency = 'NORMAL';
+  if (amount >= 20000 || days >= 60 || attempt >= 3) urgency = 'HIGH';
+  if (amount >= 50000 || days >= 120) urgency = 'CRITICAL';
+  const min_down = Number(inputs.min_down_payment_pct || 30);
+  const max_inst = Number(inputs.max_installments || 6);
+  const disc_pct = Number(inputs.discount_authority_pct || 10);
+  const down_payment = Math.round(amount * (min_down / 100));
+  const monthly = max_inst > 0 ? Math.round((amount - down_payment) / max_inst) : 0;
+  const discounted = Math.round(amount * (1 - disc_pct / 100));
+  return {
+    ok: true,
+    customer_name: b.customer_name || '',
+    customer_phone: b.customer_phone || '',
+    id_last4: b.id_last4 || '',
+    debt_type: b.debt_type || 'recourse',
+    outstanding_amount: amount,
+    policy_number: b.policy_number || '',
+    claim_number: b.claim_number || 'N/A',
+    incident_date: b.incident_date || '',
+    vehicle_plate: b.vehicle_plate || '',
+    days_overdue: days,
+    contact_attempt: attempt,
+    previous_promise: b.previous_promise || 'none',
+    iban: inputs.iban || b.iban || '',
+    bank_name: inputs.bank_name || b.bank_name || '',
+    max_installments: max_inst,
+    min_down_payment_pct: min_down,
+    discount_authority_pct: disc_pct,
+    down_payment_amount: down_payment,
+    monthly_installment: monthly,
+    discounted_amount: discounted,
+    whatsapp_link: inputs.whatsapp_link || '',
+    payment_link: inputs.payment_link || '',
+    agent_transfer_number: inputs.agent_transfer_number || '',
+    complaint_channel: inputs.complaint_channel || '8001242002',
+    call_time_window: inputs.call_time_window || '09:00-21:00',
+    call_datetime: new Date().toISOString(),
+    language: 'ar-SA',
+    urgency,
+    lead_id: b.lead_id || (b.policy_number + '-' + Date.now())
+  };
+};
+"""
+
+_SAICO_WHATSAPP_WARMUP_CODE = """
+export const code = async (inputs) => {
+  if (!inputs.whatsapp_api_url || !inputs.whatsapp_token) {
+    return { skipped: true, reason: 'no_whatsapp_config' };
+  }
+  const msg = 'أستاذ/ة ' + inputs.customer_name + '، سيتم التواصل معك خلال دقائق من سايكو ' +
+              'بخصوص الوثيقة ' + inputs.policy_number + '. نتطلع لمساعدتك على إغلاق الموضوع بيسر. — سايكو 8001242002';
+  try {
+    const r = await fetch(inputs.whatsapp_api_url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + inputs.whatsapp_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        to: inputs.customer_phone,
+        type: 'template',
+        template: {
+          name: inputs.template_name || 'saico_precall_warmup',
+          language: { code: 'ar' },
+          components: [{ type: 'body', parameters: [
+            { type: 'text', text: inputs.customer_name },
+            { type: 'text', text: inputs.policy_number }
+          ]}]
+        },
+        fallback_text: msg
+      })
+    });
+    return { sent: r.ok, status: r.status, to: inputs.customer_phone };
+  } catch (e) {
+    return { sent: false, error: String(e) };
+  }
+};
+"""
+
+_SAICO_SONDOS_CALL_CODE = """
+export const code = async (inputs) => {
+  if (!inputs.sondos_base_url || !inputs.sondos_api_key || !inputs.sondos_assistant_id) {
+    return { queued: false, error: 'missing_sondos_config' };
+  }
+  const payload = {
+    assistant_id: inputs.sondos_assistant_id,
+    phone_number: inputs.customer_phone,
+    language: 'ar-SA',
+    max_duration_sec: 420,
+    metadata: { lead_id: inputs.lead_id, urgency: inputs.urgency },
+    variables: {
+      customer_name: inputs.customer_name,
+      customer_phone: inputs.customer_phone,
+      id_last4: inputs.id_last4,
+      debt_type: inputs.debt_type,
+      outstanding_amount: String(inputs.outstanding_amount),
+      policy_number: inputs.policy_number,
+      claim_number: inputs.claim_number,
+      incident_date: inputs.incident_date,
+      vehicle_plate: inputs.vehicle_plate,
+      days_overdue: String(inputs.days_overdue),
+      contact_attempt: String(inputs.contact_attempt),
+      previous_promise: inputs.previous_promise,
+      iban: inputs.iban,
+      bank_name: inputs.bank_name,
+      max_installments: String(inputs.max_installments),
+      min_down_payment_pct: String(inputs.min_down_payment_pct),
+      discount_authority_pct: String(inputs.discount_authority_pct),
+      whatsapp_link: inputs.whatsapp_link,
+      payment_link: inputs.payment_link,
+      agent_transfer_number: inputs.agent_transfer_number,
+      complaint_channel: inputs.complaint_channel,
+      call_time_window: inputs.call_time_window,
+      call_datetime: inputs.call_datetime,
+      language: inputs.language
+    }
+  };
+  try {
+    const r = await fetch(inputs.sondos_base_url + '/v1/calls/outbound', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + inputs.sondos_api_key,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json().catch(() => ({}));
+    return {
+      queued: r.ok,
+      status: r.status,
+      call_id: data.call_id || data.id || null,
+      lead_id: inputs.lead_id,
+      phone: inputs.customer_phone,
+      urgency: inputs.urgency
+    };
+  } catch (e) {
+    return { queued: false, error: String(e) };
+  }
+};
+"""
+
+_SAICO_OUTCOME_PARSE_CODE = """
+export const code = async (inputs) => {
+  const b = inputs.body || {};
+  const o = (b.outcome || '').toLowerCase();
+  const normalized = ['paid_full','paid_partial','plan_agreed','promise_to_pay',
+                      'callback_scheduled','transferred','no_contact','refused']
+                     .includes(o) ? o : 'no_contact';
+  return {
+    call_id: b.call_id || '',
+    lead_id: b.customer_id || b.lead_id || '',
+    policy_number: b.policy_number || '',
+    customer_name: b.customer_name || '',
+    customer_phone: b.customer_phone || '',
+    outcome: normalized,
+    committed_amount: Number(b.committed_amount || 0),
+    committed_date: b.committed_date || '',
+    ladder_reached: Number(b.commitment_ladder_reached || 0),
+    objections: Array.isArray(b.objections_raised) ? b.objections_raised.join(' | ') : '',
+    duration_sec: Number(b.call_duration_sec || 0),
+    transcript_url: b.transcript_url || '',
+    iban: inputs.iban || '',
+    bank_name: inputs.bank_name || '',
+    payment_link: inputs.payment_link || '',
+    recorded_at: new Date().toISOString()
+  };
+};
+"""
+
+_SAICO_WHATSAPP_PAYMENT_CODE = """
+export const code = async (inputs) => {
+  if (!inputs.whatsapp_api_url || !inputs.whatsapp_token) {
+    return { skipped: true, reason: 'no_whatsapp_config' };
+  }
+  const body = 'أستاذ/ة ' + inputs.customer_name + '، شكراً لوقتك. ' +
+               'الالتزام: ' + inputs.outcome + ' بمبلغ ' + inputs.committed_amount + ' ريال' +
+               (inputs.committed_date ? ' بتاريخ ' + inputs.committed_date : '') + '.\\n' +
+               'للسداد: آيبان ' + inputs.iban + ' — ' + inputs.bank_name +
+               (inputs.payment_link ? '\\nرابط سداد مباشر: ' + inputs.payment_link : '') +
+               '\\nالمرجع: ' + inputs.policy_number + ' — سايكو 8001242002';
+  try {
+    const r = await fetch(inputs.whatsapp_api_url, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + inputs.whatsapp_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        to: inputs.customer_phone,
+        type: 'text',
+        text: { body }
+      })
+    });
+    return { sent: r.ok, status: r.status };
+  } catch (e) {
+    return { sent: false, error: String(e) };
+  }
+};
+"""
+
+
+def T_SAICO_TRIGGER(c, cn):
+    """Outbound collection: webhook lead → enrich → log → warm-up WhatsApp → Sondos call."""
+    sid = c.get("spreadsheet_id", "")
+
+    sondos_input = {
+        "body": "{{trigger['body']}}",
+        "sondos_base_url": c.get("sondos_base_url", ""),
+        "sondos_api_key": c.get("sondos_api_key", ""),
+        "sondos_assistant_id": c.get("sondos_assistant_id", ""),
+        "lead_id": "{{step_1['lead_id']}}",
+        "urgency": "{{step_1['urgency']}}",
+        "customer_name": "{{step_1['customer_name']}}",
+        "customer_phone": "{{step_1['customer_phone']}}",
+        "id_last4": "{{step_1['id_last4']}}",
+        "debt_type": "{{step_1['debt_type']}}",
+        "outstanding_amount": "{{step_1['outstanding_amount']}}",
+        "policy_number": "{{step_1['policy_number']}}",
+        "claim_number": "{{step_1['claim_number']}}",
+        "incident_date": "{{step_1['incident_date']}}",
+        "vehicle_plate": "{{step_1['vehicle_plate']}}",
+        "days_overdue": "{{step_1['days_overdue']}}",
+        "contact_attempt": "{{step_1['contact_attempt']}}",
+        "previous_promise": "{{step_1['previous_promise']}}",
+        "iban": "{{step_1['iban']}}",
+        "bank_name": "{{step_1['bank_name']}}",
+        "max_installments": "{{step_1['max_installments']}}",
+        "min_down_payment_pct": "{{step_1['min_down_payment_pct']}}",
+        "discount_authority_pct": "{{step_1['discount_authority_pct']}}",
+        "whatsapp_link": "{{step_1['whatsapp_link']}}",
+        "payment_link": "{{step_1['payment_link']}}",
+        "agent_transfer_number": "{{step_1['agent_transfer_number']}}",
+        "complaint_channel": "{{step_1['complaint_channel']}}",
+        "call_time_window": "{{step_1['call_time_window']}}",
+        "call_datetime": "{{step_1['call_datetime']}}",
+        "language": "{{step_1['language']}}",
+    }
+    s4 = build_code_step("step_4", "إطلاق مكالمة سندس", _SAICO_SONDOS_CALL_CODE, sondos_input)
+
+    warmup_input = {
+        "whatsapp_api_url": c.get("whatsapp_api_url", ""),
+        "whatsapp_token": c.get("whatsapp_token", ""),
+        "template_name": c.get("whatsapp_warmup_template", "saico_precall_warmup"),
+        "customer_name": "{{step_1['customer_name']}}",
+        "customer_phone": "{{step_1['customer_phone']}}",
+        "policy_number": "{{step_1['policy_number']}}",
+    }
+    s3 = build_code_step("step_3", "وتساب تمهيدي", _SAICO_WHATSAPP_WARMUP_CODE,
+                         warmup_input, next_action=s4)
+
+    if sid:
+        s2 = sheet_add("step_2", cn["google-sheets"], sid, {
+            "A": "{{step_1['lead_id']}}",
+            "B": "{{step_1['customer_name']}}",
+            "C": "{{step_1['customer_phone']}}",
+            "D": "{{step_1['policy_number']}}",
+            "E": "{{step_1['outstanding_amount']}}",
+            "F": "{{step_1['days_overdue']}}",
+            "G": "{{step_1['contact_attempt']}}",
+            "H": "{{step_1['urgency']}}",
+            "I": "{{step_1['call_datetime']}}",
+            "J": "queued",
+        }, "تسجيل محاولة التحصيل", next_action=s3)
+    else:
+        s2 = build_code_step("step_2", "تسجيل داخلي",
+            'export const code = async (i) => ({ logged: true, lead_id: i.lead_id });',
+            {"lead_id": "{{step_1['lead_id']}}"}, next_action=s3)
+
+    enrich_input = {
+        "body": "{{trigger['body']}}",
+        "iban": c.get("iban", ""),
+        "bank_name": c.get("bank_name", ""),
+        "max_installments": c.get("max_installments", 6),
+        "min_down_payment_pct": c.get("min_down_payment_pct", 30),
+        "discount_authority_pct": c.get("discount_authority_pct", 10),
+        "whatsapp_link": c.get("whatsapp_link", ""),
+        "payment_link": c.get("payment_link", ""),
+        "agent_transfer_number": c.get("agent_transfer_number", ""),
+        "complaint_channel": c.get("complaint_channel", "8001242002"),
+        "call_time_window": c.get("call_time_window", "09:00-21:00"),
+    }
+    s1 = build_code_step("step_1", "إثراء الليد + حساب الضغط",
+                         _SAICO_ENRICH_CODE, enrich_input, next_action=s2)
+
+    return wh_trigger("استقبال ليد تحصيل سايكو", s1)
+
+
+def T_SAICO_OUTCOME(c, cn):
+    """Post-call router: parse Sondos outcome → log → branch to follow-up action."""
+    sid = c.get("spreadsheet_id", "")
+    supervisor = c.get("supervisor_email", "collections@saico.com.sa")
+    paid_email = c.get("paid_confirmation_email", supervisor)
+
+    # --- Branch A: paid_full — thank-you email (closed) ---
+    paid = gmail_send("step_4", cn["gmail"], [paid_email],
+        "سداد كامل: {{step_1['customer_name']}} — {{step_1['policy_number']}}",
+        "تم السداد الكامل عبر المكالمة.\n"
+        "العميل: {{step_1['customer_name']}}\n"
+        "الوثيقة: {{step_1['policy_number']}}\n"
+        "المبلغ: {{step_1['committed_amount']}} ريال\n"
+        "معرف المكالمة: {{step_1['call_id']}}\n"
+        "التسجيل: {{step_1['transcript_url']}}\n\n— سايكو",
+        "تأكيد سداد للمشرف")
+
+    # --- Branch B: plan_agreed / promise_to_pay — WhatsApp with IBAN + link ---
+    plan_wh_input = {
+        "whatsapp_api_url": c.get("whatsapp_api_url", ""),
+        "whatsapp_token": c.get("whatsapp_token", ""),
+        "customer_name": "{{step_1['customer_name']}}",
+        "customer_phone": "{{step_1['customer_phone']}}",
+        "policy_number": "{{step_1['policy_number']}}",
+        "outcome": "{{step_1['outcome']}}",
+        "committed_amount": "{{step_1['committed_amount']}}",
+        "committed_date": "{{step_1['committed_date']}}",
+        "iban": "{{step_1['iban']}}",
+        "bank_name": "{{step_1['bank_name']}}",
+        "payment_link": "{{step_1['payment_link']}}",
+    }
+    plan_wh = build_code_step("step_5", "وتساب تفاصيل السداد",
+                              _SAICO_WHATSAPP_PAYMENT_CODE, plan_wh_input)
+
+    # --- Branch C: callback_scheduled — log callback for scheduled retry ---
+    if sid:
+        cb = sheet_add("step_6", cn["google-sheets"], sid, {
+            "A": "{{step_1['lead_id']}}",
+            "B": "{{step_1['customer_name']}}",
+            "C": "{{step_1['customer_phone']}}",
+            "D": "{{step_1['policy_number']}}",
+            "E": "{{step_1['committed_date']}}",
+            "F": "callback_scheduled",
+            "G": "{{step_1['call_id']}}",
+        }, "حفظ موعد الاتصال")
+    else:
+        cb = build_code_step("step_6", "حفظ موعد (داخلي)",
+            'export const code = async (i) => ({ scheduled: true, when: i.when });',
+            {"when": "{{step_1['committed_date']}}"})
+
+    # --- Branch D: transferred — alert supervisor for human handoff ---
+    xfer = gmail_send("step_7", cn["gmail"], [supervisor],
+        "تحويل للبشري: {{step_1['customer_name']}} — {{step_1['policy_number']}}",
+        "تم تحويل المكالمة لمختص بشري.\n"
+        "العميل: {{step_1['customer_name']}}\n"
+        "الجوال: {{step_1['customer_phone']}}\n"
+        "الوثيقة: {{step_1['policy_number']}}\n"
+        "الاعتراضات: {{step_1['objections']}}\n"
+        "التسجيل: {{step_1['transcript_url']}}\n\nيرجى الاتصال خلال ساعة.",
+        "تنبيه تحويل عاجل")
+
+    # --- Branch E (FALLBACK): no_contact / refused — pressure WhatsApp + supervisor email ---
+    pressure_input = dict(plan_wh_input)
+    pressure_input["committed_amount"] = "{{step_1['committed_amount'] || 'المستحق كاملاً'}}"
+    pressure_wh = build_code_step("step_8", "وتساب ضغط الإغلاق",
+                                  _SAICO_WHATSAPP_PAYMENT_CODE, pressure_input)
+    alert = gmail_send("step_9", cn["gmail"], [supervisor],
+        "بلا التزام: {{step_1['customer_name']}} — إعادة محاولة مطلوبة",
+        "المكالمة انتهت بلا التزام واضح.\n"
+        "العميل: {{step_1['customer_name']}}\n"
+        "الجوال: {{step_1['customer_phone']}}\n"
+        "الوثيقة: {{step_1['policy_number']}}\n"
+        "النتيجة: {{step_1['outcome']}}\n"
+        "الاعتراضات: {{step_1['objections']}}\n"
+        "التسجيل: {{step_1['transcript_url']}}\n\nيرجى جدولة محاولة ثانية.",
+        "بلا التزام — تنبيه",
+        next_action=pressure_wh)
+
+    router = build_router_step("step_3", "توجيه حسب نتيجة المكالمة", [
+        condition_branch("سداد كامل",
+            [[cond("TEXT_EXACTLY_MATCHES", "{{step_1['outcome']}}", "paid_full")]]),
+        condition_branch("خطة أو وعد",
+            [[cond("TEXT_CONTAINS", "{{step_1['outcome']}}", "plan_agreed")],
+             [cond("TEXT_CONTAINS", "{{step_1['outcome']}}", "promise_to_pay")],
+             [cond("TEXT_CONTAINS", "{{step_1['outcome']}}", "paid_partial")]]),
+        condition_branch("رد اتصال مجدول",
+            [[cond("TEXT_EXACTLY_MATCHES", "{{step_1['outcome']}}", "callback_scheduled")]]),
+        condition_branch("تحويل بشري",
+            [[cond("TEXT_EXACTLY_MATCHES", "{{step_1['outcome']}}", "transferred")]]),
+        fallback_branch("بلا التزام"),
+    ], [paid, plan_wh, cb, xfer, alert])
+
+    if sid:
+        s2 = sheet_add("step_2", cn["google-sheets"], sid, {
+            "A": "{{step_1['call_id']}}",
+            "B": "{{step_1['lead_id']}}",
+            "C": "{{step_1['customer_name']}}",
+            "D": "{{step_1['policy_number']}}",
+            "E": "{{step_1['outcome']}}",
+            "F": "{{step_1['committed_amount']}}",
+            "G": "{{step_1['committed_date']}}",
+            "H": "{{step_1['ladder_reached']}}",
+            "I": "{{step_1['duration_sec']}}",
+            "J": "{{step_1['objections']}}",
+            "K": "{{step_1['transcript_url']}}",
+            "L": "{{step_1['recorded_at']}}",
+        }, "تسجيل نتيجة المكالمة", next_action=router)
+    else:
+        s2 = build_code_step("step_2", "تسجيل داخلي",
+            'export const code = async (i) => ({ logged: true, outcome: i.outcome });',
+            {"outcome": "{{step_1['outcome']}}"}, next_action=router)
+
+    parse_input = {
+        "body": "{{trigger['body']}}",
+        "iban": c.get("iban", ""),
+        "bank_name": c.get("bank_name", ""),
+        "payment_link": c.get("payment_link", ""),
+    }
+    s1 = build_code_step("step_1", "قراءة نتيجة سندس",
+                         _SAICO_OUTCOME_PARSE_CODE, parse_input, next_action=s2)
+
+    return wh_trigger("استقبال نتيجة مكالمة سايكو", s1)
+
+
 TEMPLATES = {
     "webhook_to_email":           {"fn": T1, "req": ["recipient_email"],                   "desc": "تنبيه إيميل فوري"},
     "webhook_to_sheet":           {"fn": T2, "req": ["spreadsheet_id"],                    "desc": "حفظ بيانات في جدول"},
@@ -1531,6 +1959,12 @@ TEMPLATES = {
     "ops_log_report":             {"fn": T6, "req": ["recipient_email", "spreadsheet_id"], "desc": "تسجيل عملية + تقرير"},
     "lead_notify_and_confirm":    {"fn": T7, "req": ["recipient_email", "spreadsheet_id"], "desc": "نظام ليدات كامل"},
     "scheduled_report":           {"fn": T8, "req": ["recipient_email", "spreadsheet_id"], "desc": "تقرير يومي"},
+    "saico_collection_trigger":   {"fn": T_SAICO_TRIGGER,
+                                   "req": ["sondos_base_url", "sondos_api_key", "sondos_assistant_id"],
+                                   "desc": "تحصيل سايكو: webhook → إثراء → وتساب تمهيدي → مكالمة سندس"},
+    "saico_collection_outcome":   {"fn": T_SAICO_OUTCOME,
+                                   "req": ["supervisor_email"],
+                                   "desc": "تحصيل سايكو: نتيجة سندس → ROUTER(5) → متابعة حسب النتيجة"},
 }
 
 
