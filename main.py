@@ -12,7 +12,7 @@ Capabilities: ROUTER, LOOP, CODE, PIECE, PRESETS, SMART_SCHEMA,
               INGESTION, SAAS_ONBOARDING, CONTEXT_AWARE_MCP, PROACTIVE_LOGIC
 """
 from __future__ import annotations
-import asyncio, json, logging, os, re, time as _time, traceback
+import asyncio, hmac, json, logging, os, re, time as _time, traceback
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -1758,8 +1758,27 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Siyadah Orchestrator", version=VERSION, lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True,
-                   allow_methods=["*"], allow_headers=["*"])
+
+# Allowed origins come from env (CSV). If unset, fall back to Siyadah's BFF
+# only — never the previous "*" which, combined with allow_credentials=True,
+# exposes every authenticated path to any origin the user visits.
+_ALLOWED_ORIGINS_RAW = os.getenv("ORCHESTRATOR_ALLOWED_ORIGINS", "").strip()
+_ALLOWED_ORIGINS = [o.strip() for o in _ALLOWED_ORIGINS_RAW.split(",") if o.strip()]
+if not _ALLOWED_ORIGINS:
+    _ALLOWED_ORIGINS = ["https://app.siyadah.ai"]
+    log.warning(
+        "ORCHESTRATOR_ALLOWED_ORIGINS not set — defaulting to %s. "
+        "Set the env var (CSV) to reflect your real front-ends.",
+        _ALLOWED_ORIGINS,
+    )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Siyadah-Tenant"],
+)
 
 from mcp_sse import router as sse_router  # noqa: E402
 app.include_router(sse_router)
@@ -1769,7 +1788,10 @@ app.include_router(sse_router)
 async def api_key_check(request: Request, call_next):
     if ORCH_API_KEY and request.url.path.startswith("/v2/"):
         key = request.headers.get("X-API-Key", "")
-        if key != ORCH_API_KEY:
+        # Constant-time comparison — blocks the byte-by-byte remote timing
+        # attack the previous `!=` enabled. Both operands must be bytes.
+        if not hmac.compare_digest(key.encode("utf-8"),
+                                   ORCH_API_KEY.encode("utf-8")):
             return JSONResponse(status_code=401,
                                 content={"error": "Invalid or missing API key"})
     return await call_next(request)
