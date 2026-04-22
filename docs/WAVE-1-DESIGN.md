@@ -115,3 +115,150 @@ against it directly; it compares the caller's key hash to rows in
 `tenant_api_keys`.
 
 انتهيت من §1 + §2 + §3 (Migration v9). هل أكمل بـ §4 (Middleware pseudocode)؟
+
+---
+
+## 4. Middleware pseudocode
+
+New file: `core/security.py`. Replaces the existing inline `api_key_check`
+at `main.py:1768-1775`.
+
+```python
+# core/security.py
+import hmac, hashlib, os, json, logging, uuid
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from db.session import async_session
+from db.models import TenantApiKey
+from sqlalchemy import select
+
+log = logging.getLogger("siyadah.auth")
+
+# Kill-switch. When True, violations are logged to tenant_audit_log with
+# `violation=<reason>` but requests are allowed through. When False,
+# violations return 401/403. Wave 1 deploys with ENFORCE=False for 1 week
+# to collect BFF violations, then flips to True.
+ENFORCE = os.getenv("REQUIRE_TENANT_ENFORCE", "false").lower() == "true"
+
+PUBLIC_PATHS = {"/", "/health", "/openapi.json", "/docs", "/redoc"}
+
+def _hash_key(raw: str) -> str:
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+async def require_tenant(request: Request, call_next):
+    path = request.url.path
+    request_id = str(uuid.uuid4())
+    request.state.request_id = request_id
+
+    if path in PUBLIC_PATHS or not path.startswith(("/v2/", "/templates", "/connections")):
+        return await call_next(request)
+
+    raw_key = request.headers.get("X-API-Key", "")
+    claimed_pid = request.headers.get("X-Siyadah-Tenant", "")
+
+    violation: str | None = None
+    resolved = None
+
+    if not raw_key:
+        violation = "missing_api_key"
+    elif not claimed_pid:
+        violation = "missing_tenant_header"
+    else:
+        async with async_session() as s:
+            row = (await s.execute(
+                select(TenantApiKey).where(
+                    TenantApiKey.key_hash == _hash_key(raw_key),
+                    TenantApiKey.revoked_at.is_(None),
+                )
+            )).scalar_one_or_none()
+        if not row:
+            violation = "unknown_or_revoked_key"
+        elif not hmac.compare_digest(row.project_id.encode(), claimed_pid.encode()):
+            violation = "tenant_mismatch"
+        else:
+            resolved = row
+
+    if resolved:
+        request.state.project_id = resolved.project_id
+        request.state.scopes = resolved.scopes
+        request.state.api_key_hash = resolved.key_hash
+    else:
+        request.state.project_id = None
+        request.state.scopes = []
+        request.state.api_key_hash = _hash_key(raw_key) if raw_key else None
+
+    if violation and ENFORCE:
+        await _audit(request, 401 if violation.startswith("missing") else 403, violation)
+        log.warning("auth-block req=%s path=%s violation=%s", request_id, path, violation)
+        status = 401 if violation.startswith("missing") else 403
+        return JSONResponse(status_code=status, content={
+            "error": violation, "request_id": request_id,
+        })
+
+    if violation:  # dry-run: log but allow
+        log.warning("DRY-RUN auth-violation req=%s path=%s violation=%s",
+                    request_id, path, violation)
+        await _audit(request, 0, violation)  # http_status=0 marks dry-run log only
+
+    response = await call_next(request)
+
+    if not violation:
+        await _audit(request, response.status_code, None)
+    return response
+
+async def _audit(request, http_status: int, violation: str | None):
+    """Best-effort insert into tenant_audit_log. Never raises."""
+    try:
+        async with async_session() as s:
+            await s.execute(
+                "INSERT INTO tenant_audit_log "
+                "(project_id, api_key_hash, endpoint, http_status, "
+                " request_id, remote_ip, user_agent, violation) "
+                "VALUES (:p,:h,:e,:s,:r,:ip,:ua,:v)",
+                {
+                    "p": getattr(request.state, "project_id", None),
+                    "h": getattr(request.state, "api_key_hash", None),
+                    "e": f"{request.method} {request.url.path}",
+                    "s": http_status,
+                    "r": request.state.request_id,
+                    "ip": request.client.host if request.client else None,
+                    "ua": request.headers.get("user-agent", "")[:500],
+                    "v": violation,
+                },
+            )
+            await s.commit()
+    except Exception as e:
+        log.error("audit-log failed: %s", e)  # never fail the request
+```
+
+Wiring in `main.py`:
+
+```python
+# Replace the existing api_key_check decorator (main.py:1768-1775) with:
+from core.security import require_tenant
+app.middleware("http")(require_tenant)
+```
+
+### Header contract
+
+| Header | Required? | Value | Notes |
+|---|---|---|---|
+| `X-API-Key` | yes | raw key issued to the BFF | server hashes with sha256; never stored raw |
+| `X-Siyadah-Tenant` | yes | the target `project_id` | must match the key's bound project |
+| `X-Request-Id` | optional | client-supplied UUID | echoed back for correlation |
+
+### Env vars (new)
+
+| Var | Default | Effect |
+|---|---|---|
+| `REQUIRE_TENANT_ENFORCE` | `false` | `true` → block on violation; `false` → dry-run |
+| `REQUIRE_TENANT_DRY_RUN_UNTIL` | unset | ISO-8601 date; middleware reads it and warns daily that dry-run window is open |
+
+### Performance budget
+
+- 1 Postgres SELECT per request (indexed on `key_hash`) ≈ 0.5 ms on Railway.
+- 1 INSERT into `tenant_audit_log` per request ≈ 0.7 ms. `await` is
+  fire-and-forget via `asyncio.create_task()` if the insert becomes a
+  hotspot; keep it in the request path for Wave 1 to aid debugging.
+
+انتهيت من §4 (Middleware). هل أكمل بـ §5 (BFF breaking changes)؟
