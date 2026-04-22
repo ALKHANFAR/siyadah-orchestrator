@@ -26,6 +26,22 @@ def _normalize_url(url: str) -> str:
 
 _raw_db_url = _normalize_url(os.getenv("DATABASE_URL", ""))
 
+# Guard: Railway env templates that were not substituted (e.g. copied raw
+# `<RAILWAY_PRIVATE_DOMAIN>` or unrendered `${{Postgres.PGHOST}}` reference)
+# produce silent DNS failures. Detect and refuse to connect with a clear log.
+if _raw_db_url and (
+    "<" in _raw_db_url and ">" in _raw_db_url
+    or "${{" in _raw_db_url
+    or "RAILWAY_PRIVATE_DOMAIN" in _raw_db_url
+):
+    log.error(
+        "DATABASE_URL contains an unsubstituted template placeholder: %r. "
+        "Fix in Railway → Variables using ${{Postgres.PGHOST}} etc., or paste "
+        "the real hostname. Falling back to in-memory (no persistence).",
+        _raw_db_url,
+    )
+    _raw_db_url = ""
+
 _connect_args: dict = {}
 _skip_ssl = "sslmode" in _raw_db_url or "localhost" in _raw_db_url or "127.0.0.1" in _raw_db_url
 if _raw_db_url and not _skip_ssl:

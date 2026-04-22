@@ -966,12 +966,21 @@ def _sort_steps_info_chronological(steps_info: List[dict]) -> List[dict]:
 
 async def _build_step_from_spec(
         spec: dict, counter: list, engine: SiyadahEngine,
-        next_action=None, steps_info: Optional[List[dict]] = None):
-    """Recursively build a step from a specification dict."""
+        next_action=None, steps_info: Optional[List[dict]] = None,
+        forced_name: Optional[str] = None):
+    """Recursively build a step from a specification dict.
+
+    If `forced_name` is provided, use it as the step name (allows the caller
+    to pre-assign input-order names so `{{step_1}}` always refers to the
+    first user-supplied spec, not the last-processed one).
+    """
     stype = spec.get("type", "PIECE")
-    snum = counter[0]
-    counter[0] += 1
-    sname = f"step_{snum}"
+    if forced_name:
+        sname = forced_name
+    else:
+        snum = counter[0]
+        counter[0] += 1
+        sname = f"step_{snum}"
 
     if stype == "PIECE":
         piece_raw = (spec.get("piece") or spec.get("piece_name") or "").strip()
@@ -1154,27 +1163,40 @@ async def _build_step_from_spec(
 async def _build_action_chain(
         specs: list, counter: list, engine: SiyadahEngine,
         steps_info: Optional[List[dict]] = None):
-    """Chain actions via nextAction links (builds last→first)."""
+    """Chain actions via nextAction links (builds last→first).
+
+    Step names are pre-reserved in *input order* before the reverse build so
+    that `{{step_1[...]}}` always references the user's first spec — not the
+    last one processed. This eliminates ReferenceError at runtime caused by
+    build-order/input-order mismatches.
+    """
     if not specs:
         return None
-    chain = None
     total = len(specs)
+    # Reserve N consecutive step numbers in input order.
+    reserved_start = counter[0]
+    counter[0] += total
+    names = [f"step_{reserved_start + i}" for i in range(total)]
+
+    chain = None
     for idx, spec in enumerate(reversed(specs)):
-        step_num = total - idx
+        input_pos = total - 1 - idx  # position in the original input list
+        step_num = input_pos + 1      # 1-based for error messages
         sdict = spec if isinstance(spec, dict) else (
             spec.model_dump() if hasattr(spec, "model_dump") else spec)
         if not isinstance(sdict, dict):
             raise TypeError(f"Chain step must be dict, got {type(spec).__name__}")
         try:
             chain = await _build_step_from_spec(
-                sdict, counter, engine, next_action=chain, steps_info=steps_info)
+                sdict, counter, engine, next_action=chain,
+                steps_info=steps_info, forced_name=names[input_pos])
         except HTTPException:
             raise
         except Exception as ex:
             raise HTTPException(
                 status_code=500,
-                detail=f"Failed building step {step_num}/{total}: "
-                       f"{type(ex).__name__}: {ex}",
+                detail=f"Failed building step {step_num}/{total} "
+                       f"({names[input_pos]}): {type(ex).__name__}: {ex}",
             ) from ex
     if chain is None:
         raise HTTPException(

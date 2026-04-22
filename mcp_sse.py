@@ -27,6 +27,19 @@ log = logging.getLogger("siyadah.sse")
 router = APIRouter(prefix="/v2/mcp", tags=["MCP-SSE"])
 
 REDIS_URL = os.getenv("REDIS_URL", "")
+# Guard: refuse unsubstituted Railway template placeholders (prevents silent
+# DNS failure like `<RAILWAY_PRIVATE_DOMAIN>:6379`).
+if REDIS_URL and (
+    "<" in REDIS_URL and ">" in REDIS_URL
+    or "${{" in REDIS_URL
+    or "RAILWAY_PRIVATE_DOMAIN" in REDIS_URL
+):
+    log.error(
+        "REDIS_URL contains an unsubstituted template placeholder: %r. "
+        "Fix in Railway → Variables using ${{Redis.REDIS_URL}} or paste the "
+        "real hostname. Falling back to in-memory sessions.", REDIS_URL
+    )
+    REDIS_URL = ""
 SESSION_TTL = 3600  # 1 hour
 
 _redis: Optional[aioredis.Redis] = None
