@@ -262,3 +262,82 @@ app.middleware("http")(require_tenant)
   hotspot; keep it in the request path for Wave 1 to aid debugging.
 
 انتهيت من §4 (Middleware). هل أكمل بـ §5 (BFF breaking changes)؟
+
+---
+
+## 5. BFF (Siyadah-6.5) breaking changes
+
+The orchestrator's `require_tenant()` middleware enforces two new
+headers. The BFF (`github.com/ALKHANFAR/Siyadah-6.5`) must be updated
+**before** the orchestrator flips `REQUIRE_TENANT_ENFORCE=true`.
+
+### 5.1 What changes on the BFF
+
+| File (expected) | Change |
+|---|---|
+| `src/lib/orchestrator-server.ts` | In every outbound `fetch(ORCHESTRATOR_URL + path, ...)`, add `X-Siyadah-Tenant: <authenticated user's project_id>` header |
+| `src/lib/orchestrator-server.ts` | Remove `project_id` from any body being forwarded to `/v2/build-*`, `/v2/identity/*`, `/v2/project/*`, `/v2/mcp/*`, `/v2/connect`, `/v2/flows/{id}/reimport` — body field is now ignored server-side |
+| `src/app/api/orchestrator/[...path]/route.ts` | Allowlist already restricts paths; add check that the authenticated session has a valid `project_id` mapping before proxying |
+| `src/lib/auth/*` | Session must carry the tenant's `project_id` (exists today per `AGENTS.md:98`); no schema change — but confirm it's populated on NextAuth callback |
+| `.env` (BFF) | `ORCHESTRATOR_API_KEY` must be the raw key whose sha256 was seeded into `tenant_api_keys.key_hash` — do not rotate without re-seeding |
+
+### 5.2 Wire diagram — before vs after
+
+**Before (today):**
+
+```
+Browser → Siyadah-6.5 /api/orchestrator/[...path]
+          (session-auth'd by NextAuth)
+          → adds X-API-Key: $ORCHESTRATOR_API_KEY
+          → forwards body including { project_id: session.projectId, ... }
+          → orchestrator /v2/build-complex
+            pid = body.project_id or DEFAULT_PID   ← trust-the-body
+```
+
+**After (Wave 1 enforced):**
+
+```
+Browser → Siyadah-6.5 /api/orchestrator/[...path]
+          (session-auth'd)
+          → adds X-API-Key:       $ORCHESTRATOR_API_KEY
+          → adds X-Siyadah-Tenant: session.projectId   ← NEW
+          → forwards body with project_id REMOVED      ← NEW
+          → orchestrator middleware require_tenant()
+            verifies sha256(X-API-Key) → tenant_api_keys row
+            verifies row.project_id == X-Siyadah-Tenant
+            stores on request.state.project_id
+          → /v2/build-complex
+            pid = request.state.project_id            ← server-truth
+```
+
+### 5.3 Matching BFF PR branch
+
+- **Branch**: `wave1-bff-tenant-injection` in `ALKHANFAR/Siyadah-6.5`
+- **Dependency**: This PR (`wave1-real-multitenancy` in orchestrator) ships
+  first in **dry-run mode** (`REQUIRE_TENANT_ENFORCE=false`). BFF PR can
+  merge any time after. Once BFF is deployed and audit log shows zero
+  `tenant_mismatch` / `missing_tenant_header` violations for 7 days,
+  flip orchestrator env to `REQUIRE_TENANT_ENFORCE=true`.
+- **No simultaneous merge required** — dry-run is the decoupling layer.
+
+### 5.4 Violations the BFF will NOT cause (but third-party callers might)
+
+| Violation (audit log row) | Cause | BFF impact |
+|---|---|---|
+| `missing_api_key` | caller forgot `X-API-Key` | can't happen from BFF (middleware always sets) |
+| `missing_tenant_header` | caller omitted `X-Siyadah-Tenant` | will happen during dry-run window while BFF deploys |
+| `unknown_or_revoked_key` | stale key after rotation | operational — coordinate rotation |
+| `tenant_mismatch` | BFF's session.projectId != the key's bound project | logic bug in BFF session lookup — fix required |
+
+### 5.5 Rollout checklist for the BFF team
+
+- [ ] Add `X-Siyadah-Tenant: <session.projectId>` to every `fetch` in `orchestrator-server.ts`
+- [ ] Strip `project_id` from body before forwarding
+- [ ] Add unit test: assert header present in every outbound orchestrator call
+- [ ] Deploy BFF to staging first
+- [ ] Verify orchestrator `tenant_audit_log` shows zero violations for 24h on staging
+- [ ] Deploy BFF to production
+- [ ] Monitor orchestrator audit log for 7 days
+- [ ] On green: operator flips `REQUIRE_TENANT_ENFORCE=true` in Railway
+
+انتهيت من §5 (BFF breaking changes). هل أكمل بـ §6 (14 endpoint modifications)؟
