@@ -3767,13 +3767,18 @@ _DB_ONLY_TOOLS = frozenset({"get_institutional_memory", "list_operators", "list_
 
 
 @app.post("/v2/mcp/execute")
-async def v2_mcp_execute(body: MCPExecuteBody):
+async def v2_mcp_execute(request: Request, body: MCPExecuteBody):
     """Live MCP Tool Dispatcher — Claude calls tools here.
     Also used by mcp_sse._execute_mcp_tool for SSE transport.
     """
     tool = body.tool
     p = body.parameters
-    pid = body.project_id or p.get("project_id") or DEFAULT_PID
+    # Wave-1: prefer verified tenant from middleware state; parameters
+    # dict is caller-controlled so it comes last in the precedence chain.
+    pid = resolve_pid(request, body.project_id or p.get("project_id"))
+    # Strip any smuggled project_id in parameters so downstream handlers
+    # cannot accidentally read it.
+    p.pop("project_id", None)
     cn = resolve_conns(body.connection_ids or p.get("connection_ids"))
 
     if tool in _DB_ONLY_TOOLS:
