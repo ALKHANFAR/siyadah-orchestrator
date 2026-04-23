@@ -300,6 +300,32 @@ def resolve_conns(override: Dict[str, str] | None) -> Dict[str, str]:
     return conns
 
 
+def resolve_pid(request: Request, body_pid: Optional[str]) -> str:
+    """Resolve project_id with Wave-1 precedence.
+
+    1. request.state.project_id — set by require_tenant when the caller
+       presented a valid (X-API-Key, X-Siyadah-Tenant) pair.
+    2. body.project_id — legacy path. Accepted during the dry-run
+       window so the BFF can be updated asynchronously. Remove after
+       REQUIRE_TENANT_ENFORCE has been 'true' in prod for ≥7 days with
+       zero violations.
+    3. DEFAULT_PID — last-resort for single-tenant dev. Emits a warning
+       log every time to make the silent fallback visible.
+    """
+    state_pid = getattr(request.state, "project_id", None)
+    if state_pid:
+        return state_pid
+    if body_pid:
+        return body_pid
+    log.warning(
+        "resolve_pid fell back to DEFAULT_PID path=%s req_id=%s — header "
+        "missing AND body project_id empty. Fix BFF or seed tenant_api_keys.",
+        request.url.path,
+        getattr(request.state, "request_id", "?"),
+    )
+    return DEFAULT_PID
+
+
 # ═══════════════════════════════════════════════════════════════
 # TOKEN-EFFICIENT RESPONSE COMPRESSION
 # ═══════════════════════════════════════════════════════════════
@@ -1784,17 +1810,17 @@ from mcp_sse import router as sse_router  # noqa: E402
 app.include_router(sse_router)
 
 
-@app.middleware("http")
-async def api_key_check(request: Request, call_next):
-    if ORCH_API_KEY and request.url.path.startswith("/v2/"):
-        key = request.headers.get("X-API-Key", "")
-        # Constant-time comparison — blocks the byte-by-byte remote timing
-        # attack the previous `!=` enabled. Both operands must be bytes.
-        if not hmac.compare_digest(key.encode("utf-8"),
-                                   ORCH_API_KEY.encode("utf-8")):
-            return JSONResponse(status_code=401,
-                                content={"error": "Invalid or missing API key"})
-    return await call_next(request)
+# ─── Wave-1 tenant enforcement (dry-run by default) ─────────────────
+# Replaces the legacy api_key_check. require_tenant verifies (X-API-Key,
+# X-Siyadah-Tenant) against the tenant_api_keys table and attaches the
+# verified project_id to request.state.project_id. Endpoint handlers
+# read from request.state instead of body.project_id.
+# Behaviour gated by REQUIRE_TENANT_ENFORCE:
+#   false (default) → violations logged to tenant_audit_log, request passes
+#   true            → violations return 401/403
+# See docs/WAVE-1-DESIGN.md §4 and auth.py.
+from auth import require_tenant  # noqa: E402
+app.middleware("http")(require_tenant)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1879,7 +1905,7 @@ async def v2_templates():
 
 
 @app.post("/v2/build-and-deploy")
-async def v2_build(body: BuildBody):
+async def v2_build(request: Request, body: BuildBody):
     e = E()
     t = body.template
     if t not in TEMPLATES:
@@ -1889,7 +1915,7 @@ async def v2_build(body: BuildBody):
     if missing:
         raise HTTPException(422, detail=f"Missing config: {missing}")
 
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
 
     await guard_connections(e, pid, ["gmail", "google-sheets"], cn, strict=True)
@@ -1914,9 +1940,9 @@ async def v2_build(body: BuildBody):
 # V2 — DYNAMIC BUILDER (Golden Protocol)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-dynamic")
-async def v2_build_dynamic(body: DynamicBuildBody):
+async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
 
     t = body.trigger
@@ -1984,9 +2010,9 @@ async def v2_build_dynamic(body: DynamicBuildBody):
 # V2 — ROUTER BUILDER
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-router")
-async def v2_build_router(body: RouterBuildBody):
+async def v2_build_router(request: Request, body: RouterBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     counter = [1]
 
@@ -2025,9 +2051,9 @@ async def v2_build_router(body: RouterBuildBody):
 # V2 — LOOP BUILDER
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-loop")
-async def v2_build_loop(body: LoopBuildBody):
+async def v2_build_loop(request: Request, body: LoopBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     counter = [1]
 
     before = (await _build_action_chain(body.before_loop, counter, e)
@@ -2063,9 +2089,9 @@ async def v2_build_loop(body: LoopBuildBody):
 # V2 — COMPLEX BUILDER (any mix)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-complex")
-async def v2_build_complex(body: ComplexBuildBody):
+async def v2_build_complex(request: Request, body: ComplexBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     validate_complex_steps(body.steps)
 
@@ -2137,11 +2163,11 @@ async def v2_presets():
 
 
 @app.post("/v2/build-preset")
-async def v2_build_preset(body: PresetBuildBody):
+async def v2_build_preset(request: Request, body: PresetBuildBody):
     e = E()
     if body.preset not in PRESETS:
         raise HTTPException(400, detail=f"Unknown preset: {body.preset}. Available: {list(PRESETS.keys())}")
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     pdef = PRESETS[body.preset]
     default_name, trigger = pdef["fn"](body.params, cn)
@@ -2158,9 +2184,9 @@ async def v2_build_preset(body: PresetBuildBody):
 # V2 — SMART BUILDER (schema-validated propertySettings)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-smart")
-async def v2_build_smart(body: SmartBuildBody):
+async def v2_build_smart(request: Request, body: SmartBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
 
     required = [s.piece_name.replace("@activepieces/piece-", "") for s in body.steps]
@@ -2401,10 +2427,10 @@ async def v2_diagnose(flow_id: str):
 # V2 — UPDATE EXISTING FLOW (Re-import)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/flows/{flow_id}/reimport")
-async def v2_reimport(flow_id: str, body: ReimportBody):
+async def v2_reimport(flow_id: str, request: Request, body: ReimportBody):
     """Re-import flow with new structure. Golden Protocol on existing flow."""
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     result = {"flow_id": flow_id, "webhook_url": None, "publish": {}, "diagnosis": None}
 
@@ -2803,7 +2829,7 @@ class ProjectRegisterBody(BaseModel):
 
 
 @app.post("/v2/project/register")
-async def v2_project_register(body: ProjectRegisterBody):
+async def v2_project_register(request: Request, body: ProjectRegisterBody):
     """Register or update a project in the Siyadah memory layer."""
     try:
         from database import async_session
@@ -2812,7 +2838,7 @@ async def v2_project_register(body: ProjectRegisterBody):
         if not async_session:
             raise HTTPException(503, detail="Database not configured")
 
-        pid = body.project_id or DEFAULT_PID
+        pid = resolve_pid(request, body.project_id)
         async with async_session() as session:
             async with session.begin():
                 proj = (await session.execute(
@@ -2923,7 +2949,7 @@ class IngestBody(BaseModel):
 
 
 @app.post("/v2/identity/ingest")
-async def v2_identity_ingest(body: IngestBody):
+async def v2_identity_ingest(request: Request, body: IngestBody):
     """Universal Absorption Engine — scrape website, AI-analyze, persist identity.
 
     Modes:
@@ -2941,7 +2967,7 @@ async def v2_identity_ingest(body: IngestBody):
             result = await preview_website(url=url)
             return result
 
-        pid = body.project_id or DEFAULT_PID
+        pid = resolve_pid(request, body.project_id)
         result = await ingest_website(url=url, project_id=pid)
         return result
     except RuntimeError as exc:
@@ -3135,7 +3161,7 @@ class SuggestBody(BaseModel):
 
 
 @app.post("/v2/logic/suggest")
-async def v2_logic_suggest(body: SuggestBody):
+async def v2_logic_suggest(request: Request, body: SuggestBody):
     """Sector-aware suggestion engine — returns 3 personalized flow recommendations.
 
     Analyzes the project's identity and proposes automation flows that
@@ -3145,7 +3171,7 @@ async def v2_logic_suggest(body: SuggestBody):
     from models import ProjectIdentity, KnowledgeAsset
     from sqlalchemy import select
 
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
 
     sector = "default"
     lang = "en"
@@ -3566,13 +3592,14 @@ async def _build_missed_opportunities(
 
 @app.get("/v2/logic/proactive-suggestions")
 async def v2_logic_proactive_suggestions(
+    request: Request,
     project_id: Optional[str] = Query(
         default=None,
         description="Tenant project id (defaults to AP_PROJECT_ID).",
     ),
 ):
     """Compare ProjectIdentity + knowledge to success patterns in Mem; add per-flow health WARNING hints."""
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     lang = "en"
     from database import async_session
     from models import ProjectIdentity
@@ -4054,10 +4081,10 @@ class ConnectBody(BaseModel):
 
 
 @app.post("/v2/connect")
-async def v2_connect(body: ConnectBody):
+async def v2_connect(request: Request, body: ConnectBody):
     """Create a new AP connection for a piece."""
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     piece = body.piece_name
     full_piece = piece if piece.startswith("@") else f"@activepieces/piece-{piece}"
     short = piece.replace("@activepieces/piece-", "")
@@ -4073,10 +4100,10 @@ async def v2_connect(body: ConnectBody):
 
 
 @app.get("/v2/connections/health")
-async def v2_connections_health(project_id: Optional[str] = None):
+async def v2_connections_health(request: Request, project_id: Optional[str] = None):
     """Health overview of all connections — split by healthy/unhealthy."""
     e = E()
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     conns = await e.list_connections(pid)
     healthy, unhealthy = [], []
     for c in conns:
@@ -4090,10 +4117,10 @@ async def v2_connections_health(project_id: Optional[str] = None):
 
 
 @app.post("/v2/connections/{connection_id}/test")
-async def v2_connection_test(connection_id: str, project_id: Optional[str] = None):
+async def v2_connection_test(connection_id: str, request: Request, project_id: Optional[str] = None):
     """Check stored status of a connection (not a live connectivity test)."""
     e = E()
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     conns = await e.list_connections(pid)
     target = next((c for c in conns
                    if c.get("id") == connection_id
@@ -4111,10 +4138,10 @@ async def v2_connection_test(connection_id: str, project_id: Optional[str] = Non
 
 
 @app.delete("/v2/connections/{connection_id}")
-async def v2_connection_delete(connection_id: str, project_id: Optional[str] = None):
+async def v2_connection_delete(connection_id: str, request: Request, project_id: Optional[str] = None):
     """Delete a connection — refuses if any flow uses it."""
     e = E()
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     flows = await e.list_flows(pid)
     affected = [f"{f.get('id')} ({f.get('version', {}).get('displayName', '?')})"
                 for f in flows if connection_id in str(f.get("version", {}))]

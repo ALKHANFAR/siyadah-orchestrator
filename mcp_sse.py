@@ -104,16 +104,30 @@ def _get_queue(sid: str) -> asyncio.Queue:
 
 @router.get("/sse")
 async def mcp_sse_connect(request: Request):
-    """Open an SSE stream. Returns session_id in the first event."""
+    """Open an SSE stream. Returns session_id in the first event.
+
+    Wave-1: the session is bound to request.state.project_id (set by
+    require_tenant middleware). In dry-run, tenant may be None — we
+    allow the connection but warn; when ENFORCE=true and tenant is
+    None the middleware already rejected the request.
+    """
     sid = str(uuid.uuid4())
+    tenant_id = getattr(request.state, "project_id", None)
+    if tenant_id is None:
+        log.warning(
+            "SSE session %s opened without tenant binding (dry-run or "
+            "legacy bootstrap). Seed tenant_api_keys to enable binding.",
+            sid,
+        )
     session_data = {
         "session_id": sid,
+        "tenant_id": tenant_id,
         "created_at": time.time(),
         "status": "connected",
     }
     await _save_session(sid, session_data)
     queue = _get_queue(sid)
-    log.info("SSE session opened: %s", sid)
+    log.info("SSE session opened: sid=%s tenant=%s", sid, tenant_id)
 
     async def event_generator():
         yield {
@@ -150,25 +164,49 @@ class MCPMessage(BaseModel):
 
 
 @router.post("/messages/{session_id}")
-async def mcp_sse_message(session_id: str, body: MCPMessage):
-    """Receive a JSON-RPC message and push the response through the SSE stream."""
+async def mcp_sse_message(session_id: str, request: Request, body: MCPMessage):
+    """Receive a JSON-RPC message and push the response through the SSE stream.
+
+    Wave-1: reject if the caller's verified tenant (from
+    require_tenant middleware) does not match the session's tenant
+    binding. Prevents a valid BFF session key from being used to
+    hijack another tenant's SSE stream.
+    """
     sess = await _load_session(session_id)
     if not sess:
         raise HTTPException(404, detail=f"Session '{session_id}' not found or expired")
+
+    caller_tenant = getattr(request.state, "project_id", None)
+    session_tenant = sess.get("tenant_id")
+    if session_tenant is not None and caller_tenant is not None:
+        if session_tenant != caller_tenant:
+            log.warning(
+                "SSE tenant mismatch: session.tenant=%s caller=%s sid=%s",
+                session_tenant, caller_tenant, session_id,
+            )
+            raise HTTPException(
+                403,
+                detail="Session belongs to a different tenant",
+            )
 
     queue = _queues.get(session_id)
     if not queue:
         raise HTTPException(410, detail=f"Session '{session_id}' stream disconnected")
 
-    response = await _handle_mcp_message(body)
+    response = await _handle_mcp_message(body, tenant_id=session_tenant or caller_tenant)
 
     await queue.put(response)
 
     return {"status": "accepted", "session_id": session_id}
 
 
-async def _handle_mcp_message(msg: MCPMessage) -> dict:
-    """Route JSON-RPC methods to internal handlers."""
+async def _handle_mcp_message(msg: MCPMessage, tenant_id: Optional[str] = None) -> dict:
+    """Route JSON-RPC methods to internal handlers.
+
+    ``tenant_id`` is the verified caller/session tenant; when set, tool
+    executions are scoped to it and the arguments.project_id is
+    ignored (Wave-1 isolation).
+    """
 
     if msg.method == "initialize":
         return {
@@ -201,7 +239,7 @@ async def _handle_mcp_message(msg: MCPMessage) -> dict:
         tool_name = msg.params.get("name", "")
         arguments = msg.params.get("arguments", {})
         try:
-            result = await _execute_mcp_tool(tool_name, arguments)
+            result = await _execute_mcp_tool(tool_name, arguments, tenant_id=tenant_id)
             return {
                 "jsonrpc": "2.0",
                 "id": msg.id,
@@ -264,16 +302,36 @@ async def _load_project_context(project_id: str) -> dict | None:
         return None
 
 
-async def _execute_mcp_tool(tool_name: str, arguments: dict) -> Any:
+async def _execute_mcp_tool(
+    tool_name: str,
+    arguments: dict,
+    tenant_id: Optional[str] = None,
+) -> Any:
     """Shared tool executor — used by both SSE and REST `/v2/mcp/execute`.
 
     Injects ProjectIdentity as _system_context so the AI has full
     business awareness when processing tool calls.
+
+    Wave-1: ``tenant_id`` (from the verified SSE session or caller)
+    takes precedence over arguments["project_id"]. Arguments' copy is
+    dropped even if still present — prevents a client from smuggling
+    a cross-tenant id into the tool call.
     """
     from main import E, DEFAULT_PID, resolve_conns, _mcp_dispatch
 
     e = E()
-    pid = arguments.pop("project_id", None) or DEFAULT_PID
+    args_pid = arguments.pop("project_id", None)
+    if tenant_id:
+        pid = tenant_id
+    elif args_pid:
+        pid = args_pid
+    else:
+        pid = DEFAULT_PID
+        log.warning(
+            "MCP tool %s executing with DEFAULT_PID — no session tenant "
+            "and no args project_id. Seed tenant_api_keys or pass tenant.",
+            tool_name,
+        )
     cn = resolve_conns(arguments.pop("connection_ids", None))
 
     context = await _load_project_context(pid)
