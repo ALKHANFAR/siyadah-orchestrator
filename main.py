@@ -2649,6 +2649,242 @@ async def v2_reimport(flow_id: str, request: Request, body: ReimportBody):
 
 
 # ═══════════════════════════════════════════════════════════════
+# V2 — FLOW REGISTRY (Orphan Bridge — Phase 4)
+# The BFF calls register-employee after every successful build so it
+# can populate its own siyadah.digital_employees table with an
+# enriched manifest. Reconciliation: GET /v2/flows?orphan=true lists
+# AP flows not yet mirrored into flow_registry.
+# ═══════════════════════════════════════════════════════════════
+
+class RegisterEmployeeBody(_Multi):
+    display_name: Optional[str] = Field(
+        None,
+        description="Override display name. Defaults to flow.displayName from AP.",
+    )
+
+
+def _extract_flow_metadata(flow: dict) -> dict:
+    """Walk the AP flow JSON and pull out trigger + piece manifest."""
+    version = flow.get("version") or {}
+    trigger = version.get("trigger") or flow.get("trigger") or {}
+    trigger_type = trigger.get("type") or "unknown"
+
+    pieces: list[str] = []
+    mcp_tool_count = 0
+
+    def _walk(step: dict | None) -> None:
+        nonlocal mcp_tool_count
+        if not isinstance(step, dict):
+            return
+        settings = step.get("settings") or {}
+        piece = settings.get("pieceName") or step.get("pieceName")
+        if piece and piece not in pieces:
+            pieces.append(piece)
+        if step.get("type") == "PIECE":
+            mcp_tool_count += 1
+        for child in step.get("children") or []:
+            _walk(child)
+        _walk(step.get("nextAction"))
+        for branch in step.get("branches") or []:
+            _walk(branch.get("nextAction"))
+            for inner in branch.get("children") or []:
+                _walk(inner)
+
+    _walk(trigger)
+    # Trigger.nextAction chain
+    _walk(trigger.get("nextAction"))
+
+    return {
+        "trigger_type": trigger_type,
+        "pieces": pieces,
+        "mcp_tool_count": mcp_tool_count,
+    }
+
+
+def _webhook_url_for(flow_id: str, trigger_type: str) -> Optional[str]:
+    if trigger_type == "WEBHOOK" or trigger_type == "webhook":
+        return f"{AP_BASE}/api/v1/webhooks/{flow_id}"
+    return None
+
+
+@app.post("/v2/flows/{flow_id}/register-employee")
+@limiter.limit("20/minute")
+async def v2_register_employee(
+    flow_id: str,
+    request: Request,
+    body: RegisterEmployeeBody,
+):
+    """Register an AP flow as a digital employee in this tenant's registry.
+
+    Idempotent — calling twice with the same flow_id updates the row
+    instead of duplicating. Cross-tenant protection: if the flow's AP
+    projectId does not match the caller's tenant, returns 404 (no
+    existence leak).
+
+    Response payload is enriched with piece_manifest so the BFF can
+    populate its own digital_employees table in one call.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+
+    e = E()
+    pid = resolve_pid(request, body.project_id)
+
+    try:
+        flow = await e.get_flow(flow_id)
+    except HTTPException as he:
+        if he.status_code == 404:
+            raise HTTPException(404, detail="flow_not_found") from he
+        raise
+
+    # Cross-tenant guard: AP returns projectId on the flow; reject if
+    # it doesn't match the caller's tenant so a valid key for tenant A
+    # can't register tenant B's flow.
+    flow_pid = flow.get("projectId") or flow.get("project_id")
+    if flow_pid and flow_pid != pid:
+        log.warning(
+            "register-employee cross-tenant attempt caller=%s flow_owner=%s flow=%s",
+            pid, flow_pid, flow_id,
+        )
+        raise HTTPException(404, detail="flow_not_found")
+
+    meta = _extract_flow_metadata(flow)
+    ap_display = (flow.get("version") or {}).get("displayName") or flow.get("displayName") or flow_id
+    display_name = body.display_name or ap_display
+    webhook_url = _webhook_url_for(flow_id, meta["trigger_type"])
+
+    piece_manifest = {
+        "pieces": meta["pieces"],
+        "mcp_tool_count": meta["mcp_tool_count"],
+        "ap_version_id": (flow.get("version") or {}).get("id"),
+    }
+
+    # Upsert — use ON CONFLICT so retries don't duplicate.
+    if async_session is None:
+        raise HTTPException(503, detail="database_unavailable")
+
+    async with async_session() as s:
+        existing = (await s.execute(
+            select(FlowRegistry).where(FlowRegistry.flow_id == flow_id)
+        )).scalar_one_or_none()
+
+        if existing:
+            # Tenant ownership is fixed — never let another tenant claim
+            # a previously-registered flow_id.
+            if existing.tenant_id != pid:
+                log.warning(
+                    "register-employee tenant-hijack attempt caller=%s owner=%s flow=%s",
+                    pid, existing.tenant_id, flow_id,
+                )
+                raise HTTPException(404, detail="flow_not_found")
+            existing.display_name = display_name
+            existing.trigger_type = meta["trigger_type"]
+            existing.webhook_url = webhook_url
+            existing.piece_manifest = piece_manifest
+            await s.commit()
+            row_id = existing.id
+            created = False
+        else:
+            row = FlowRegistry(
+                tenant_id=pid,
+                flow_id=flow_id,
+                display_name=display_name,
+                trigger_type=meta["trigger_type"],
+                webhook_url=webhook_url,
+                piece_manifest=piece_manifest,
+            )
+            s.add(row)
+            await s.commit()
+            row_id = row.id
+            created = True
+
+    return {
+        "status": "registered",
+        "created": created,
+        "registry_id": row_id,
+        "flow_id": flow_id,
+        "tenant_id": pid,
+        "display_name": display_name,
+        "trigger_type": meta["trigger_type"],
+        "webhook_url": webhook_url,
+        "piece_manifest": piece_manifest,
+    }
+
+
+@app.get("/v2/flows")
+@limiter.limit("60/minute")
+async def v2_list_flows(
+    request: Request,
+    orphan: bool = Query(
+        False,
+        description="If true, return only AP flows NOT yet in flow_registry.",
+    ),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """List AP flows for the caller's tenant + merge flow_registry metadata.
+
+    Cross-tenant safety: only flows whose AP projectId matches the
+    caller's tenant are returned. The flow_registry join is filtered
+    the same way so a recycled flow_id from another tenant cannot leak.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+
+    e = E()
+    pid = resolve_pid(request, None)
+
+    ap_flows_raw = await e.list_flows(pid)
+    # Defensive: AP sometimes returns flows for other projects if the
+    # projectId query is ignored; double-check.
+    ap_flows = [
+        f for f in ap_flows_raw
+        if (f.get("projectId") or f.get("project_id") or pid) == pid
+    ]
+
+    registered_ids: set[str] = set()
+    registry_rows: dict[str, dict] = {}
+    if async_session is not None:
+        async with async_session() as s:
+            rows = (await s.execute(
+                select(FlowRegistry).where(FlowRegistry.tenant_id == pid)
+            )).scalars().all()
+        for r in rows:
+            registered_ids.add(r.flow_id)
+            registry_rows[r.flow_id] = {
+                "registry_id": r.id,
+                "display_name": r.display_name,
+                "trigger_type": r.trigger_type,
+                "webhook_url": r.webhook_url,
+                "piece_manifest": r.piece_manifest,
+                "registered_at": r.created_at.isoformat() if r.created_at else None,
+            }
+
+    items: list[dict] = []
+    for f in ap_flows[:limit]:
+        fid = f.get("id") or f.get("flowId") or ""
+        is_registered = fid in registered_ids
+        if orphan and is_registered:
+            continue
+        items.append({
+            "flow_id": fid,
+            "ap_display_name": (f.get("version") or {}).get("displayName") or f.get("displayName"),
+            "ap_status": f.get("status"),
+            "registered": is_registered,
+            "orphan": not is_registered,
+            **({"registry": registry_rows[fid]} if is_registered else {}),
+        })
+
+    return {
+        "tenant_id": pid,
+        "total": len(items),
+        "orphan_filter": orphan,
+        "flows": items,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════
 # V2 — PIECES CATALOG
 # ═══════════════════════════════════════════════════════════════
 @app.get("/v2/available-pieces")

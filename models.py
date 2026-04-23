@@ -133,3 +133,46 @@ class TenantAuditLog(Base):
     remote_ip = Column(INET, nullable=True)
     user_agent = Column(Text, nullable=True)
     violation = Column(String(64), nullable=True)  # null for clean writes
+
+
+# ═══════════════════════════════════════════════════════════════
+# WAVE-4 / PHASE-4 — FLOW REGISTRY (Orphan Bridge)
+# Maps every Activepieces flow_id that the BFF built to its owning
+# tenant + piece manifest. Solves the "orphan flow" problem where a
+# built flow doesn't appear in the frontend's digital_employees table
+# because the BFF never learned about it.
+#
+# Writes happen via POST /v2/flows/{flow_id}/register-employee.
+# Reads via GET /v2/flows?orphan=true (reconciliation).
+# ═══════════════════════════════════════════════════════════════
+
+class FlowRegistry(Base):
+    """One row per registered digital-employee flow.
+
+    - `flow_id` is the Activepieces flow uuid; unique across all tenants
+      because AP itself guarantees uniqueness, but we still scope reads
+      by tenant_id so one tenant can't even discover another's ids.
+    - `piece_manifest` is the enriched JSON payload the BFF needs to
+      write its own `siyadah.digital_employees` row.
+    """
+    __tablename__ = "flow_registry"
+    __table_args__ = (
+        Index("ix_fr_tenant_created", "tenant_id", "created_at"),
+        Index("ix_fr_trigger_type", "tenant_id", "trigger_type"),
+    )
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    tenant_id = Column(
+        String(64),
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    flow_id = Column(String(64), nullable=False, unique=True)
+    display_name = Column(String(255), nullable=False)
+    trigger_type = Column(String(64), nullable=True)       # e.g. 'webhook', 'schedule'
+    webhook_url = Column(Text, nullable=True)
+    piece_manifest = Column(JSONB, default=dict)          # pieces + mcp_tool count
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(),
+    )

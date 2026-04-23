@@ -131,6 +131,7 @@ async def init_db() -> None:
         AutonomousSetting,
         TenantApiKey,
         TenantAuditLog,
+        FlowRegistry,
     )
 
     async with engine.begin() as conn:
