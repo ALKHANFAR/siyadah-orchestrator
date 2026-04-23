@@ -25,6 +25,12 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
@@ -73,6 +79,21 @@ OPERATORS = [
 # ═══════════════════════════════════════════════════════════════
 # ASYNC ENGINE — httpx, multi-tenant
 # ═══════════════════════════════════════════════════════════════
+
+def _is_retryable_engine_error(exc: BaseException) -> bool:
+    """Classify upstream failures for the AP engine retry loop (Phase 2).
+
+    Retry: transient httpx errors (converted to HTTPException(502) inside
+    _r), and any upstream 5xx. Never retry 4xx — those are caller bugs,
+    retrying just wastes budget and hides the error.
+    """
+    if isinstance(exc, HTTPException) and 500 <= exc.status_code < 600:
+        return True
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return True
+    return False
+
+
 class SiyadahEngine:
     """Async Activepieces API client."""
 
@@ -85,10 +106,18 @@ class SiyadahEngine:
 
     async def _ensure_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
+            # Phase 2: bound the connection pool so a burst of builds can't
+            # exhaust sockets. Tuned for Railway's single-worker default; raise
+            # max_connections if we move to a multi-worker deploy.
             self._client = httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {self.token}",
                          "Content-Type": "application/json"},
                 timeout=ORCHESTRATOR_HTTPX_TIMEOUT,
+                limits=httpx.Limits(
+                    max_connections=50,
+                    max_keepalive_connections=20,
+                    keepalive_expiry=30.0,
+                ),
             )
         return self._client
 
@@ -97,32 +126,58 @@ class SiyadahEngine:
             await self._client.aclose()
 
     async def _r(self, method: str, path: str, body=None, params=None):
-        client = await self._ensure_client()
+        """Call AP with bounded retry on transient failures.
+
+        Retry policy (Phase 2):
+        - Transient network/timeout → retry up to 3 attempts, exp jitter 1–8s.
+        - Upstream 5xx → retry (same budget).
+        - 4xx → NEVER retry (surface the error to the caller immediately).
+        - 401 with credentials → re-auth inline on the current attempt
+          (existing behaviour; does NOT consume a retry slot).
+        """
         url = f"{self.base}/api{path}"
-        try:
-            r = await client.request(method, url, json=body, params=params)
-        except Exception as e:
-            raise HTTPException(502, detail=str(e))
-        if r.status_code == 401 and self._email and self._password:
-            log.warning("[engine] 401 on %s %s — re-authenticating", method, path)
-            try:
-                auth = await self.sign_in(self._email, self._password, self.base)
-                new_token = auth.get("token") or auth.get("access_token", "")
-                if new_token:
-                    self.token = new_token
-                    if self._client and not self._client.is_closed:
-                        await self._client.aclose()
-                    self._client = None
-                    client = await self._ensure_client()
+        async for attempt in AsyncRetrying(
+            retry=retry_if_exception(_is_retryable_engine_error),
+            stop=stop_after_attempt(3),
+            wait=wait_exponential_jitter(initial=1.0, max=8.0),
+            reraise=True,
+        ):
+            with attempt:
+                client = await self._ensure_client()
+                try:
                     r = await client.request(method, url, json=body, params=params)
-                    log.info("[engine] Re-auth successful, retried %s %s → %s", method, path, r.status_code)
-            except Exception as auth_err:
-                log.error("[engine] Re-auth failed: %s", auth_err)
-        if not r.is_success:
-            raise HTTPException(r.status_code, detail=r.text[:500])
-        if r.status_code == 204 or not r.content:
-            return {}
-        return r.json()
+                except (httpx.TimeoutException, httpx.NetworkError) as e:
+                    # Tagged as 502 so the route returns a sane upstream error
+                    # AND so _is_retryable_engine_error fires.
+                    raise HTTPException(502, detail=f"upstream network error: {e}")
+                except Exception as e:
+                    raise HTTPException(502, detail=str(e))
+
+                if r.status_code == 401 and self._email and self._password:
+                    log.warning("[engine] 401 on %s %s — re-authenticating", method, path)
+                    try:
+                        auth = await self.sign_in(self._email, self._password, self.base)
+                        new_token = auth.get("token") or auth.get("access_token", "")
+                        if new_token:
+                            self.token = new_token
+                            if self._client and not self._client.is_closed:
+                                await self._client.aclose()
+                            self._client = None
+                            client = await self._ensure_client()
+                            r = await client.request(method, url, json=body, params=params)
+                            log.info("[engine] Re-auth OK, retried %s %s → %s",
+                                     method, path, r.status_code)
+                    except Exception as auth_err:
+                        log.error("[engine] Re-auth failed: %s", auth_err)
+
+                if not r.is_success:
+                    raise HTTPException(r.status_code, detail=r.text[:500])
+                if r.status_code == 204 or not r.content:
+                    return {}
+                return r.json()
+        # AsyncRetrying with reraise=True always either returns from the
+        # body or raises; the loop cannot exit normally.
+        raise RuntimeError("unreachable: AsyncRetrying exited without outcome")
 
     @staticmethod
     async def sign_in(email: str, password: str, base: str) -> dict:
@@ -1806,6 +1861,43 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Siyadah-Tenant"],
 )
 
+# ─── Phase 2 rate limiter (per-tenant, Redis-backed) ────────────────
+# Must be wired BEFORE include_router so the SSE routes inherit the
+# limiter.state without needing their own limiter instance.
+from slowapi.errors import RateLimitExceeded  # noqa: E402
+from slowapi.middleware import SlowAPIMiddleware  # noqa: E402
+
+from limits_config import limiter  # noqa: E402
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    """Return JSON with the breached limit + Retry-After.
+
+    Preserves the X-RateLimit-* headers that SlowAPIMiddleware already
+    attached to the request, so clients see both the failure and the
+    window reset time.
+    """
+    tenant = getattr(request.state, "project_id", None) or "anonymous"
+    log.warning(
+        "rate-limit-exceeded tenant=%s path=%s limit=%s",
+        tenant, request.url.path, exc.detail,
+    )
+    response = JSONResponse(
+        status_code=429,
+        content={
+            "error": "rate_limit_exceeded",
+            "detail": str(exc.detail),
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+    # slowapi adds headers on the response itself when headers_enabled=True.
+    return response
+
+
 from mcp_sse import router as sse_router  # noqa: E402
 app.include_router(sse_router)
 
@@ -1905,6 +1997,7 @@ async def v2_templates():
 
 
 @app.post("/v2/build-and-deploy")
+@limiter.limit("10/minute")
 async def v2_build(request: Request, body: BuildBody):
     e = E()
     t = body.template
@@ -1940,6 +2033,7 @@ async def v2_build(request: Request, body: BuildBody):
 # V2 — DYNAMIC BUILDER (Golden Protocol)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-dynamic")
+@limiter.limit("10/minute")
 async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
     e = E()
     pid = resolve_pid(request, body.project_id)
@@ -2010,6 +2104,7 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
 # V2 — ROUTER BUILDER
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-router")
+@limiter.limit("10/minute")
 async def v2_build_router(request: Request, body: RouterBuildBody):
     e = E()
     pid = resolve_pid(request, body.project_id)
@@ -2051,6 +2146,7 @@ async def v2_build_router(request: Request, body: RouterBuildBody):
 # V2 — LOOP BUILDER
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-loop")
+@limiter.limit("10/minute")
 async def v2_build_loop(request: Request, body: LoopBuildBody):
     e = E()
     pid = resolve_pid(request, body.project_id)
@@ -2089,6 +2185,7 @@ async def v2_build_loop(request: Request, body: LoopBuildBody):
 # V2 — COMPLEX BUILDER (any mix)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-complex")
+@limiter.limit("10/minute")
 async def v2_build_complex(request: Request, body: ComplexBuildBody):
     e = E()
     pid = resolve_pid(request, body.project_id)
@@ -2163,6 +2260,7 @@ async def v2_presets():
 
 
 @app.post("/v2/build-preset")
+@limiter.limit("10/minute")
 async def v2_build_preset(request: Request, body: PresetBuildBody):
     e = E()
     if body.preset not in PRESETS:
@@ -2184,6 +2282,7 @@ async def v2_build_preset(request: Request, body: PresetBuildBody):
 # V2 — SMART BUILDER (schema-validated propertySettings)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-smart")
+@limiter.limit("10/minute")
 async def v2_build_smart(request: Request, body: SmartBuildBody):
     e = E()
     pid = resolve_pid(request, body.project_id)
@@ -2427,6 +2526,7 @@ async def v2_diagnose(flow_id: str):
 # V2 — UPDATE EXISTING FLOW (Re-import)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/flows/{flow_id}/reimport")
+@limiter.limit("10/minute")
 async def v2_reimport(flow_id: str, request: Request, body: ReimportBody):
     """Re-import flow with new structure. Golden Protocol on existing flow."""
     e = E()
@@ -2829,6 +2929,7 @@ class ProjectRegisterBody(BaseModel):
 
 
 @app.post("/v2/project/register")
+@limiter.limit("10/minute")
 async def v2_project_register(request: Request, body: ProjectRegisterBody):
     """Register or update a project in the Siyadah memory layer."""
     try:
@@ -2949,6 +3050,7 @@ class IngestBody(BaseModel):
 
 
 @app.post("/v2/identity/ingest")
+@limiter.limit("10/minute")
 async def v2_identity_ingest(request: Request, body: IngestBody):
     """Universal Absorption Engine — scrape website, AI-analyze, persist identity.
 
@@ -3767,6 +3869,7 @@ _DB_ONLY_TOOLS = frozenset({"get_institutional_memory", "list_operators", "list_
 
 
 @app.post("/v2/mcp/execute")
+@limiter.limit("60/minute")
 async def v2_mcp_execute(request: Request, body: MCPExecuteBody):
     """Live MCP Tool Dispatcher — Claude calls tools here.
     Also used by mcp_sse._execute_mcp_tool for SSE transport.
