@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main, "claude/**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: pytest harsh suite (Phases 1-4)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sy
+          POSTGRES_PASSWORD: sy
+          POSTGRES_DB: siyadah_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd="pg_isready -U sy"
+          --health-interval=3s
+          --health-timeout=5s
+          --health-retries=10
+
+      redis:
+        image: redis:7-alpine
+        ports: ["6380:6379"]
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=3s
+          --health-timeout=5s
+          --health-retries=10
+
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://sy:sy@127.0.0.1:5432/siyadah_test
+      TEST_REDIS_URL: redis://127.0.0.1:6380/0
+      SIYADAH_SKIP_PG_SSL: "1"
+      PYTHONUNBUFFERED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-asyncio ruff
+
+      - name: Ruff lint (warn only for now)
+        run: |
+          ruff check --select E,F,W --exclude tests/integration_phase_1_4.py . \
+            || echo "::warning::ruff found issues — not blocking while suite stabilises"
+
+      - name: Pytest harsh suite
+        run: |
+          pytest tests/ \
+            --ignore=tests/integration_phase_1_4.py \
+            -v --tb=short --maxfail=5
+
+      - name: Smoke-run Phase 4 in dry-run mode too
+        env:
+          REQUIRE_TENANT_ENFORCE: "false"
+        run: |
+          # In dry-run, API-key violations are still enforced but
+          # tenant_mismatch is allowed through. Rerun Phase 4 only —
+          # Phase 1 assumes enforce=true.
+          pytest tests/test_phase_4_orphan.py -v --tb=short
