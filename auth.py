@@ -139,7 +139,20 @@ async def _audit(
 
 
 async def require_tenant(request: Request, call_next):
-    """Wave-1 middleware. Must be registered via app.middleware('http')."""
+    """Wave-1 middleware. Must be registered via app.middleware('http').
+
+    Binds request_id (always) and tenant_id (when resolved) onto the
+    structlog contextvars so every downstream log line in this request
+    carries them. Always cleared in a finally block.
+    """
+    # Lazy import — logging_config is configured during app startup,
+    # but auth.py is imported early.
+    try:
+        from logging_config import bind_request_context, clear_request_context
+    except Exception:  # nosec B110 — fall back to no-op binding
+        def bind_request_context(**_kw): return None
+        def clear_request_context(): return None
+
     path = request.url.path
 
     # Always stamp a request_id so downstream handlers + logs can correlate.
@@ -148,100 +161,108 @@ async def require_tenant(request: Request, call_next):
     request.state.api_key_hash = None
     request.state.scopes = []
 
-    if not _needs_enforcement(path):
-        return await call_next(request)
+    bind_request_context(request_id=request.state.request_id)
 
-    raw_key = request.headers.get("X-API-Key", "") or ""
-    claimed_pid = (request.headers.get("X-Siyadah-Tenant", "") or "").strip()
+    try:
+        if not _needs_enforcement(path):
+            return await call_next(request)
 
-    violation: Optional[str] = None
-    resolved = None
+        raw_key = request.headers.get("X-API-Key", "") or ""
+        claimed_pid = (request.headers.get("X-Siyadah-Tenant", "") or "").strip()
 
-    if not raw_key:
-        violation = "missing_api_key"
-    else:
-        key_hash = _hash_key(raw_key)
-        request.state.api_key_hash = key_hash
+        violation: Optional[str] = None
+        resolved = None
 
-        resolved = await _lookup_key(key_hash)
-        if resolved is None:
-            # Bootstrap: if no rows at all, trust legacy env-key compare so
-            # we don't break prod before the seed migration runs.
-            if LEGACY_API_KEY and hmac.compare_digest(
-                raw_key.encode("utf-8"),
-                LEGACY_API_KEY.encode("utf-8"),
-            ):
-                log.info(
-                    "auth-bootstrap req=%s path=%s — legacy key accepted "
-                    "(seed tenant_api_keys to remove this path)",
-                    request.state.request_id, path,
-                )
-            else:
-                violation = "unknown_or_revoked_key"
+        if not raw_key:
+            violation = "missing_api_key"
         else:
-            if not claimed_pid:
-                violation = "missing_tenant_header"
-            elif not hmac.compare_digest(
-                resolved.project_id.encode("utf-8"),
-                claimed_pid.encode("utf-8"),
-            ):
-                violation = "tenant_mismatch"
+            key_hash = _hash_key(raw_key)
+            request.state.api_key_hash = key_hash
+
+            resolved = await _lookup_key(key_hash)
+            if resolved is None:
+                # Bootstrap: if no rows at all, trust legacy env-key compare so
+                # we don't break prod before the seed migration runs.
+                if LEGACY_API_KEY and hmac.compare_digest(
+                    raw_key.encode("utf-8"),
+                    LEGACY_API_KEY.encode("utf-8"),
+                ):
+                    log.info(
+                        "auth-bootstrap req=%s path=%s — legacy key accepted "
+                        "(seed tenant_api_keys to remove this path)",
+                        request.state.request_id, path,
+                    )
+                else:
+                    violation = "unknown_or_revoked_key"
             else:
-                request.state.project_id = resolved.project_id
-                request.state.scopes = list(resolved.scopes or [])
-                # fire-and-forget last_used_at update
-                asyncio.create_task(_touch_last_used(resolved.key_hash))
+                if not claimed_pid:
+                    violation = "missing_tenant_header"
+                elif not hmac.compare_digest(
+                    resolved.project_id.encode("utf-8"),
+                    claimed_pid.encode("utf-8"),
+                ):
+                    violation = "tenant_mismatch"
+                else:
+                    request.state.project_id = resolved.project_id
+                    request.state.scopes = list(resolved.scopes or [])
+                    # Bind tenant onto the log context so downstream
+                    # log.info() calls in the route handler inherit it.
+                    bind_request_context(tenant_id=resolved.project_id)
+                    # fire-and-forget last_used_at update
+                    asyncio.create_task(_touch_last_used(resolved.key_hash))
 
-    # Violation classification:
-    # - API_KEY violations are ALWAYS enforced (parity with pre-Wave-1).
-    # - TENANT violations honour REQUIRE_TENANT_ENFORCE (dry-run default).
-    API_KEY_VIOLATIONS = {"missing_api_key", "unknown_or_revoked_key"}
-    TENANT_VIOLATIONS = {"missing_tenant_header", "tenant_mismatch"}
+        # Violation classification:
+        # - API_KEY violations are ALWAYS enforced (parity with pre-Wave-1).
+        # - TENANT violations honour REQUIRE_TENANT_ENFORCE (dry-run default).
+        API_KEY_VIOLATIONS = {"missing_api_key", "unknown_or_revoked_key"}
+        TENANT_VIOLATIONS = {"missing_tenant_header", "tenant_mismatch"}
 
-    if violation in API_KEY_VIOLATIONS:
-        status = 401
-        await _audit(request, status, violation)
-        log.warning(
-            "auth-block req=%s path=%s violation=%s status=%d",
-            request.state.request_id, path, violation, status,
-        )
-        return JSONResponse(
-            status_code=status,
-            content={
-                "error": violation,
-                "request_id": request.state.request_id,
-            },
-        )
+        if violation in API_KEY_VIOLATIONS:
+            status = 401
+            await _audit(request, status, violation)
+            log.warning(
+                "auth-block req=%s path=%s violation=%s status=%d",
+                request.state.request_id, path, violation, status,
+            )
+            return JSONResponse(
+                status_code=status,
+                content={
+                    "error": violation,
+                    "request_id": request.state.request_id,
+                },
+            )
 
-    if violation in TENANT_VIOLATIONS and ENFORCE:
-        status = 401 if violation == "missing_tenant_header" else 403
-        await _audit(request, status, violation)
-        log.warning(
-            "auth-block req=%s path=%s violation=%s status=%d",
-            request.state.request_id, path, violation, status,
-        )
-        return JSONResponse(
-            status_code=status,
-            content={
-                "error": violation,
-                "request_id": request.state.request_id,
-            },
-        )
+        if violation in TENANT_VIOLATIONS and ENFORCE:
+            status = 401 if violation == "missing_tenant_header" else 403
+            await _audit(request, status, violation)
+            log.warning(
+                "auth-block req=%s path=%s violation=%s status=%d",
+                request.state.request_id, path, violation, status,
+            )
+            return JSONResponse(
+                status_code=status,
+                content={
+                    "error": violation,
+                    "request_id": request.state.request_id,
+                },
+            )
 
-    # Dry-run: tenant violation logged, request passes through.
-    if violation in TENANT_VIOLATIONS and not ENFORCE:
-        log.warning(
-            "DRY-RUN tenant-violation req=%s path=%s violation=%s",
-            request.state.request_id, path, violation,
-        )
-        await _audit(request, 0, violation)
-        # fall through to call_next
+        # Dry-run: tenant violation logged, request passes through.
+        if violation in TENANT_VIOLATIONS and not ENFORCE:
+            log.warning(
+                "DRY-RUN tenant-violation req=%s path=%s violation=%s",
+                request.state.request_id, path, violation,
+            )
+            await _audit(request, 0, violation)
+            # fall through to call_next
 
-    response = await call_next(request)
+        response = await call_next(request)
 
-    # Record successful writes (not violations — they're already logged).
-    if not violation:
-        # Fire-and-forget for the happy path — keep the hot path fast.
-        asyncio.create_task(_audit(request, response.status_code, None))
+        # Record successful writes (not violations — they're already logged).
+        if not violation:
+            # Fire-and-forget for the happy path — keep the hot path fast.
+            asyncio.create_task(_audit(request, response.status_code, None))
 
-    return response
+        return response
+    finally:
+        clear_request_context()

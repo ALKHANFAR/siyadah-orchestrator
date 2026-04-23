@@ -32,6 +32,11 @@ from tenacity import (
     wait_exponential_jitter,
 )
 
+# Phase 3 replaces the plain-text formatter with structlog JSON +
+# optional Sentry. configure_logging() is called inside the lifespan
+# handler before anything else so the first startup log line is JSON.
+# Until configure_logging() runs (e.g. during module import) the
+# standard basicConfig keeps logs visible in dev REPLs.
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
@@ -1797,6 +1802,11 @@ def E() -> SiyadahEngine:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _engine
+    # Phase 3: upgrade logging before anything emits a line in the
+    # startup sequence. Idempotent — safe on reloads.
+    from logging_config import configure_logging
+    configure_logging(level=os.getenv("LOG_LEVEL", "INFO"))
+
     log.info("Siyadah Orchestrator v%s starting", VERSION)
 
     # 1. Authenticate with Activepieces
