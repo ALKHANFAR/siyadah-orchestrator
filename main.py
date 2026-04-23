@@ -2885,6 +2885,195 @@ async def v2_list_flows(
 
 
 # ═══════════════════════════════════════════════════════════════
+# Phase 6 — Flow graph + duplicate detector
+# The BFF asks the orchestrator "is this already built?" before
+# calling a /v2/build-* endpoint, and pulls a node/edge summary for
+# visualisation. Both are read-only and tenant-scoped.
+# ═══════════════════════════════════════════════════════════════
+
+class CheckDuplicateBody(_Multi):
+    trigger_type: str = Field(
+        ..., description="Upper-case trigger type, e.g. WEBHOOK or SCHEDULE",
+    )
+    pieces: List[str] = Field(
+        default_factory=list,
+        description="Piece short-names that the planned flow would use "
+                    "(order-insensitive). Ex: ['@activepieces/gmail','@activepieces/sheets']",
+    )
+    display_name: Optional[str] = Field(
+        None, description="Proposed display name (used only to surface in the response)",
+    )
+
+
+def _flow_to_graph(flow: dict) -> dict:
+    """Collapse an AP flow JSON into a node/edge representation.
+
+    Designed for the BFF: small payload (no settings dumps), linear
+    chain where possible, branches expanded as sibling edges. We
+    preserve only fields a human would visualise — piece, action,
+    displayName, branch condition label.
+    """
+    version = flow.get("version") or {}
+    trigger = version.get("trigger") or flow.get("trigger") or {}
+
+    nodes: list[dict] = []
+    edges: list[dict] = []
+    node_counter = {"i": 0}
+
+    def _nid() -> str:
+        node_counter["i"] += 1
+        return f"n{node_counter['i']}"
+
+    def _node(step: dict, kind: str, parent_id: Optional[str] = None,
+              edge_label: Optional[str] = None) -> Optional[str]:
+        if not isinstance(step, dict):
+            return None
+        settings = step.get("settings") or {}
+        nid = _nid()
+        nodes.append({
+            "id": nid,
+            "kind": kind,  # trigger | piece | branch | loop | code
+            "type": step.get("type"),
+            "piece": settings.get("pieceName") or step.get("pieceName"),
+            "action": settings.get("actionName") or settings.get("triggerName"),
+            "display_name": step.get("displayName") or step.get("name"),
+        })
+        if parent_id is not None:
+            edges.append({
+                "from": parent_id, "to": nid,
+                **({"label": edge_label} if edge_label else {}),
+            })
+        return nid
+
+    def _walk(step: Optional[dict], parent: Optional[str]) -> None:
+        if not isinstance(step, dict):
+            return
+        nid = _node(step, "piece" if step.get("type") == "PIECE" else
+                    step.get("type", "step").lower(), parent)
+        if nid is None:
+            return
+        nxt = step.get("nextAction")
+        if nxt:
+            _walk(nxt, nid)
+        for branch in step.get("branches") or []:
+            label = branch.get("name") or branch.get("branchName")
+            child = branch.get("nextAction") or branch
+            _walk(child, nid)
+            if child:  # annotate the last edge with the branch label
+                for e in reversed(edges):
+                    if e["from"] == nid and "label" not in e:
+                        e["label"] = label
+                        break
+        for child in step.get("children") or []:
+            _walk(child, nid)
+
+    trigger_id = _node(trigger, "trigger")
+    if trigger.get("nextAction"):
+        _walk(trigger["nextAction"], trigger_id)
+
+    return {
+        "flow_id": flow.get("id"),
+        "display_name": version.get("displayName") or flow.get("displayName"),
+        "trigger_type": trigger.get("type"),
+        "status": flow.get("status"),
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+@app.get("/v2/flows/{flow_id}/graph")
+@limiter.limit("60/minute")
+async def v2_flow_graph(flow_id: str, request: Request):
+    """Return a node/edge representation of a flow for frontend drawing.
+
+    Cross-tenant safety: the flow's AP projectId must match the verified
+    caller. Mismatch → 404 (no existence leak).
+    """
+    e = E()
+    pid = resolve_pid(request, None)
+
+    try:
+        flow = await e.get_flow(flow_id)
+    except HTTPException as he:
+        if he.status_code == 404:
+            raise HTTPException(404, detail="flow_not_found") from he
+        raise
+
+    flow_pid = flow.get("projectId") or flow.get("project_id")
+    if flow_pid and flow_pid != pid:
+        log.warning(
+            "flow-graph cross-tenant attempt caller=%s owner=%s flow=%s",
+            pid, flow_pid, flow_id,
+        )
+        raise HTTPException(404, detail="flow_not_found")
+
+    return _flow_to_graph(flow)
+
+
+@app.post("/v2/flows/check-duplicate")
+@limiter.limit("60/minute")
+async def v2_check_duplicate(request: Request, body: CheckDuplicateBody):
+    """Tell the BFF whether a flow with the same (trigger, pieces) signature
+    already exists for this tenant in flow_registry.
+
+    Response shape:
+    - `{"kind":"none"}` — nothing similar on record.
+    - `{"kind":"exact","existing":{...}}` — same trigger + same unordered
+      piece list. BFF should refuse the build and surface the existing
+      flow to the user.
+    - `{"kind":"near","matches":[{...}]}` — same trigger but a different
+      piece set. Advisory only; BFF may confirm with the user.
+
+    Signature comparison is deliberately tenant-scoped — we NEVER
+    reveal cross-tenant matches even on piece-level hits.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+
+    pid = resolve_pid(request, body.project_id)
+    want_trigger = (body.trigger_type or "").strip().upper()
+    want_pieces = sorted(set(body.pieces or []))
+
+    if async_session is None:
+        raise HTTPException(503, detail="database_unavailable")
+
+    async with async_session() as s:
+        rows = (await s.execute(
+            select(FlowRegistry)
+            .where(FlowRegistry.tenant_id == pid)
+        )).scalars().all()
+
+    exact: Optional[dict] = None
+    near: list[dict] = []
+    for r in rows:
+        manifest = r.piece_manifest or {}
+        got_pieces = sorted(set(manifest.get("pieces") or []))
+        got_trigger = (r.trigger_type or "").upper()
+        if got_trigger != want_trigger:
+            continue
+        summary = {
+            "flow_id": r.flow_id,
+            "display_name": r.display_name,
+            "trigger_type": r.trigger_type,
+            "pieces": got_pieces,
+            "registered_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        if got_pieces == want_pieces:
+            exact = summary
+            break
+        if set(got_pieces) & set(want_pieces):
+            # At least one overlapping piece — flag as near match.
+            near.append(summary)
+
+    if exact:
+        return {"kind": "exact", "existing": exact}
+    if near:
+        return {"kind": "near", "matches": near[:5]}
+    return {"kind": "none"}
+
+
+# ═══════════════════════════════════════════════════════════════
 # V2 — PIECES CATALOG
 # ═══════════════════════════════════════════════════════════════
 @app.get("/v2/available-pieces")
