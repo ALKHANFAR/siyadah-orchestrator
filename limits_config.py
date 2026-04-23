@@ -64,7 +64,11 @@ limiter = Limiter(
     storage_uri=_storage_uri,
     strategy="fixed-window",
     default_limits=[],  # opt-in per route
-    headers_enabled=True,  # X-RateLimit-* response headers
+    # Header injection from the decorator requires every route to expose
+    # `response: Response` in its signature. We rely on SlowAPIMiddleware
+    # for X-RateLimit-* headers on the 429 itself, so disable per-route
+    # injection to keep endpoint signatures free of extra parameters.
+    headers_enabled=False,
 )
 
 log.info("Rate limiter initialised (storage=%s)", _storage_kind)

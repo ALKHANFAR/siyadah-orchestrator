@@ -49,8 +49,12 @@ def _scrub(text: str) -> str:
     return text
 
 
-def _scrub_event(event_dict: dict[str, Any]) -> dict[str, Any]:
-    """structlog processor: run scrubbing on the rendered message + args."""
+def _scrub_event(logger, method_name, event_dict):
+    """structlog processor: run scrubbing on the rendered message + fields.
+
+    Signature (logger, method_name, event_dict) — mandatory per structlog
+    processor contract.
+    """
     msg = event_dict.get("event")
     if isinstance(msg, str):
         event_dict["event"] = _scrub(msg)
