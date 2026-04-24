@@ -208,8 +208,23 @@ def _stub_ap_flow_methods(monkeypatch):
             if f["projectId"] == pid
         ]
 
+    async def fake_mcp_register(self, pid, flow_id, tool_name, description):
+        """Default stub: AP doesn't know the /mcp-server/register endpoint
+        (simulates older AP build). sync_flow_to_mcp catches the 404 and
+        returns None — flow_registry gets mcp_tool_name = NULL.
+        Tests that WANT mcp registration to succeed override this via
+        their own monkeypatch."""
+        raise main.HTTPException(404, detail="mcp-server/register not implemented")
+
+    async def fake_mcp_unregister(self, pid, tool_name):
+        raise main.HTTPException(404, detail="mcp-server/tools not implemented")
+
     monkeypatch.setattr(main.SiyadahEngine, "get_flow", fake_get_flow)
     monkeypatch.setattr(main.SiyadahEngine, "list_flows", fake_list_flows)
+    monkeypatch.setattr(main.SiyadahEngine,
+                        "register_flow_as_mcp_tool", fake_mcp_register)
+    monkeypatch.setattr(main.SiyadahEngine,
+                        "unregister_flow_from_mcp", fake_mcp_unregister)
     # Ensure E() has a non-None engine so route handlers don't crash.
     if main._engine is None:
         main._engine = main.SiyadahEngine("http://localhost", "stub")

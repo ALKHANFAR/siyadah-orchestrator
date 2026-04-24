@@ -172,6 +172,11 @@ class FlowRegistry(Base):
     trigger_type = Column(String(64), nullable=True)       # e.g. 'webhook', 'schedule'
     webhook_url = Column(Text, nullable=True)
     piece_manifest = Column(JSONB, default=dict)          # pieces + mcp_tool count
+    # Phase 9 (Gap 2): flow is also advertised as an MCP tool in AP's
+    # per-project MCP server. NULL = not registered (either not tried
+    # yet or AP rejected).
+    mcp_tool_name = Column(String(64), nullable=True, index=True)
+    mcp_registered_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(),

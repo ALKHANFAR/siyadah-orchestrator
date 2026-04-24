@@ -82,6 +82,39 @@ OPERATORS = [
 
 
 # ═══════════════════════════════════════════════════════════════
+# Phase 9 — MCP tool name slugifier (Gap 2 remediation)
+# ═══════════════════════════════════════════════════════════════
+_SLUG_RE = re.compile(r"[^a-z0-9_]+")
+_MCP_TOOL_NAME_MAX = 64
+
+
+def _slugify_tool_name(display_name: str) -> str:
+    """Convert human display name → MCP-safe tool identifier.
+
+    MCP JSON-Schema tool names must match ``^[a-zA-Z_][a-zA-Z0-9_]*$``;
+    we normalise to lower-snake for predictability. Non-ASCII input
+    (Arabic, emoji, etc.) is stripped by the character class, so such
+    names fall back to ``flow_`` prefix or ``unnamed``.
+
+    Examples::
+
+      "Order Manager"        → "order_manager"
+      "Sales / 2024"         → "sales_2024"
+      "سارة المطعم"          → "unnamed"     (ASCII-only class drops Arabic)
+      "123 first"            → "flow_123_first"  (starts with digit)
+      ""                     → "unnamed"
+    """
+    s = (display_name or "").lower().strip()
+    s = _SLUG_RE.sub("_", s)
+    s = re.sub(r"_+", "_", s).strip("_")
+    if not s:
+        return "unnamed"
+    if not s[0].isalpha():
+        s = f"flow_{s}".strip("_") or "unnamed"
+    return s[:_MCP_TOOL_NAME_MAX]
+
+
+# ═══════════════════════════════════════════════════════════════
 # ASYNC ENGINE — httpx, multi-tenant
 # ═══════════════════════════════════════════════════════════════
 
@@ -290,6 +323,36 @@ class SiyadahEngine:
 
     async def update_trigger(self, fid: str, cfg: dict):
         return await self._fop(fid, "UPDATE_TRIGGER", cfg)
+
+    # ─── Phase 9 — MCP tool registration (Gap 2 remediation) ─────────
+    # AP exposes a per-project MCP server that can advertise flows as
+    # discoverable tools for external AI agents (Claude Desktop, Cursor).
+    # Endpoint path assumes a recent AP build; the orchestrator-level
+    # sync wrapper swallows 404s so older AP instances keep working.
+
+    async def register_flow_as_mcp_tool(
+        self, pid: str, flow_id: str, tool_name: str, description: str,
+    ) -> dict:
+        """Advertise a published flow as an MCP tool in this tenant's
+        MCP server. Relies on self._r's tenacity retry for 5xx/network."""
+        return await self._r(
+            "POST",
+            f"/v1/projects/{pid}/mcp-server/register",
+            {
+                "flowId": flow_id,
+                "toolName": tool_name,
+                "description": description,
+            },
+        )
+
+    async def unregister_flow_from_mcp(
+        self, pid: str, tool_name: str,
+    ) -> dict:
+        """Remove an MCP tool. Used on flow disable/delete in future work."""
+        return await self._r(
+            "DELETE",
+            f"/v1/projects/{pid}/mcp-server/tools/{tool_name}",
+        )
 
     async def add_action(self, fid: str, parent: str, loc: str, action: dict):
         return await self._fop(fid, "ADD_ACTION", {
@@ -1456,6 +1519,67 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
             "resource_link": resource_link,
             "pulse_sent": pulse_sent,
             "client_email": client_email}
+
+
+# ═══════════════════════════════════════════════════════════════
+# Phase 9 — MCP sync (Gap 2 — register flow as AP MCP tool)
+# ═══════════════════════════════════════════════════════════════
+
+async def sync_flow_to_mcp(
+    engine: SiyadahEngine,
+    flow_id: str,
+    project_id: str,
+    display_name: str,
+) -> Optional[dict]:
+    """Register a digital-employee flow as an MCP tool on AP's per-project
+    MCP server. Best-effort: never raises, logs failures, and returns
+    ``None`` if AP rejects or the endpoint isn't implemented in this
+    AP build.
+
+    Returns on success::
+
+        {"mcp_tool_name": "sarah_orders",
+         "mcp_registered_at": "2026-04-24T08:30:00+00:00",
+         "mcp_description": "Digital Employee: Sarah Orders"}
+
+    Safety rationale: flow creation must survive an MCP registration
+    failure (Gap-2 remediation plan Safety Rule #1). Any exception is
+    caught and logged at WARNING; callers read ``None`` and continue.
+    """
+    if not (flow_id and project_id and display_name):
+        log.debug("[mcp-sync] skipped — missing flow_id/project_id/display_name")
+        return None
+
+    tool_name = _slugify_tool_name(display_name)
+    description = f"Digital Employee: {display_name}"
+
+    try:
+        await engine.register_flow_as_mcp_tool(
+            project_id, flow_id, tool_name, description,
+        )
+        log.info(
+            "[mcp-sync] registered flow=%s tenant=%s tool=%s",
+            flow_id, project_id, tool_name,
+        )
+        return {
+            "mcp_tool_name": tool_name,
+            "mcp_registered_at": datetime.now(timezone.utc).isoformat(),
+            "mcp_description": description,
+        }
+    except HTTPException as he:
+        # 4xx = payload bug (won't retry per tenacity config)
+        # 5xx after 3 attempts = AP down or endpoint missing
+        # 404 = older AP without /mcp-server/register
+        log.warning(
+            "[mcp-sync] ap returned %d for flow=%s tenant=%s: %s",
+            he.status_code, flow_id, project_id, str(he.detail)[:180],
+        )
+    except Exception as exc:
+        log.warning(
+            "[mcp-sync] unexpected %s on flow=%s: %s",
+            type(exc).__name__, flow_id, exc,
+        )
+    return None
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2760,9 +2884,23 @@ async def v2_register_employee(
         "ap_version_id": (flow.get("version") or {}).get("id"),
     }
 
+    # Phase 9 (Gap 2): best-effort MCP tool registration. Runs BEFORE
+    # the DB upsert so the enriched mcp_tool_name lands in one commit.
+    # Returns None on any AP failure — flow registration still proceeds.
+    mcp_info = await sync_flow_to_mcp(e, flow_id, pid, display_name)
+    if mcp_info:
+        piece_manifest["mcp_tool_name"] = mcp_info["mcp_tool_name"]
+        piece_manifest["mcp_registered_at"] = mcp_info["mcp_registered_at"]
+
     # Upsert — use ON CONFLICT so retries don't duplicate.
     if async_session is None:
         raise HTTPException(503, detail="database_unavailable")
+
+    mcp_tool_name_val = mcp_info["mcp_tool_name"] if mcp_info else None
+    mcp_registered_at_val = (
+        datetime.fromisoformat(mcp_info["mcp_registered_at"])
+        if mcp_info else None
+    )
 
     async with async_session() as s:
         existing = (await s.execute(
@@ -2782,6 +2920,11 @@ async def v2_register_employee(
             existing.trigger_type = meta["trigger_type"]
             existing.webhook_url = webhook_url
             existing.piece_manifest = piece_manifest
+            # Only overwrite MCP fields when the current sync succeeded;
+            # a transient AP failure must not wipe previously-good data.
+            if mcp_info:
+                existing.mcp_tool_name = mcp_tool_name_val
+                existing.mcp_registered_at = mcp_registered_at_val
             await s.commit()
             row_id = existing.id
             created = False
@@ -2793,6 +2936,8 @@ async def v2_register_employee(
                 trigger_type=meta["trigger_type"],
                 webhook_url=webhook_url,
                 piece_manifest=piece_manifest,
+                mcp_tool_name=mcp_tool_name_val,
+                mcp_registered_at=mcp_registered_at_val,
             )
             s.add(row)
             await s.commit()
@@ -2809,6 +2954,7 @@ async def v2_register_employee(
         "trigger_type": meta["trigger_type"],
         "webhook_url": webhook_url,
         "piece_manifest": piece_manifest,
+        "mcp": mcp_info or {"status": "not_registered"},
     }
 
 
