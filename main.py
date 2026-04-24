@@ -25,7 +25,18 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
+# Phase 3 replaces the plain-text formatter with structlog JSON +
+# optional Sentry. configure_logging() is called inside the lifespan
+# handler before anything else so the first startup log line is JSON.
+# Until configure_logging() runs (e.g. during module import) the
+# standard basicConfig keeps logs visible in dev REPLs.
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)-7s | %(message)s")
 log = logging.getLogger("siyadah")
 
@@ -73,6 +84,21 @@ OPERATORS = [
 # ═══════════════════════════════════════════════════════════════
 # ASYNC ENGINE — httpx, multi-tenant
 # ═══════════════════════════════════════════════════════════════
+
+def _is_retryable_engine_error(exc: BaseException) -> bool:
+    """Classify upstream failures for the AP engine retry loop (Phase 2).
+
+    Retry: transient httpx errors (converted to HTTPException(502) inside
+    _r), and any upstream 5xx. Never retry 4xx — those are caller bugs,
+    retrying just wastes budget and hides the error.
+    """
+    if isinstance(exc, HTTPException) and 500 <= exc.status_code < 600:
+        return True
+    if isinstance(exc, (httpx.TimeoutException, httpx.NetworkError)):
+        return True
+    return False
+
+
 class SiyadahEngine:
     """Async Activepieces API client."""
 
@@ -85,10 +111,18 @@ class SiyadahEngine:
 
     async def _ensure_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
+            # Phase 2: bound the connection pool so a burst of builds can't
+            # exhaust sockets. Tuned for Railway's single-worker default; raise
+            # max_connections if we move to a multi-worker deploy.
             self._client = httpx.AsyncClient(
                 headers={"Authorization": f"Bearer {self.token}",
                          "Content-Type": "application/json"},
                 timeout=ORCHESTRATOR_HTTPX_TIMEOUT,
+                limits=httpx.Limits(
+                    max_connections=50,
+                    max_keepalive_connections=20,
+                    keepalive_expiry=30.0,
+                ),
             )
         return self._client
 
@@ -97,32 +131,58 @@ class SiyadahEngine:
             await self._client.aclose()
 
     async def _r(self, method: str, path: str, body=None, params=None):
-        client = await self._ensure_client()
+        """Call AP with bounded retry on transient failures.
+
+        Retry policy (Phase 2):
+        - Transient network/timeout → retry up to 3 attempts, exp jitter 1–8s.
+        - Upstream 5xx → retry (same budget).
+        - 4xx → NEVER retry (surface the error to the caller immediately).
+        - 401 with credentials → re-auth inline on the current attempt
+          (existing behaviour; does NOT consume a retry slot).
+        """
         url = f"{self.base}/api{path}"
-        try:
-            r = await client.request(method, url, json=body, params=params)
-        except Exception as e:
-            raise HTTPException(502, detail=str(e))
-        if r.status_code == 401 and self._email and self._password:
-            log.warning("[engine] 401 on %s %s — re-authenticating", method, path)
-            try:
-                auth = await self.sign_in(self._email, self._password, self.base)
-                new_token = auth.get("token") or auth.get("access_token", "")
-                if new_token:
-                    self.token = new_token
-                    if self._client and not self._client.is_closed:
-                        await self._client.aclose()
-                    self._client = None
-                    client = await self._ensure_client()
+        async for attempt in AsyncRetrying(
+            retry=retry_if_exception(_is_retryable_engine_error),
+            stop=stop_after_attempt(3),
+            wait=wait_exponential_jitter(initial=1.0, max=8.0),
+            reraise=True,
+        ):
+            with attempt:
+                client = await self._ensure_client()
+                try:
                     r = await client.request(method, url, json=body, params=params)
-                    log.info("[engine] Re-auth successful, retried %s %s → %s", method, path, r.status_code)
-            except Exception as auth_err:
-                log.error("[engine] Re-auth failed: %s", auth_err)
-        if not r.is_success:
-            raise HTTPException(r.status_code, detail=r.text[:500])
-        if r.status_code == 204 or not r.content:
-            return {}
-        return r.json()
+                except (httpx.TimeoutException, httpx.NetworkError) as e:
+                    # Tagged as 502 so the route returns a sane upstream error
+                    # AND so _is_retryable_engine_error fires.
+                    raise HTTPException(502, detail=f"upstream network error: {e}")
+                except Exception as e:
+                    raise HTTPException(502, detail=str(e))
+
+                if r.status_code == 401 and self._email and self._password:
+                    log.warning("[engine] 401 on %s %s — re-authenticating", method, path)
+                    try:
+                        auth = await self.sign_in(self._email, self._password, self.base)
+                        new_token = auth.get("token") or auth.get("access_token", "")
+                        if new_token:
+                            self.token = new_token
+                            if self._client and not self._client.is_closed:
+                                await self._client.aclose()
+                            self._client = None
+                            client = await self._ensure_client()
+                            r = await client.request(method, url, json=body, params=params)
+                            log.info("[engine] Re-auth OK, retried %s %s → %s",
+                                     method, path, r.status_code)
+                    except Exception as auth_err:
+                        log.error("[engine] Re-auth failed: %s", auth_err)
+
+                if not r.is_success:
+                    raise HTTPException(r.status_code, detail=r.text[:500])
+                if r.status_code == 204 or not r.content:
+                    return {}
+                return r.json()
+        # AsyncRetrying with reraise=True always either returns from the
+        # body or raises; the loop cannot exit normally.
+        raise RuntimeError("unreachable: AsyncRetrying exited without outcome")
 
     @staticmethod
     async def sign_in(email: str, password: str, base: str) -> dict:
@@ -298,6 +358,32 @@ def resolve_conns(override: Dict[str, str] | None) -> Dict[str, str]:
     if override:
         conns.update(override)
     return conns
+
+
+def resolve_pid(request: Request, body_pid: Optional[str]) -> str:
+    """Resolve project_id with Wave-1 precedence.
+
+    1. request.state.project_id — set by require_tenant when the caller
+       presented a valid (X-API-Key, X-Siyadah-Tenant) pair.
+    2. body.project_id — legacy path. Accepted during the dry-run
+       window so the BFF can be updated asynchronously. Remove after
+       REQUIRE_TENANT_ENFORCE has been 'true' in prod for ≥7 days with
+       zero violations.
+    3. DEFAULT_PID — last-resort for single-tenant dev. Emits a warning
+       log every time to make the silent fallback visible.
+    """
+    state_pid = getattr(request.state, "project_id", None)
+    if state_pid:
+        return state_pid
+    if body_pid:
+        return body_pid
+    log.warning(
+        "resolve_pid fell back to DEFAULT_PID path=%s req_id=%s — header "
+        "missing AND body project_id empty. Fix BFF or seed tenant_api_keys.",
+        request.url.path,
+        getattr(request.state, "request_id", "?"),
+    )
+    return DEFAULT_PID
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1716,6 +1802,11 @@ def E() -> SiyadahEngine:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _engine
+    # Phase 3: upgrade logging before anything emits a line in the
+    # startup sequence. Idempotent — safe on reloads.
+    from logging_config import configure_logging
+    configure_logging(level=os.getenv("LOG_LEVEL", "INFO"))
+
     log.info("Siyadah Orchestrator v%s starting", VERSION)
 
     # 1. Authenticate with Activepieces
@@ -1780,21 +1871,58 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type", "X-API-Key", "X-Siyadah-Tenant"],
 )
 
+# ─── Phase 2 rate limiter (per-tenant, Redis-backed) ────────────────
+# Must be wired BEFORE include_router so the SSE routes inherit the
+# limiter.state without needing their own limiter instance.
+from slowapi.errors import RateLimitExceeded  # noqa: E402
+from slowapi.middleware import SlowAPIMiddleware  # noqa: E402
+
+from limits_config import limiter  # noqa: E402
+
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    """Return JSON with the breached limit + Retry-After.
+
+    Preserves the X-RateLimit-* headers that SlowAPIMiddleware already
+    attached to the request, so clients see both the failure and the
+    window reset time.
+    """
+    tenant = getattr(request.state, "project_id", None) or "anonymous"
+    log.warning(
+        "rate-limit-exceeded tenant=%s path=%s limit=%s",
+        tenant, request.url.path, exc.detail,
+    )
+    response = JSONResponse(
+        status_code=429,
+        content={
+            "error": "rate_limit_exceeded",
+            "detail": str(exc.detail),
+            "request_id": getattr(request.state, "request_id", None),
+        },
+    )
+    # slowapi adds headers on the response itself when headers_enabled=True.
+    return response
+
+
 from mcp_sse import router as sse_router  # noqa: E402
 app.include_router(sse_router)
 
 
-@app.middleware("http")
-async def api_key_check(request: Request, call_next):
-    if ORCH_API_KEY and request.url.path.startswith("/v2/"):
-        key = request.headers.get("X-API-Key", "")
-        # Constant-time comparison — blocks the byte-by-byte remote timing
-        # attack the previous `!=` enabled. Both operands must be bytes.
-        if not hmac.compare_digest(key.encode("utf-8"),
-                                   ORCH_API_KEY.encode("utf-8")):
-            return JSONResponse(status_code=401,
-                                content={"error": "Invalid or missing API key"})
-    return await call_next(request)
+# ─── Wave-1 tenant enforcement (dry-run by default) ─────────────────
+# Replaces the legacy api_key_check. require_tenant verifies (X-API-Key,
+# X-Siyadah-Tenant) against the tenant_api_keys table and attaches the
+# verified project_id to request.state.project_id. Endpoint handlers
+# read from request.state instead of body.project_id.
+# Behaviour gated by REQUIRE_TENANT_ENFORCE:
+#   false (default) → violations logged to tenant_audit_log, request passes
+#   true            → violations return 401/403
+# See docs/WAVE-1-DESIGN.md §4 and auth.py.
+from auth import require_tenant  # noqa: E402
+app.middleware("http")(require_tenant)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1879,7 +2007,8 @@ async def v2_templates():
 
 
 @app.post("/v2/build-and-deploy")
-async def v2_build(body: BuildBody):
+@limiter.limit("10/minute")
+async def v2_build(request: Request, body: BuildBody):
     e = E()
     t = body.template
     if t not in TEMPLATES:
@@ -1889,7 +2018,7 @@ async def v2_build(body: BuildBody):
     if missing:
         raise HTTPException(422, detail=f"Missing config: {missing}")
 
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
 
     await guard_connections(e, pid, ["gmail", "google-sheets"], cn, strict=True)
@@ -1914,9 +2043,10 @@ async def v2_build(body: BuildBody):
 # V2 — DYNAMIC BUILDER (Golden Protocol)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-dynamic")
-async def v2_build_dynamic(body: DynamicBuildBody):
+@limiter.limit("10/minute")
+async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
 
     t = body.trigger
@@ -1984,9 +2114,10 @@ async def v2_build_dynamic(body: DynamicBuildBody):
 # V2 — ROUTER BUILDER
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-router")
-async def v2_build_router(body: RouterBuildBody):
+@limiter.limit("10/minute")
+async def v2_build_router(request: Request, body: RouterBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     counter = [1]
 
@@ -2025,9 +2156,10 @@ async def v2_build_router(body: RouterBuildBody):
 # V2 — LOOP BUILDER
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-loop")
-async def v2_build_loop(body: LoopBuildBody):
+@limiter.limit("10/minute")
+async def v2_build_loop(request: Request, body: LoopBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     counter = [1]
 
     before = (await _build_action_chain(body.before_loop, counter, e)
@@ -2063,9 +2195,10 @@ async def v2_build_loop(body: LoopBuildBody):
 # V2 — COMPLEX BUILDER (any mix)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-complex")
-async def v2_build_complex(body: ComplexBuildBody):
+@limiter.limit("10/minute")
+async def v2_build_complex(request: Request, body: ComplexBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     validate_complex_steps(body.steps)
 
@@ -2137,11 +2270,12 @@ async def v2_presets():
 
 
 @app.post("/v2/build-preset")
-async def v2_build_preset(body: PresetBuildBody):
+@limiter.limit("10/minute")
+async def v2_build_preset(request: Request, body: PresetBuildBody):
     e = E()
     if body.preset not in PRESETS:
         raise HTTPException(400, detail=f"Unknown preset: {body.preset}. Available: {list(PRESETS.keys())}")
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     pdef = PRESETS[body.preset]
     default_name, trigger = pdef["fn"](body.params, cn)
@@ -2158,9 +2292,10 @@ async def v2_build_preset(body: PresetBuildBody):
 # V2 — SMART BUILDER (schema-validated propertySettings)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/build-smart")
-async def v2_build_smart(body: SmartBuildBody):
+@limiter.limit("10/minute")
+async def v2_build_smart(request: Request, body: SmartBuildBody):
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
 
     required = [s.piece_name.replace("@activepieces/piece-", "") for s in body.steps]
@@ -2401,10 +2536,11 @@ async def v2_diagnose(flow_id: str):
 # V2 — UPDATE EXISTING FLOW (Re-import)
 # ═══════════════════════════════════════════════════════════════
 @app.post("/v2/flows/{flow_id}/reimport")
-async def v2_reimport(flow_id: str, body: ReimportBody):
+@limiter.limit("10/minute")
+async def v2_reimport(flow_id: str, request: Request, body: ReimportBody):
     """Re-import flow with new structure. Golden Protocol on existing flow."""
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     cn = resolve_conns(body.connection_ids)
     result = {"flow_id": flow_id, "webhook_url": None, "publish": {}, "diagnosis": None}
 
@@ -2510,6 +2646,431 @@ async def v2_reimport(flow_id: str, body: ReimportBody):
                 "diagnosis": str(diag),
             },
         ) from ex
+
+
+# ═══════════════════════════════════════════════════════════════
+# V2 — FLOW REGISTRY (Orphan Bridge — Phase 4)
+# The BFF calls register-employee after every successful build so it
+# can populate its own siyadah.digital_employees table with an
+# enriched manifest. Reconciliation: GET /v2/flows?orphan=true lists
+# AP flows not yet mirrored into flow_registry.
+# ═══════════════════════════════════════════════════════════════
+
+class RegisterEmployeeBody(_Multi):
+    display_name: Optional[str] = Field(
+        None,
+        description="Override display name. Defaults to flow.displayName from AP.",
+    )
+
+
+def _extract_flow_metadata(flow: dict) -> dict:
+    """Walk the AP flow JSON and pull out trigger + piece manifest."""
+    version = flow.get("version") or {}
+    trigger = version.get("trigger") or flow.get("trigger") or {}
+    trigger_type = trigger.get("type") or "unknown"
+
+    pieces: list[str] = []
+    mcp_tool_count = 0
+
+    def _walk(step: dict | None) -> None:
+        nonlocal mcp_tool_count
+        if not isinstance(step, dict):
+            return
+        settings = step.get("settings") or {}
+        piece = settings.get("pieceName") or step.get("pieceName")
+        if piece and piece not in pieces:
+            pieces.append(piece)
+        if step.get("type") == "PIECE":
+            mcp_tool_count += 1
+        for child in step.get("children") or []:
+            _walk(child)
+        _walk(step.get("nextAction"))
+        for branch in step.get("branches") or []:
+            _walk(branch.get("nextAction"))
+            for inner in branch.get("children") or []:
+                _walk(inner)
+
+    _walk(trigger)
+    # Trigger.nextAction chain
+    _walk(trigger.get("nextAction"))
+
+    return {
+        "trigger_type": trigger_type,
+        "pieces": pieces,
+        "mcp_tool_count": mcp_tool_count,
+    }
+
+
+def _webhook_url_for(flow_id: str, trigger_type: str) -> Optional[str]:
+    if trigger_type == "WEBHOOK" or trigger_type == "webhook":
+        return f"{AP_BASE}/api/v1/webhooks/{flow_id}"
+    return None
+
+
+@app.post("/v2/flows/{flow_id}/register-employee")
+@limiter.limit("20/minute")
+async def v2_register_employee(
+    flow_id: str,
+    request: Request,
+    body: RegisterEmployeeBody,
+):
+    """Register an AP flow as a digital employee in this tenant's registry.
+
+    Idempotent — calling twice with the same flow_id updates the row
+    instead of duplicating. Cross-tenant protection: if the flow's AP
+    projectId does not match the caller's tenant, returns 404 (no
+    existence leak).
+
+    Response payload is enriched with piece_manifest so the BFF can
+    populate its own digital_employees table in one call.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+
+    e = E()
+    pid = resolve_pid(request, body.project_id)
+
+    try:
+        flow = await e.get_flow(flow_id)
+    except HTTPException as he:
+        if he.status_code == 404:
+            raise HTTPException(404, detail="flow_not_found") from he
+        raise
+
+    # Cross-tenant guard: AP returns projectId on the flow; reject if
+    # it doesn't match the caller's tenant so a valid key for tenant A
+    # can't register tenant B's flow.
+    flow_pid = flow.get("projectId") or flow.get("project_id")
+    if flow_pid and flow_pid != pid:
+        log.warning(
+            "register-employee cross-tenant attempt caller=%s flow_owner=%s flow=%s",
+            pid, flow_pid, flow_id,
+        )
+        raise HTTPException(404, detail="flow_not_found")
+
+    meta = _extract_flow_metadata(flow)
+    ap_display = (flow.get("version") or {}).get("displayName") or flow.get("displayName") or flow_id
+    display_name = body.display_name or ap_display
+    webhook_url = _webhook_url_for(flow_id, meta["trigger_type"])
+
+    piece_manifest = {
+        "pieces": meta["pieces"],
+        "mcp_tool_count": meta["mcp_tool_count"],
+        "ap_version_id": (flow.get("version") or {}).get("id"),
+    }
+
+    # Upsert — use ON CONFLICT so retries don't duplicate.
+    if async_session is None:
+        raise HTTPException(503, detail="database_unavailable")
+
+    async with async_session() as s:
+        existing = (await s.execute(
+            select(FlowRegistry).where(FlowRegistry.flow_id == flow_id)
+        )).scalar_one_or_none()
+
+        if existing:
+            # Tenant ownership is fixed — never let another tenant claim
+            # a previously-registered flow_id.
+            if existing.tenant_id != pid:
+                log.warning(
+                    "register-employee tenant-hijack attempt caller=%s owner=%s flow=%s",
+                    pid, existing.tenant_id, flow_id,
+                )
+                raise HTTPException(404, detail="flow_not_found")
+            existing.display_name = display_name
+            existing.trigger_type = meta["trigger_type"]
+            existing.webhook_url = webhook_url
+            existing.piece_manifest = piece_manifest
+            await s.commit()
+            row_id = existing.id
+            created = False
+        else:
+            row = FlowRegistry(
+                tenant_id=pid,
+                flow_id=flow_id,
+                display_name=display_name,
+                trigger_type=meta["trigger_type"],
+                webhook_url=webhook_url,
+                piece_manifest=piece_manifest,
+            )
+            s.add(row)
+            await s.commit()
+            row_id = row.id
+            created = True
+
+    return {
+        "status": "registered",
+        "created": created,
+        "registry_id": row_id,
+        "flow_id": flow_id,
+        "tenant_id": pid,
+        "display_name": display_name,
+        "trigger_type": meta["trigger_type"],
+        "webhook_url": webhook_url,
+        "piece_manifest": piece_manifest,
+    }
+
+
+@app.get("/v2/flows")
+@limiter.limit("60/minute")
+async def v2_list_flows(
+    request: Request,
+    orphan: bool = Query(
+        False,
+        description="If true, return only AP flows NOT yet in flow_registry.",
+    ),
+    limit: int = Query(100, ge=1, le=500),
+):
+    """List AP flows for the caller's tenant + merge flow_registry metadata.
+
+    Cross-tenant safety: only flows whose AP projectId matches the
+    caller's tenant are returned. The flow_registry join is filtered
+    the same way so a recycled flow_id from another tenant cannot leak.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+
+    e = E()
+    pid = resolve_pid(request, None)
+
+    ap_flows_raw = await e.list_flows(pid)
+    # Defensive: AP sometimes returns flows for other projects if the
+    # projectId query is ignored; double-check.
+    ap_flows = [
+        f for f in ap_flows_raw
+        if (f.get("projectId") or f.get("project_id") or pid) == pid
+    ]
+
+    registered_ids: set[str] = set()
+    registry_rows: dict[str, dict] = {}
+    if async_session is not None:
+        async with async_session() as s:
+            rows = (await s.execute(
+                select(FlowRegistry).where(FlowRegistry.tenant_id == pid)
+            )).scalars().all()
+        for r in rows:
+            registered_ids.add(r.flow_id)
+            registry_rows[r.flow_id] = {
+                "registry_id": r.id,
+                "display_name": r.display_name,
+                "trigger_type": r.trigger_type,
+                "webhook_url": r.webhook_url,
+                "piece_manifest": r.piece_manifest,
+                "registered_at": r.created_at.isoformat() if r.created_at else None,
+            }
+
+    items: list[dict] = []
+    for f in ap_flows[:limit]:
+        fid = f.get("id") or f.get("flowId") or ""
+        is_registered = fid in registered_ids
+        if orphan and is_registered:
+            continue
+        items.append({
+            "flow_id": fid,
+            "ap_display_name": (f.get("version") or {}).get("displayName") or f.get("displayName"),
+            "ap_status": f.get("status"),
+            "registered": is_registered,
+            "orphan": not is_registered,
+            **({"registry": registry_rows[fid]} if is_registered else {}),
+        })
+
+    return {
+        "tenant_id": pid,
+        "total": len(items),
+        "orphan_filter": orphan,
+        "flows": items,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════
+# Phase 6 — Flow graph + duplicate detector
+# The BFF asks the orchestrator "is this already built?" before
+# calling a /v2/build-* endpoint, and pulls a node/edge summary for
+# visualisation. Both are read-only and tenant-scoped.
+# ═══════════════════════════════════════════════════════════════
+
+class CheckDuplicateBody(_Multi):
+    trigger_type: str = Field(
+        ..., description="Upper-case trigger type, e.g. WEBHOOK or SCHEDULE",
+    )
+    pieces: List[str] = Field(
+        default_factory=list,
+        description="Piece short-names that the planned flow would use "
+                    "(order-insensitive). Ex: ['@activepieces/gmail','@activepieces/sheets']",
+    )
+    display_name: Optional[str] = Field(
+        None, description="Proposed display name (used only to surface in the response)",
+    )
+
+
+def _flow_to_graph(flow: dict) -> dict:
+    """Collapse an AP flow JSON into a node/edge representation.
+
+    Designed for the BFF: small payload (no settings dumps), linear
+    chain where possible, branches expanded as sibling edges. We
+    preserve only fields a human would visualise — piece, action,
+    displayName, branch condition label.
+    """
+    version = flow.get("version") or {}
+    trigger = version.get("trigger") or flow.get("trigger") or {}
+
+    nodes: list[dict] = []
+    edges: list[dict] = []
+    node_counter = {"i": 0}
+
+    def _nid() -> str:
+        node_counter["i"] += 1
+        return f"n{node_counter['i']}"
+
+    def _node(step: dict, kind: str, parent_id: Optional[str] = None,
+              edge_label: Optional[str] = None) -> Optional[str]:
+        if not isinstance(step, dict):
+            return None
+        settings = step.get("settings") or {}
+        nid = _nid()
+        nodes.append({
+            "id": nid,
+            "kind": kind,  # trigger | piece | branch | loop | code
+            "type": step.get("type"),
+            "piece": settings.get("pieceName") or step.get("pieceName"),
+            "action": settings.get("actionName") or settings.get("triggerName"),
+            "display_name": step.get("displayName") or step.get("name"),
+        })
+        if parent_id is not None:
+            edges.append({
+                "from": parent_id, "to": nid,
+                **({"label": edge_label} if edge_label else {}),
+            })
+        return nid
+
+    def _walk(step: Optional[dict], parent: Optional[str]) -> None:
+        if not isinstance(step, dict):
+            return
+        nid = _node(step, "piece" if step.get("type") == "PIECE" else
+                    step.get("type", "step").lower(), parent)
+        if nid is None:
+            return
+        nxt = step.get("nextAction")
+        if nxt:
+            _walk(nxt, nid)
+        for branch in step.get("branches") or []:
+            label = branch.get("name") or branch.get("branchName")
+            child = branch.get("nextAction") or branch
+            _walk(child, nid)
+            if child:  # annotate the last edge with the branch label
+                for e in reversed(edges):
+                    if e["from"] == nid and "label" not in e:
+                        e["label"] = label
+                        break
+        for child in step.get("children") or []:
+            _walk(child, nid)
+
+    trigger_id = _node(trigger, "trigger")
+    if trigger.get("nextAction"):
+        _walk(trigger["nextAction"], trigger_id)
+
+    return {
+        "flow_id": flow.get("id"),
+        "display_name": version.get("displayName") or flow.get("displayName"),
+        "trigger_type": trigger.get("type"),
+        "status": flow.get("status"),
+        "nodes": nodes,
+        "edges": edges,
+    }
+
+
+@app.get("/v2/flows/{flow_id}/graph")
+@limiter.limit("60/minute")
+async def v2_flow_graph(flow_id: str, request: Request):
+    """Return a node/edge representation of a flow for frontend drawing.
+
+    Cross-tenant safety: the flow's AP projectId must match the verified
+    caller. Mismatch → 404 (no existence leak).
+    """
+    e = E()
+    pid = resolve_pid(request, None)
+
+    try:
+        flow = await e.get_flow(flow_id)
+    except HTTPException as he:
+        if he.status_code == 404:
+            raise HTTPException(404, detail="flow_not_found") from he
+        raise
+
+    flow_pid = flow.get("projectId") or flow.get("project_id")
+    if flow_pid and flow_pid != pid:
+        log.warning(
+            "flow-graph cross-tenant attempt caller=%s owner=%s flow=%s",
+            pid, flow_pid, flow_id,
+        )
+        raise HTTPException(404, detail="flow_not_found")
+
+    return _flow_to_graph(flow)
+
+
+@app.post("/v2/flows/check-duplicate")
+@limiter.limit("60/minute")
+async def v2_check_duplicate(request: Request, body: CheckDuplicateBody):
+    """Tell the BFF whether a flow with the same (trigger, pieces) signature
+    already exists for this tenant in flow_registry.
+
+    Response shape:
+    - `{"kind":"none"}` — nothing similar on record.
+    - `{"kind":"exact","existing":{...}}` — same trigger + same unordered
+      piece list. BFF should refuse the build and surface the existing
+      flow to the user.
+    - `{"kind":"near","matches":[{...}]}` — same trigger but a different
+      piece set. Advisory only; BFF may confirm with the user.
+
+    Signature comparison is deliberately tenant-scoped — we NEVER
+    reveal cross-tenant matches even on piece-level hits.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+
+    pid = resolve_pid(request, body.project_id)
+    want_trigger = (body.trigger_type or "").strip().upper()
+    want_pieces = sorted(set(body.pieces or []))
+
+    if async_session is None:
+        raise HTTPException(503, detail="database_unavailable")
+
+    async with async_session() as s:
+        rows = (await s.execute(
+            select(FlowRegistry)
+            .where(FlowRegistry.tenant_id == pid)
+        )).scalars().all()
+
+    exact: Optional[dict] = None
+    near: list[dict] = []
+    for r in rows:
+        manifest = r.piece_manifest or {}
+        got_pieces = sorted(set(manifest.get("pieces") or []))
+        got_trigger = (r.trigger_type or "").upper()
+        if got_trigger != want_trigger:
+            continue
+        summary = {
+            "flow_id": r.flow_id,
+            "display_name": r.display_name,
+            "trigger_type": r.trigger_type,
+            "pieces": got_pieces,
+            "registered_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        if got_pieces == want_pieces:
+            exact = summary
+            break
+        if set(got_pieces) & set(want_pieces):
+            # At least one overlapping piece — flag as near match.
+            near.append(summary)
+
+    if exact:
+        return {"kind": "exact", "existing": exact}
+    if near:
+        return {"kind": "near", "matches": near[:5]}
+    return {"kind": "none"}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2803,7 +3364,8 @@ class ProjectRegisterBody(BaseModel):
 
 
 @app.post("/v2/project/register")
-async def v2_project_register(body: ProjectRegisterBody):
+@limiter.limit("10/minute")
+async def v2_project_register(request: Request, body: ProjectRegisterBody):
     """Register or update a project in the Siyadah memory layer."""
     try:
         from database import async_session
@@ -2812,7 +3374,7 @@ async def v2_project_register(body: ProjectRegisterBody):
         if not async_session:
             raise HTTPException(503, detail="Database not configured")
 
-        pid = body.project_id or DEFAULT_PID
+        pid = resolve_pid(request, body.project_id)
         async with async_session() as session:
             async with session.begin():
                 proj = (await session.execute(
@@ -2923,7 +3485,8 @@ class IngestBody(BaseModel):
 
 
 @app.post("/v2/identity/ingest")
-async def v2_identity_ingest(body: IngestBody):
+@limiter.limit("10/minute")
+async def v2_identity_ingest(request: Request, body: IngestBody):
     """Universal Absorption Engine — scrape website, AI-analyze, persist identity.
 
     Modes:
@@ -2941,7 +3504,7 @@ async def v2_identity_ingest(body: IngestBody):
             result = await preview_website(url=url)
             return result
 
-        pid = body.project_id or DEFAULT_PID
+        pid = resolve_pid(request, body.project_id)
         result = await ingest_website(url=url, project_id=pid)
         return result
     except RuntimeError as exc:
@@ -3135,7 +3698,7 @@ class SuggestBody(BaseModel):
 
 
 @app.post("/v2/logic/suggest")
-async def v2_logic_suggest(body: SuggestBody):
+async def v2_logic_suggest(request: Request, body: SuggestBody):
     """Sector-aware suggestion engine — returns 3 personalized flow recommendations.
 
     Analyzes the project's identity and proposes automation flows that
@@ -3145,7 +3708,7 @@ async def v2_logic_suggest(body: SuggestBody):
     from models import ProjectIdentity, KnowledgeAsset
     from sqlalchemy import select
 
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
 
     sector = "default"
     lang = "en"
@@ -3566,13 +4129,14 @@ async def _build_missed_opportunities(
 
 @app.get("/v2/logic/proactive-suggestions")
 async def v2_logic_proactive_suggestions(
+    request: Request,
     project_id: Optional[str] = Query(
         default=None,
         description="Tenant project id (defaults to AP_PROJECT_ID).",
     ),
 ):
     """Compare ProjectIdentity + knowledge to success patterns in Mem; add per-flow health WARNING hints."""
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     lang = "en"
     from database import async_session
     from models import ProjectIdentity
@@ -3740,13 +4304,19 @@ _DB_ONLY_TOOLS = frozenset({"get_institutional_memory", "list_operators", "list_
 
 
 @app.post("/v2/mcp/execute")
-async def v2_mcp_execute(body: MCPExecuteBody):
+@limiter.limit("60/minute")
+async def v2_mcp_execute(request: Request, body: MCPExecuteBody):
     """Live MCP Tool Dispatcher — Claude calls tools here.
     Also used by mcp_sse._execute_mcp_tool for SSE transport.
     """
     tool = body.tool
     p = body.parameters
-    pid = body.project_id or p.get("project_id") or DEFAULT_PID
+    # Wave-1: prefer verified tenant from middleware state; parameters
+    # dict is caller-controlled so it comes last in the precedence chain.
+    pid = resolve_pid(request, body.project_id or p.get("project_id"))
+    # Strip any smuggled project_id in parameters so downstream handlers
+    # cannot accidentally read it.
+    p.pop("project_id", None)
     cn = resolve_conns(body.connection_ids or p.get("connection_ids"))
 
     if tool in _DB_ONLY_TOOLS:
@@ -4054,10 +4624,10 @@ class ConnectBody(BaseModel):
 
 
 @app.post("/v2/connect")
-async def v2_connect(body: ConnectBody):
+async def v2_connect(request: Request, body: ConnectBody):
     """Create a new AP connection for a piece."""
     e = E()
-    pid = body.project_id or DEFAULT_PID
+    pid = resolve_pid(request, body.project_id)
     piece = body.piece_name
     full_piece = piece if piece.startswith("@") else f"@activepieces/piece-{piece}"
     short = piece.replace("@activepieces/piece-", "")
@@ -4073,10 +4643,10 @@ async def v2_connect(body: ConnectBody):
 
 
 @app.get("/v2/connections/health")
-async def v2_connections_health(project_id: Optional[str] = None):
+async def v2_connections_health(request: Request, project_id: Optional[str] = None):
     """Health overview of all connections — split by healthy/unhealthy."""
     e = E()
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     conns = await e.list_connections(pid)
     healthy, unhealthy = [], []
     for c in conns:
@@ -4090,10 +4660,10 @@ async def v2_connections_health(project_id: Optional[str] = None):
 
 
 @app.post("/v2/connections/{connection_id}/test")
-async def v2_connection_test(connection_id: str, project_id: Optional[str] = None):
+async def v2_connection_test(connection_id: str, request: Request, project_id: Optional[str] = None):
     """Check stored status of a connection (not a live connectivity test)."""
     e = E()
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     conns = await e.list_connections(pid)
     target = next((c for c in conns
                    if c.get("id") == connection_id
@@ -4111,10 +4681,10 @@ async def v2_connection_test(connection_id: str, project_id: Optional[str] = Non
 
 
 @app.delete("/v2/connections/{connection_id}")
-async def v2_connection_delete(connection_id: str, project_id: Optional[str] = None):
+async def v2_connection_delete(connection_id: str, request: Request, project_id: Optional[str] = None):
     """Delete a connection — refuses if any flow uses it."""
     e = E()
-    pid = project_id or DEFAULT_PID
+    pid = resolve_pid(request, project_id)
     flows = await e.list_flows(pid)
     affected = [f"{f.get('id')} ({f.get('version', {}).get('displayName', '?')})"
                 for f in flows if connection_id in str(f.get("version", {}))]

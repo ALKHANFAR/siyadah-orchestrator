@@ -2,7 +2,13 @@
 __pycache__/
 *.pyc
 .venv/
+.venv_test/
 *.egg-info/
 dist/
 build/
 .DS_Store
+.pytest_cache/
+.coverage
+htmlcov/
+dump.rdb
+appendonlydir/
