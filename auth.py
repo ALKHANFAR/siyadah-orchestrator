@@ -138,6 +138,8 @@ async def _audit(
                 remote_ip=request.client.host if request.client else None,
                 user_agent=(request.headers.get("user-agent", "") or "")[:500],
                 violation=violation,
+                # Phase-10 fix #5: webhook execution correlation
+                webhook_id=getattr(request.state, "webhook_id", None),
             )
             s.add(row)
             await s.commit()

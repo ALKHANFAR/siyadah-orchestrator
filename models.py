@@ -133,6 +133,9 @@ class TenantAuditLog(Base):
     remote_ip = Column(INET, nullable=True)
     user_agent = Column(Text, nullable=True)
     violation = Column(String(64), nullable=True)  # null for clean writes
+    # Phase-10 fix #5: webhook execution correlation. Populated only
+    # when the request arrived via /v2/webhook/*; null otherwise.
+    webhook_id = Column(String(64), nullable=True, index=True)
 
 
 # ═══════════════════════════════════════════════════════════════

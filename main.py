@@ -750,7 +750,12 @@ async def auto_resolve_piece(engine, name: str) -> tuple:
 
 
 def clean_input_config(input_config: dict) -> dict:
-    """Drop empty-string and null-like keys before sending input to Activepieces."""
+    """Drop empty-string and null-like keys before sending input to Activepieces.
+
+    Also enforces Phase-10 validation on any ``timezone`` field: invalid
+    IANA names raise HTTPException(422) so the flow is rejected at build
+    time rather than silently deploying a schedule that never fires.
+    """
     cleaned: Dict[str, Any] = {}
     for k, v in input_config.items():
         if v is None:
@@ -759,8 +764,66 @@ def clean_input_config(input_config: dict) -> dict:
             continue
         if isinstance(v, str) and v == '':
             continue
+        # Phase-10 fix #1 — reject bogus IANA timezones early
+        if k == "timezone" and isinstance(v, str) and v.strip():
+            _validate_iana_timezone(v.strip())
         cleaned[k] = v
     return cleaned
+
+
+# Phase-10 fix #1 — strict IANA timezone validation
+try:
+    # Python 3.9+: zoneinfo is stdlib; availability may depend on OS tzdata
+    from zoneinfo import ZoneInfo, available_timezones as _iana_available
+    _IANA_TIMEZONES_CACHE: Optional[frozenset] = None
+
+    def _valid_timezone_set() -> frozenset:
+        global _IANA_TIMEZONES_CACHE
+        if _IANA_TIMEZONES_CACHE is None:
+            _IANA_TIMEZONES_CACHE = frozenset(_iana_available())
+        return _IANA_TIMEZONES_CACHE
+except Exception:  # pragma: no cover — fallback for environments without tzdata
+    ZoneInfo = None  # type: ignore
+    def _valid_timezone_set() -> frozenset:  # type: ignore
+        return frozenset()
+
+
+def _validate_iana_timezone(tz: str) -> None:
+    """Raise HTTPException(422) if ``tz`` is not a known IANA timezone.
+
+    Uses ``zoneinfo.available_timezones()`` which is the authoritative
+    list on the host (fed by the OS tzdata). If the host lacks tzdata,
+    falls back to a cheap ``ZoneInfo(tz)`` construction check.
+    """
+    if not tz:
+        return
+    valid = _valid_timezone_set()
+    if valid:
+        if tz not in valid:
+            raise HTTPException(
+                status_code=422,
+                detail={
+                    "error": "invalid_timezone",
+                    "message": (
+                        f"Timezone {tz!r} is not a valid IANA identifier. "
+                        "Use values like 'Asia/Riyadh', 'Africa/Cairo', 'UTC'."
+                    ),
+                },
+            )
+        return
+    # tzdata not reachable — try construction as a final check
+    if ZoneInfo is None:
+        return  # can't validate, don't block
+    try:
+        ZoneInfo(tz)
+    except Exception:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "invalid_timezone",
+                "message": f"Timezone {tz!r} could not be resolved.",
+            },
+        )
 
 
 def clean_input(input_config: dict) -> dict:
@@ -2995,8 +3058,29 @@ async def v2_register_employee(
         datetime.fromisoformat(mcp_info["mcp_registered_at"])
         if mcp_info else None
     )
+    # Phase-10 fix #2: secure_webhook MUST be a WEBHOOK-triggered flow.
+    # A scheduled or polling flow has no inbound HTTP entry point — storing
+    # secure_webhook=True would create a confusing row the UI can't act on.
+    is_webhook_trigger = (
+        (meta["trigger_type"] or "").upper() in ("WEBHOOK", "PIECE_TRIGGER")
+    )
+    webhook_state_warning: Optional[str] = None
+    if body.secure_webhook and not is_webhook_trigger:
+        webhook_state_warning = (
+            f"secure_webhook ignored — flow is {meta['trigger_type']}, not WEBHOOK"
+        )
+        log.warning(
+            "[register-employee] %s  flow=%s tenant=%s",
+            webhook_state_warning, flow_id, pid,
+        )
+        # Coerce client-side too so the returned secret is never shown
+        webhook_secret = None
+
     # secure_webhook only committed as True if we actually derived a secret
-    secure_webhook_val = bool(body.secure_webhook and webhook_secret)
+    # AND the trigger is a webhook.
+    secure_webhook_val = bool(
+        body.secure_webhook and webhook_secret and is_webhook_trigger
+    )
 
     async with async_session() as s:
         existing = (await s.execute(
@@ -3057,6 +3141,10 @@ async def v2_register_employee(
     # provider. Never logged; not persisted in DB.
     if webhook_secret and secure_webhook_val:
         webhook_block["secret"] = webhook_secret
+    # Phase-10 fix #2: surface state mismatch so the BFF can explain
+    # why secure_webhook silently degraded.
+    if webhook_state_warning:
+        webhook_block["warning"] = webhook_state_warning
 
     return {
         "status": "registered",
@@ -3169,10 +3257,21 @@ class CheckDuplicateBody(_Multi):
 def _flow_to_graph(flow: dict) -> dict:
     """Collapse an AP flow JSON into a node/edge representation.
 
-    Designed for the BFF: small payload (no settings dumps), linear
-    chain where possible, branches expanded as sibling edges. We
-    preserve only fields a human would visualise — piece, action,
-    displayName, branch condition label.
+    Walks every structural branch AP supports:
+
+    - Linear chain via ``nextAction``.
+    - ``ROUTER``: per-branch entry points live in ``children[i]``; the
+      branch label (name / conditions) lives in
+      ``settings.branches[i]``. Empty branches (children[i] == None)
+      are still rendered as placeholder ``branch`` nodes so the UI
+      shows every decision path, even if no action is wired up yet.
+    - ``LOOP_ON_ITEMS``: body entry is ``firstLoopAction``.
+    - Legacy ``BRANCH`` steps: ``onSuccessAction`` / ``onFailureAction``.
+    - Legacy ``branches`` list with inline ``nextAction`` per branch.
+
+    Output is flat — each step becomes one node; edges annotate branch
+    labels so the BFF can draw a directed graph without parsing AP's
+    internals.
     """
     version = flow.get("version") or {}
     trigger = version.get("trigger") or flow.get("trigger") or {}
@@ -3185,52 +3284,99 @@ def _flow_to_graph(flow: dict) -> dict:
         node_counter["i"] += 1
         return f"n{node_counter['i']}"
 
-    def _node(step: dict, kind: str, parent_id: Optional[str] = None,
-              edge_label: Optional[str] = None) -> Optional[str]:
-        if not isinstance(step, dict):
-            return None
+    def _push_node(step: dict, kind: str) -> str:
         settings = step.get("settings") or {}
         nid = _nid()
         nodes.append({
             "id": nid,
-            "kind": kind,  # trigger | piece | branch | loop | code
+            "kind": kind,
             "type": step.get("type"),
             "piece": settings.get("pieceName") or step.get("pieceName"),
             "action": settings.get("actionName") or settings.get("triggerName"),
             "display_name": step.get("displayName") or step.get("name"),
         })
-        if parent_id is not None:
-            edges.append({
-                "from": parent_id, "to": nid,
-                **({"label": edge_label} if edge_label else {}),
-            })
         return nid
 
-    def _walk(step: Optional[dict], parent: Optional[str]) -> None:
+    def _kind_for(stype: str) -> str:
+        return {
+            "PIECE":         "piece",
+            "PIECE_TRIGGER": "trigger",
+            "CODE":          "code",
+            "ROUTER":        "router",
+            "LOOP_ON_ITEMS": "loop",
+            "BRANCH":        "branch",
+            "WEBHOOK":       "trigger",
+            "TRIGGER":       "trigger",
+            "EMPTY_TRIGGER": "trigger",
+        }.get(stype or "", (stype or "step").lower())
+
+    def _walk(step: Optional[dict], parent: Optional[str],
+              edge_label: Optional[str] = None) -> None:
         if not isinstance(step, dict):
             return
-        nid = _node(step, "piece" if step.get("type") == "PIECE" else
-                    step.get("type", "step").lower(), parent)
-        if nid is None:
-            return
-        nxt = step.get("nextAction")
-        if nxt:
-            _walk(nxt, nid)
-        for branch in step.get("branches") or []:
-            label = branch.get("name") or branch.get("branchName")
-            child = branch.get("nextAction") or branch
-            _walk(child, nid)
-            if child:  # annotate the last edge with the branch label
-                for e in reversed(edges):
-                    if e["from"] == nid and "label" not in e:
-                        e["label"] = label
-                        break
-        for child in step.get("children") or []:
-            _walk(child, nid)
+        stype = step.get("type") or "step"
+        nid = _push_node(step, _kind_for(stype))
+        if parent is not None:
+            edge = {"from": parent, "to": nid}
+            if edge_label:
+                edge["label"] = edge_label
+            edges.append(edge)
 
-    trigger_id = _node(trigger, "trigger")
+        # 1. Linear next-action chain
+        if step.get("nextAction"):
+            _walk(step["nextAction"], nid)
+
+        # 2. ROUTER — zip children[i] with settings.branches[i]
+        if stype == "ROUTER":
+            settings = step.get("settings") or {}
+            branches_meta = settings.get("branches") or []
+            children = step.get("children") or []
+            # Walk actual children, labelling with branch name
+            for i, child in enumerate(children):
+                bm = branches_meta[i] if i < len(branches_meta) else {}
+                label = (bm or {}).get("branchName") or (bm or {}).get("name") \
+                        or f"branch_{i+1}"
+                if child:
+                    _walk(child, nid, edge_label=label)
+                else:
+                    # Empty branch: still render so UI shows the decision exists
+                    empty_id = _nid()
+                    nodes.append({
+                        "id": empty_id, "kind": "branch",
+                        "type": "BRANCH_EMPTY",
+                        "piece": None, "action": None,
+                        "display_name": label,
+                    })
+                    edges.append({"from": nid, "to": empty_id, "label": label})
+
+        # 3. LOOP_ON_ITEMS — body entry
+        if stype == "LOOP_ON_ITEMS":
+            body = step.get("firstLoopAction")
+            if body:
+                _walk(body, nid, edge_label="each")
+
+        # 4. Legacy BRANCH success / failure
+        for key, label in (("onSuccessAction", "success"),
+                           ("onFailureAction", "failure")):
+            b = step.get(key)
+            if b:
+                _walk(b, nid, edge_label=label)
+
+        # 5. Legacy inline branches list (some AP builds use this shape)
+        for i, branch in enumerate(step.get("branches") or []):
+            if not isinstance(branch, dict):
+                continue
+            b_label = branch.get("name") or branch.get("branchName") \
+                      or f"branch_{i+1}"
+            b_child = branch.get("nextAction")
+            if b_child:
+                _walk(b_child, nid, edge_label=b_label)
+
+    # Kick off from the trigger. The trigger itself is rendered as the
+    # root node; everything else flows from trigger.nextAction.
+    root_id = _push_node(trigger, _kind_for(trigger.get("type") or "TRIGGER"))
     if trigger.get("nextAction"):
-        _walk(trigger["nextAction"], trigger_id)
+        _walk(trigger["nextAction"], root_id)
 
     return {
         "flow_id": flow.get("id"),
@@ -3474,6 +3620,13 @@ _WEBHOOK_HEADERS_DROP = {
     "/v2/webhook/{flow_id}",
     methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
 )
+# Phase-10 fix #4 — IP-keyed DOS protection for the webhook proxy.
+# /v2/webhook/{flow_id} is exempt from tenant auth (EXEMPT_PREFIXES),
+# so tenant_or_ip() falls back to the remote IP. 300/minute per IP is
+# generous for legitimate burst traffic from GitHub/Stripe/Slack while
+# blocking floods from a single source. SlowAPIMiddleware handles the
+# 429 response; no decorator-level header injection needed.
+@limiter.limit("300/minute")
 async def v2_webhook_receiver(flow_id: str, request: Request):
     """External webhook receiver. Opt-in via FlowRegistry.secure_webhook.
 
@@ -3495,10 +3648,18 @@ async def v2_webhook_receiver(flow_id: str, request: Request):
         verify_signature, SIGNATURE_SCHEMES,
     )
     from logging_config import bind_extra
+    from auth import _audit as _write_audit
 
     # Always stamp a webhook_id so log lines correlate even on early returns
     webhook_id = request.headers.get("x-webhook-id") or str(uuid.uuid4())
+    request.state.webhook_id = webhook_id  # audit log reads from here
     bind_extra(webhook_id=webhook_id, flow_id=flow_id)
+
+    # Phase-10 fix #5 — audit every terminal path of the webhook proxy.
+    async def _audit_and_raise(status: int, violation: str, detail):
+        # Populate request.state for _audit (project_id known only after row lookup)
+        await _write_audit(request, status, violation)
+        raise HTTPException(status, detail=detail)
 
     # 1. Handshake (GET) — echoes whichever challenge param the provider sent.
     if request.method == "GET":
@@ -3507,6 +3668,8 @@ async def v2_webhook_receiver(flow_id: str, request: Request):
             "[webhook-proxy] handshake flow=%s webhook=%s challenge=%s",
             flow_id, webhook_id, challenge or "<none>",
         )
+        # Fire-and-forget audit — handshake is high-volume, don't block
+        asyncio.create_task(_write_audit(request, 200, "webhook_handshake"))
         return {
             "handshake": "ok",
             "flow_id": flow_id,
@@ -3526,18 +3689,20 @@ async def v2_webhook_receiver(flow_id: str, request: Request):
             "[webhook-proxy] unknown flow=%s webhook=%s",
             flow_id, webhook_id,
         )
-        raise HTTPException(404, detail="flow_not_found")
+        await _audit_and_raise(404, "webhook_unknown_flow", "flow_not_found")
     if not row.secure_webhook:
+        # Bind tenant for audit context
+        request.state.project_id = row.tenant_id
         log.warning(
             "[webhook-proxy] flow=%s tenant=%s is not marked secure_webhook — "
             "caller should use AP's /api/v1/webhooks/{id} directly",
             flow_id, row.tenant_id,
         )
-        raise HTTPException(
-            410,
-            detail="flow_not_secured_for_proxy",
+        await _audit_and_raise(
+            410, "webhook_not_secured", "flow_not_secured_for_proxy",
         )
 
+    request.state.project_id = row.tenant_id
     bind_extra(tenant_id=row.tenant_id)
 
     body = await request.body()
@@ -3562,7 +3727,10 @@ async def v2_webhook_receiver(flow_id: str, request: Request):
                 "[webhook-proxy] signature FAILED flow=%s tenant=%s webhook=%s reason=%s",
                 flow_id, row.tenant_id, webhook_id, reason,
             )
-            raise HTTPException(401, detail=f"invalid_signature:{reason}")
+            await _audit_and_raise(
+                401, f"webhook_{reason}",
+                f"invalid_signature:{reason}",
+            )
 
     # 4. Forward to AP, preserving method + body + safe headers
     forward_headers = {
@@ -3581,12 +3749,17 @@ async def v2_webhook_receiver(flow_id: str, request: Request):
             "[webhook-proxy] forward FAILED flow=%s webhook=%s: %s",
             flow_id, webhook_id, exc,
         )
-        raise HTTPException(502, detail="upstream_forward_failed")
+        await _audit_and_raise(
+            502, "webhook_forward_failed", "upstream_forward_failed",
+        )
 
     log.info(
         "[webhook-proxy] OK flow=%s tenant=%s webhook=%s status=%d",
         flow_id, row.tenant_id, webhook_id, status,
     )
+    # Success audit — fire-and-forget to keep the hot path fast
+    asyncio.create_task(_write_audit(request, status, None))
+
     return Response(
         content=ap_body,
         status_code=status,
