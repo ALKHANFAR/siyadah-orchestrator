@@ -8,7 +8,7 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import (
-    ARRAY, BigInteger, Column, DateTime, ForeignKey, Index,
+    ARRAY, BigInteger, Boolean, Column, DateTime, ForeignKey, Index,
     SmallInteger, String, Text, func,
 )
 from sqlalchemy.dialects.postgresql import JSONB, INET
@@ -177,6 +177,12 @@ class FlowRegistry(Base):
     # yet or AP rejected).
     mcp_tool_name = Column(String(64), nullable=True, index=True)
     mcp_registered_at = Column(DateTime(timezone=True), nullable=True)
+    # Phase 10 (Gap 1 — webhook security): opt-in HMAC proxy. Secret
+    # itself is NEVER stored (derived from WEBHOOK_SIGNING_MASTER_KEY +
+    # flow_id). These flags control behaviour only.
+    secure_webhook = Column(Boolean, default=False, nullable=False)
+    skip_webhook_auth = Column(Boolean, default=False, nullable=False)
+    webhook_scheme = Column(String(32), default="siyadah", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(),

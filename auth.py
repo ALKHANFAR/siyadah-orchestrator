@@ -48,6 +48,11 @@ PUBLIC_PATHS = frozenset({
 # Path prefixes that REQUIRE tenant enforcement when ENFORCE=true.
 PROTECTED_PREFIXES = ("/v2/",)
 
+# Prefixes EXEMPT from tenant enforcement even under /v2/ —
+# these are verified by their own mechanism (HMAC, etc.). External
+# callers (GitHub, Stripe, Slack) don't and won't send X-API-Key.
+EXEMPT_PREFIXES = ("/v2/webhook/",)
+
 
 def _hash_key(raw: str) -> str:
     """sha256 hex — matches the column definition in tenant_api_keys.key_hash."""
@@ -56,6 +61,8 @@ def _hash_key(raw: str) -> str:
 
 def _needs_enforcement(path: str) -> bool:
     if path in PUBLIC_PATHS:
+        return False
+    if any(path.startswith(p) for p in EXEMPT_PREFIXES):
         return False
     return any(path.startswith(p) for p in PROTECTED_PREFIXES)
 
@@ -160,8 +167,16 @@ async def require_tenant(request: Request, call_next):
     request.state.project_id = None
     request.state.api_key_hash = None
     request.state.scopes = []
+    request.state.webhook_id = None
 
     bind_request_context(request_id=request.state.request_id)
+
+    # Phase 10: capture x-webhook-id if present so every log line and
+    # audit row correlates with the external webhook execution.
+    webhook_id = request.headers.get("x-webhook-id", "").strip()
+    if webhook_id:
+        request.state.webhook_id = webhook_id
+        bind_request_context(webhook_id=webhook_id)
 
     try:
         if not _needs_enforcement(path):

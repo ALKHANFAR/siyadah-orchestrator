@@ -19,8 +19,8 @@ from dotenv import load_dotenv
 load_dotenv()
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
-import httpx, uvicorn
-from fastapi import FastAPI, HTTPException, Query, Request
+import httpx, uuid, uvicorn
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -353,6 +353,37 @@ class SiyadahEngine:
             "DELETE",
             f"/v1/projects/{pid}/mcp-server/tools/{tool_name}",
         )
+
+    # ─── Phase 10 — webhook proxy forwarder (Gap 1 remediation) ──────
+    # Separate from _r because AP webhook endpoints don't use Bearer
+    # auth, accept any content-type (not just JSON), and need raw body
+    # preservation for downstream parsing. Kept as an instance method
+    # so tests can monkeypatch it cleanly.
+
+    async def forward_webhook(
+        self,
+        flow_id: str,
+        method: str,
+        body: bytes,
+        headers: dict,
+        query_params: dict,
+    ) -> tuple[int, bytes, dict]:
+        """Forward a verified webhook to AP. Returns (status, body, headers).
+
+        Bypasses ``_r`` on purpose — webhooks are opaque payloads and
+        AP's ``/api/v1/webhooks/{id}`` is ``skipAuth: true``. A fresh
+        httpx client is used so the Bearer token never leaks downstream.
+        """
+        url = f"{self.base}/api/v1/webhooks/{flow_id}"
+        import httpx as _httpx
+        async with _httpx.AsyncClient(timeout=30.0) as client:
+            r = await client.request(
+                method, url,
+                content=body,
+                headers=headers,
+                params=query_params,
+            )
+            return r.status_code, r.content, dict(r.headers)
 
     async def add_action(self, fid: str, parent: str, loc: str, action: dict):
         return await self._fop(fid, "ADD_ACTION", {
@@ -2785,6 +2816,25 @@ class RegisterEmployeeBody(_Multi):
         None,
         description="Override display name. Defaults to flow.displayName from AP.",
     )
+    # Phase 10 (Gap 1): opt-in webhook security. When a flow has a
+    # webhook trigger and the tenant wants HMAC-verified inbound calls,
+    # the BFF sets secure_webhook=True and the response returns the
+    # proxy URL + the one-time-visible secret.
+    secure_webhook: bool = Field(
+        False,
+        description="Enable HMAC-verified proxy at /v2/webhook/{flow_id}. "
+                    "Requires WEBHOOK_SIGNING_MASTER_KEY on server.",
+    )
+    skip_webhook_auth: bool = Field(
+        False,
+        description="Mark this flow as legacy — proxy accepts calls "
+                    "without HMAC and logs a WARNING. Only useful for "
+                    "providers that cannot sign.",
+    )
+    webhook_scheme: str = Field(
+        "siyadah",
+        description="Signature scheme: siyadah | github | stripe | slack.",
+    )
 
 
 def _extract_flow_metadata(flow: dict) -> dict:
@@ -2825,10 +2875,33 @@ def _extract_flow_metadata(flow: dict) -> dict:
     }
 
 
-def _webhook_url_for(flow_id: str, trigger_type: str) -> Optional[str]:
-    if trigger_type == "WEBHOOK" or trigger_type == "webhook":
-        return f"{AP_BASE}/api/v1/webhooks/{flow_id}"
-    return None
+def _webhook_url_for(
+    flow_id: str,
+    trigger_type: str,
+    *,
+    secure: bool = False,
+    public_base: Optional[str] = None,
+) -> Optional[str]:
+    """Compute the webhook URL to return to the BFF.
+
+    - ``secure=False`` (default) → AP's direct URL (legacy, unauthenticated).
+    - ``secure=True`` → orchestrator's proxy URL for HMAC verification.
+      Falls back to AP direct if no public base URL is known (env +
+      runtime both failed), so the flow still works.
+    """
+    if trigger_type not in ("WEBHOOK", "webhook"):
+        return None
+    if secure:
+        base = (public_base or os.getenv("ORCHESTRATOR_PUBLIC_URL", "")).rstrip("/")
+        if base:
+            return f"{base}/v2/webhook/{flow_id}"
+        # No public URL known — log and fall back. Caller decides.
+        log.warning(
+            "[webhook-url] secure=True but no ORCHESTRATOR_PUBLIC_URL; "
+            "returning AP direct URL for flow=%s",
+            flow_id,
+        )
+    return f"{AP_BASE}/api/v1/webhooks/{flow_id}"
 
 
 @app.post("/v2/flows/{flow_id}/register-employee")
@@ -2876,7 +2949,28 @@ async def v2_register_employee(
     meta = _extract_flow_metadata(flow)
     ap_display = (flow.get("version") or {}).get("displayName") or flow.get("displayName") or flow_id
     display_name = body.display_name or ap_display
-    webhook_url = _webhook_url_for(flow_id, meta["trigger_type"])
+
+    # Phase 10: if secure_webhook requested, build the proxy URL and
+    # derive the secret to return once. Fall back to AP direct URL if
+    # master key isn't configured on this deploy (zero-knowledge DB).
+    from webhook_security import derive_webhook_secret
+
+    public_base = (
+        os.getenv("ORCHESTRATOR_PUBLIC_URL", "").strip()
+        or str(request.base_url).rstrip("/")  # request-derived fallback
+    )
+    webhook_url = _webhook_url_for(
+        flow_id, meta["trigger_type"],
+        secure=body.secure_webhook, public_base=public_base,
+    )
+    webhook_secret: Optional[str] = None
+    if body.secure_webhook:
+        webhook_secret = derive_webhook_secret(flow_id)
+        if webhook_secret is None:
+            log.warning(
+                "[register-employee] secure_webhook=True but "
+                "WEBHOOK_SIGNING_MASTER_KEY unset — storing flag as False",
+            )
 
     piece_manifest = {
         "pieces": meta["pieces"],
@@ -2901,6 +2995,8 @@ async def v2_register_employee(
         datetime.fromisoformat(mcp_info["mcp_registered_at"])
         if mcp_info else None
     )
+    # secure_webhook only committed as True if we actually derived a secret
+    secure_webhook_val = bool(body.secure_webhook and webhook_secret)
 
     async with async_session() as s:
         existing = (await s.execute(
@@ -2925,6 +3021,10 @@ async def v2_register_employee(
             if mcp_info:
                 existing.mcp_tool_name = mcp_tool_name_val
                 existing.mcp_registered_at = mcp_registered_at_val
+            # Phase 10 webhook flags — always refreshed from body
+            existing.secure_webhook = secure_webhook_val
+            existing.skip_webhook_auth = bool(body.skip_webhook_auth)
+            existing.webhook_scheme = body.webhook_scheme or "siyadah"
             await s.commit()
             row_id = existing.id
             created = False
@@ -2938,11 +3038,25 @@ async def v2_register_employee(
                 piece_manifest=piece_manifest,
                 mcp_tool_name=mcp_tool_name_val,
                 mcp_registered_at=mcp_registered_at_val,
+                secure_webhook=secure_webhook_val,
+                skip_webhook_auth=bool(body.skip_webhook_auth),
+                webhook_scheme=body.webhook_scheme or "siyadah",
             )
             s.add(row)
             await s.commit()
             row_id = row.id
             created = True
+
+    webhook_block: dict = {
+        "url": webhook_url,
+        "secure": secure_webhook_val,
+        "scheme": body.webhook_scheme or "siyadah",
+        "skip_auth": bool(body.skip_webhook_auth),
+    }
+    # Secret is returned ONCE — BFF must capture and hand to the external
+    # provider. Never logged; not persisted in DB.
+    if webhook_secret and secure_webhook_val:
+        webhook_block["secret"] = webhook_secret
 
     return {
         "status": "registered",
@@ -2955,6 +3069,7 @@ async def v2_register_employee(
         "webhook_url": webhook_url,
         "piece_manifest": piece_manifest,
         "mcp": mcp_info or {"status": "not_registered"},
+        "webhook": webhook_block,
     }
 
 
@@ -3336,6 +3451,148 @@ async def v2_test(flow_id: str, request: Request):
         payload = {"test": True, "name": "تجربة سيادة",
                    "email": "test@siyadah-ai.com"}
     return await e.test_webhook(flow_id, payload)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Phase 10 — Secure webhook receiver (Gap 1 remediation)
+# Opt-in proxy in front of AP's /api/v1/webhooks/{flow_id}.
+#   GET  → handshake (200 with challenge echo — no flow execution)
+#   POST → HMAC verify → forward to AP → return AP's response
+# External callers never see our Bearer token; we never see theirs
+# except via the signature we verify.
+# ═══════════════════════════════════════════════════════════════
+
+_WEBHOOK_HEADERS_DROP = {
+    # Hop-by-hop + Siyadah internals that must not leak downstream
+    "host", "content-length", "connection", "keep-alive",
+    "transfer-encoding", "upgrade", "proxy-authorization",
+    "x-api-key", "x-siyadah-tenant", "authorization",
+}
+
+
+@app.api_route(
+    "/v2/webhook/{flow_id}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
+)
+async def v2_webhook_receiver(flow_id: str, request: Request):
+    """External webhook receiver. Opt-in via FlowRegistry.secure_webhook.
+
+    Safety posture:
+    - Unknown flow_id → 404 (no existence leak).
+    - Flow exists but ``secure_webhook=False`` → 410 Gone (BFF should
+      point the provider at AP's URL directly).
+    - ``skip_webhook_auth=True`` → HMAC check is skipped, request is
+      logged at WARNING so operators can spot legacy flows drifting
+      past their rotation window.
+    - Any forward failure → 502 ``upstream_forward_failed`` (AP down).
+    - Handshake path (GET) never touches the DB or forwards anything.
+    """
+    from database import async_session
+    from models import FlowRegistry
+    from sqlalchemy import select
+    from webhook_security import (
+        derive_webhook_secret, extract_handshake_challenge,
+        verify_signature, SIGNATURE_SCHEMES,
+    )
+    from logging_config import bind_extra
+
+    # Always stamp a webhook_id so log lines correlate even on early returns
+    webhook_id = request.headers.get("x-webhook-id") or str(uuid.uuid4())
+    bind_extra(webhook_id=webhook_id, flow_id=flow_id)
+
+    # 1. Handshake (GET) — echoes whichever challenge param the provider sent.
+    if request.method == "GET":
+        challenge = extract_handshake_challenge(dict(request.query_params))
+        log.info(
+            "[webhook-proxy] handshake flow=%s webhook=%s challenge=%s",
+            flow_id, webhook_id, challenge or "<none>",
+        )
+        return {
+            "handshake": "ok",
+            "flow_id": flow_id,
+            "challenge": challenge,
+            "webhook_id": webhook_id,
+        }
+
+    # 2. Look up flow — no existence leak
+    if async_session is None:
+        raise HTTPException(503, detail="database_unavailable")
+    async with async_session() as s:
+        row = (await s.execute(
+            select(FlowRegistry).where(FlowRegistry.flow_id == flow_id)
+        )).scalar_one_or_none()
+    if not row:
+        log.warning(
+            "[webhook-proxy] unknown flow=%s webhook=%s",
+            flow_id, webhook_id,
+        )
+        raise HTTPException(404, detail="flow_not_found")
+    if not row.secure_webhook:
+        log.warning(
+            "[webhook-proxy] flow=%s tenant=%s is not marked secure_webhook — "
+            "caller should use AP's /api/v1/webhooks/{id} directly",
+            flow_id, row.tenant_id,
+        )
+        raise HTTPException(
+            410,
+            detail="flow_not_secured_for_proxy",
+        )
+
+    bind_extra(tenant_id=row.tenant_id)
+
+    body = await request.body()
+
+    # 3. HMAC verify (unless explicitly disabled per flow)
+    if row.skip_webhook_auth:
+        log.warning(
+            "[webhook-proxy] skipAuth=true for flow=%s tenant=%s — "
+            "HMAC NOT verified (legacy marker)",
+            flow_id, row.tenant_id,
+        )
+    else:
+        scheme = row.webhook_scheme or "siyadah"
+        header_name, _algo, _prefix = SIGNATURE_SCHEMES.get(
+            scheme, SIGNATURE_SCHEMES["siyadah"],
+        )
+        provided_sig = request.headers.get(header_name, "")
+        secret = derive_webhook_secret(flow_id) or ""
+        ok, reason = verify_signature(body, provided_sig, secret, scheme=scheme)
+        if not ok:
+            log.warning(
+                "[webhook-proxy] signature FAILED flow=%s tenant=%s webhook=%s reason=%s",
+                flow_id, row.tenant_id, webhook_id, reason,
+            )
+            raise HTTPException(401, detail=f"invalid_signature:{reason}")
+
+    # 4. Forward to AP, preserving method + body + safe headers
+    forward_headers = {
+        k: v for k, v in request.headers.items()
+        if k.lower() not in _WEBHOOK_HEADERS_DROP
+    }
+    forward_headers["x-forwarded-webhook-id"] = webhook_id
+
+    try:
+        status, ap_body, ap_headers = await E().forward_webhook(
+            flow_id, request.method, body, forward_headers,
+            dict(request.query_params),
+        )
+    except Exception as exc:
+        log.error(
+            "[webhook-proxy] forward FAILED flow=%s webhook=%s: %s",
+            flow_id, webhook_id, exc,
+        )
+        raise HTTPException(502, detail="upstream_forward_failed")
+
+    log.info(
+        "[webhook-proxy] OK flow=%s tenant=%s webhook=%s status=%d",
+        flow_id, row.tenant_id, webhook_id, status,
+    )
+    return Response(
+        content=ap_body,
+        status_code=status,
+        media_type=ap_headers.get("content-type", "application/json"),
+        headers={"x-webhook-id": webhook_id},
+    )
 
 
 @app.post("/v2/create-project")

@@ -38,6 +38,10 @@ os.environ["AP_PROJECT_ID"] = "TEST_DEFAULT_PID"
 os.environ["ORCHESTRATOR_API_KEY"] = ""
 os.environ["LOG_LEVEL"] = "INFO"
 os.environ["ORCHESTRATOR_ALLOWED_ORIGINS"] = "http://testclient"
+os.environ["ORCHESTRATOR_PUBLIC_URL"] = "http://testclient"
+# Phase 10: master key for webhook signature derivation. Fixed value so
+# tests are deterministic; per-flow secrets derive from (master, flow_id).
+os.environ["WEBHOOK_SIGNING_MASTER_KEY"] = "test-master-key-phase-10-abc123xyz"
 # Wipe any pre-existing AP connection hints so stub doesn't hit real net.
 for _k in list(os.environ):
     if _k.startswith("AP_MCP_") or _k.startswith("GMAIL_") or _k.startswith("SHEETS_"):
