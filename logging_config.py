@@ -40,6 +40,22 @@ _SECRET_PATTERNS = [
     # sha256-ish hex blobs (our tenant_api_keys.key_hash — harmless but
     # still not worth shipping to Sentry)
     re.compile(r"\b[a-f0-9]{64}\b"),
+    # Phase 4.6 (Q2) — Sovereign-Grade env-var scrubbing.
+    # Master Key + State Key + Slack secrets, in any K=V or K: V form.
+    # Catches accidental `os.environ` dumps, repr() leaks, traceback
+    # locals dumped to Sentry, ad-hoc debug prints, etc.
+    re.compile(
+        r"(SIYADAH_OAUTH_(?:MK|STATE_KEY)|SLACK_(?:SIGNING_SECRET|CLIENT_SECRET))"
+        r"\s*[=:]\s*[A-Za-z0-9_\-+/]{20,}",
+        re.IGNORECASE,
+    ),
+    # Slack bot/user/refresh tokens — any context (URL, JSON value, log line)
+    re.compile(r"xox[abprs]-[A-Za-z0-9-]{10,}"),
+    # Slack rotating refresh tokens
+    re.compile(r"xoxe-[A-Za-z0-9-]{10,}"),
+    # Google OAuth access tokens (start with ya29.) and refresh (1//)
+    re.compile(r"ya29\.[A-Za-z0-9_\-]{20,}"),
+    re.compile(r"\b1//0[A-Za-z0-9_\-]{30,}"),
 ]
 
 

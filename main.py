@@ -59,6 +59,12 @@ _BOOLEAN_FIELD_NAMES = frozenset({
     "is_active", "enabled", "published",
 })
 
+# DEPRECATED (Phase-8): replaced by piece_registry. Kept only as a cold
+# fallback for environments where the registry is empty (first deploy,
+# before sync_pieces has run). Delete this dict and every lookup against
+# it once `python -m scripts.sync_pieces --full` has been run in every
+# environment. The values below are historically stale — e.g. gmail here
+# is 0.11.6 while AP production already ships 0.12.1.
 PIECE_VERSIONS: Dict[str, str] = {
     "webhook": "~0.1.31",
     "gmail": "~0.11.6",
@@ -1082,34 +1088,15 @@ async def _build_step_from_spec(
                 spec.get("action_name", ""), schema.get("actions", {}))
             props = get_action_props(schema, resolved_action)
 
-            # ── Smart Auto-Fill: populate missing required fields ──
-            if props:
-                for _fn, _fi in props.items():
-                    if _fn == "auth":
-                        continue
-                    if (isinstance(_fi, dict) and _fi.get("required", False)
-                            and (_fn not in cleaned_cfg
-                                 or cleaned_cfg[_fn] in (None, "", []))):
-                        _ptype = _fi.get("type", "")
-                        if _ptype == "BOOLEAN":
-                            cleaned_cfg[_fn] = False
-                        elif _ptype == "NUMBER":
-                            cleaned_cfg[_fn] = 0
-                        elif _ptype == "ARRAY":
-                            cleaned_cfg[_fn] = []
-                        elif _ptype in ("STATIC_DROPDOWN", "DROPDOWN"):
-                            _opts = _fi.get("options", [])
-                            if isinstance(_opts, list) and _opts:
-                                _first = _opts[0]
-                                cleaned_cfg[_fn] = _first.get("value", _first) if isinstance(_first, dict) else _first
-                            else:
-                                cleaned_cfg[_fn] = ""
-                        else:
-                            cleaned_cfg[_fn] = "Siyadah Auto-Fill"
-                        log.info("[auto-fill] %s.%s → %r (type=%s)",
-                                 sname, _fn, cleaned_cfg[_fn], _ptype)
+            # Phase-8: the "Siyadah Auto-Fill" literal injection was removed
+            # here. The Sniper Validator in golden_build() now hard-stops on
+            # missing required fields with an actionable error_code — we no
+            # longer fabricate values that would pass IMPORT_FLOW but fail at
+            # runtime with an opaque error.
 
             # ── Draft Guard: inject missing boolean fields ──
+            # Narrowly scoped: only for 8 well-known boolean flags that have
+            # an obvious safe default. NOT a general auto-fill.
             if props:
                 for _bn in _BOOLEAN_FIELD_NAMES:
                     if _bn not in cleaned_cfg and _bn in props:
@@ -1355,10 +1342,38 @@ def _build_smart_pulse(trigger: dict) -> dict:
 # ═══════════════════════════════════════════════════════════════
 async def golden_build(engine: SiyadahEngine, pid: str, name: str,
                        trigger: dict, *, self_test: bool = True) -> dict:
-    """Full Golden Protocol: IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE."""
+    """Full Golden Protocol: IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE.
+
+    Phase-8 pre-flight: the trigger tree is validated against piece_registry
+    BEFORE any AP call. Activepieces accepts IMPORT_FLOW with non-existent
+    pieces and marks them valid:true (verified empirically 2026-04-24), so
+    without this guard a typo only surfaces at runtime.
+    """
     # ── Visibility Guard: unique timestamp + fallback project ──
     name = f"{name} ({datetime.now().strftime('%H:%M:%S')})"
     pid = pid or DEFAULT_PID
+
+    # ── Phase-8 Sniper Validator: hard-stop on unknown piece / action /
+    # missing required field. Skipped gracefully if DB is unconfigured
+    # (dev/test environments without Postgres) or the registry is empty
+    # (before first sync_pieces run) — the orchestrator stays functional,
+    # the guard just can't fire yet.
+    from database import async_session as _async_session
+    if _async_session is not None:
+        from piece_validator import assert_trigger
+        from models import PieceRegistry
+        from sqlalchemy import select as _select
+        async with _async_session() as _vs:
+            _has_any = (await _vs.execute(
+                _select(PieceRegistry.name).limit(1)
+            )).first()
+            if _has_any:
+                await assert_trigger(_vs, trigger)
+            else:
+                log.warning(
+                    "[golden] piece_registry is empty — validator disarmed. "
+                    "Run: python -m scripts.sync_pieces --full"
+                )
 
     flow = await engine.create_flow(pid, name)
     fid = flow["id"]
@@ -1836,9 +1851,41 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         log.error("Redis init failed (non-fatal): %s", e)
 
+    # 4. Phase 4.4 — OAuth refresh worker (the Eternal Pulse).
+    #    Disabled by default. Enable in prod via SIYADAH_REFRESH_WORKER_ENABLED=true.
+    #    Single-replica safety: we use Redis SETNX per-token mutex inside
+    #    _refresh_one_token, so spawning this task on every replica is
+    #    bounded — only one replica wins each token's lock per cycle.
+    refresh_task = None
+    if os.getenv("SIYADAH_REFRESH_WORKER_ENABLED", "false").lower() == "true":
+        try:
+            import asyncio as _asyncio_pulse
+            from oauth_routes import _refresh_loop, REFRESH_DEFAULT_INTERVAL
+            refresh_task = _asyncio_pulse.create_task(
+                _refresh_loop(REFRESH_DEFAULT_INTERVAL),
+                name="oauth-refresh-worker",
+            )
+            log.info("[lifespan] OAuth refresh worker spawned (interval=%ds)",
+                     REFRESH_DEFAULT_INTERVAL)
+        except Exception as e:
+            log.error("[lifespan] could not spawn refresh worker: %s", e)
+    else:
+        log.info("[lifespan] OAuth refresh worker NOT enabled "
+                 "(set SIYADAH_REFRESH_WORKER_ENABLED=true to activate)")
+
     yield
 
     # Shutdown
+    if refresh_task is not None:
+        log.info("[lifespan] cancelling OAuth refresh worker …")
+        refresh_task.cancel()
+        try:
+            await refresh_task
+        except BaseException:
+            # CancelledError (BaseException in 3.8+) + any race during a
+            # cycle land here. Safe to swallow during shutdown.
+            pass
+
     if _engine:
         await _engine.close()
     try:
@@ -1910,6 +1957,15 @@ async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
 
 from mcp_sse import router as sse_router  # noqa: E402
 app.include_router(sse_router)
+
+# Phase-9 — Sovereign-Grade OAuth (Layer 1+2+5 already wired; routes
+# delivered incrementally: initiate → callback → refresh → webhooks).
+from oauth_routes import router as oauth_router  # noqa: E402
+app.include_router(oauth_router)
+
+# Phase 4.5 — Layer 4 revocation webhooks. Public path (HMAC-authenticated).
+from oauth_webhooks import router as webhooks_router  # noqa: E402
+app.include_router(webhooks_router)
 
 
 # ─── Wave-1 tenant enforcement (dry-run by default) ─────────────────
@@ -2313,34 +2369,11 @@ async def v2_build_smart(request: Request, body: SmartBuildBody):
             resolved_action = _fuzzy_name(s.action_name, schema.get("actions", {}))
             props = get_action_props(schema, resolved_action)
 
-            # ── Smart Auto-Fill: populate missing required fields ──
-            if props:
-                for _fn, _fi in props.items():
-                    if _fn == "auth":
-                        continue
-                    if (isinstance(_fi, dict) and _fi.get("required", False)
-                            and (_fn not in cleaned_cfg
-                                 or cleaned_cfg[_fn] in (None, "", []))):
-                        _ptype = _fi.get("type", "")
-                        if _ptype == "BOOLEAN":
-                            cleaned_cfg[_fn] = False
-                        elif _ptype == "NUMBER":
-                            cleaned_cfg[_fn] = 0
-                        elif _ptype == "ARRAY":
-                            cleaned_cfg[_fn] = []
-                        elif _ptype in ("STATIC_DROPDOWN", "DROPDOWN"):
-                            _opts = _fi.get("options", [])
-                            if isinstance(_opts, list) and _opts:
-                                _first = _opts[0]
-                                cleaned_cfg[_fn] = _first.get("value", _first) if isinstance(_first, dict) else _first
-                            else:
-                                cleaned_cfg[_fn] = ""
-                        else:
-                            cleaned_cfg[_fn] = "Siyadah Auto-Fill"
-                        log.info("[auto-fill] smart-build %s → %r (type=%s)",
-                                 _fn, cleaned_cfg[_fn], _ptype)
+            # Phase-8: "Siyadah Auto-Fill" literal injection removed — see
+            # _build_step_from_spec above. The Sniper Validator in
+            # golden_build() hard-stops on missing required fields.
 
-            # ── Draft Guard: inject missing boolean fields ──
+            # ── Draft Guard: inject missing boolean fields (narrow, safe default) ──
             if props:
                 for _bn in _BOOLEAN_FIELD_NAMES:
                     if _bn not in cleaned_cfg and _bn in props:
@@ -3618,6 +3651,43 @@ async def v2_saas_register(body: SaaSRegisterBody):
 # ═══════════════════════════════════════════════════════════════
 # V2 — SUGGESTION ENGINE (Sector-Aware Flow Recommendations)
 # ═══════════════════════════════════════════════════════════════
+#
+# Two intelligence layers, separated cleanly:
+#   1. SECTOR_SUGGESTIONS — hardcoded *flow recipes* (preset names like
+#      "lead_capture") that the BFF turns into a ready-to-build CTA.
+#      These are sticky, branded, and not LLM-generated.
+#   2. SECTOR_CATEGORY_MAP + PieceRegistry.effective_dahae — the live
+#      ranker. Filters the 688-piece registry to the categories that
+#      matter for this sector, then orders by Dahae score (Phase-12a).
+#      This is what /v2/logic/suggest now returns alongside the recipes.
+#
+# Activepieces categories observed in prod (688 pieces): see
+# scripts/audit_stats.py — top buckets are AI, PRODUCTIVITY, MARKETING,
+# COMMUNICATION, SALES_AND_CRM, COMMERCE, FORMS_AND_SURVEYS.
+
+# Per-sector category preference order. The FIRST category in each
+# list is the "primary" filter; the rest broaden coverage if the
+# primary alone yields too few pieces.
+SECTOR_CATEGORY_MAP: Dict[str, List[str]] = {
+    "E-commerce": [
+        "COMMERCE", "SALES_AND_CRM", "MARKETING", "COMMUNICATION",
+    ],
+    "Healthcare": [
+        "COMMUNICATION", "FORMS_AND_SURVEYS", "PRODUCTIVITY",
+    ],
+    "Education": [
+        "COMMUNICATION", "FORMS_AND_SURVEYS", "CONTENT_AND_FILES",
+        "PRODUCTIVITY",
+    ],
+    "Real Estate": [
+        "SALES_AND_CRM", "COMMUNICATION", "FORMS_AND_SURVEYS",
+        "MARKETING",
+    ],
+    "default": [
+        "COMMUNICATION", "PRODUCTIVITY", "MARKETING", "SALES_AND_CRM",
+    ],
+}
+
 
 SECTOR_SUGGESTIONS: Dict[str, List[Dict[str, str]]] = {
     "E-commerce": [
@@ -3699,21 +3769,30 @@ class SuggestBody(BaseModel):
 
 @app.post("/v2/logic/suggest")
 async def v2_logic_suggest(request: Request, body: SuggestBody):
-    """Sector-aware suggestion engine — returns 3 personalized flow recommendations.
+    """Sector-aware suggestion engine.
 
-    Analyzes the project's identity and proposes automation flows that
-    match its sector, language, and business goals.
+    Returns two stacked layers:
+      • `suggestions` — 3 hardcoded flow recipes per sector (lead_capture,
+        smart_reply, …). These map to existing presets and are stable.
+      • `recommended_pieces` — live ranking of the piece_registry by
+        Phase-12a `effective_dahae`, filtered to the AP categories that
+        matter for the project's sector. This is the brain wiring that
+        the frontend's `skill-loader.ts` should consume to inject the
+        most useful tools first into the LLM tool catalogue.
+
+    Degradation: if Dahae is unscored (e.g. brand-new DB), the recipes
+    still ship and `recommended_pieces` is an empty list — never raise.
     """
     from database import async_session
-    from models import ProjectIdentity, KnowledgeAsset
-    from sqlalchemy import select
+    from models import ProjectIdentity, KnowledgeAsset, PieceRegistry
+    from sqlalchemy import select, text
 
     pid = resolve_pid(request, body.project_id)
 
     sector = "default"
     lang = "en"
     tone = "professional"
-    goals: List[str] = []
+    recommended_pieces: List[Dict[str, Any]] = []
 
     if async_session:
         try:
@@ -3725,11 +3804,50 @@ async def v2_logic_suggest(request: Request, body: SuggestBody):
                     select(KnowledgeAsset).where(KnowledgeAsset.project_id == pid)
                 )).scalar_one_or_none()
 
-            if identity:
-                sector = identity.sector or "default"
-                lang = identity.language or "en"
-            if knowledge:
-                tone = knowledge.tone_of_voice or "professional"
+                if identity:
+                    sector = identity.sector or "default"
+                    lang = identity.language or "en"
+                if knowledge:
+                    tone = knowledge.tone_of_voice or "professional"
+
+                # Dahae ranker — the brain wiring. Postgres ARRAY overlap
+                # operator `&&` returns true if any category in the row
+                # matches one in the sector preference list. We rely on
+                # the ix_pr_effective_dahae partial index for ordering.
+                cats = SECTOR_CATEGORY_MAP.get(
+                    sector, SECTOR_CATEGORY_MAP["default"],
+                )
+                ranked_rows = (await session.execute(
+                    text("""
+                        SELECT name,
+                               display_name,
+                               categories,
+                               effective_dahae,
+                               dahae_score,
+                               laziness_score,
+                               jsonb_extract_path(dahae_breakdown, 'n_actions')
+                                   AS n_actions
+                          FROM piece_registry
+                         WHERE effective_dahae IS NOT NULL
+                           AND categories && :cats
+                         ORDER BY effective_dahae DESC NULLS LAST, name
+                         LIMIT 8
+                    """),
+                    {"cats": cats},
+                )).all()
+
+                recommended_pieces = [
+                    {
+                        "piece": r[0],
+                        "display_name": r[1],
+                        "matched_categories": [c for c in (r[2] or []) if c in cats],
+                        "effective_dahae": r[3],
+                        "dahae_score": r[4],
+                        "laziness_score": r[5],
+                        "n_actions": r[6],
+                    }
+                    for r in ranked_rows
+                ]
         except Exception as exc:
             log.warning("[suggest] DB read failed: %s", exc)
 
@@ -3747,15 +3865,16 @@ async def v2_logic_suggest(request: Request, body: SuggestBody):
         }
         suggestions.append(entry)
 
+    n_pieces = len(recommended_pieces)
     if lang == "ar":
         hint = (
-            f"بناءً على قطاع «{sector}»، نقترح {len(suggestions)} فلوهات أتمتة. "
-            "اختر أحدها أو اطلب فلو مخصص."
+            f"بناءً على قطاع «{sector}»، نقترح {len(suggestions)} فلوهات أتمتة "
+            f"و{n_pieces} أداة مرتبة بـ Dahae score. اختر أحدها أو اطلب فلو مخصص."
         )
     else:
         hint = (
-            f"Based on sector «{sector}», we suggest {len(suggestions)} automation flows. "
-            "Pick one or request a custom flow."
+            f"Based on sector «{sector}», we suggest {len(suggestions)} flows "
+            f"and {n_pieces} Dahae-ranked pieces. Pick one or request a custom flow."
         )
 
     return {
@@ -3764,6 +3883,8 @@ async def v2_logic_suggest(request: Request, body: SuggestBody):
         "language": lang,
         "tone_of_voice": tone,
         "suggestions": suggestions,
+        "recommended_pieces": recommended_pieces,
+        "intelligent": bool(recommended_pieces),
         "_hint": hint,
     }
 

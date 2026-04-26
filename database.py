@@ -119,11 +119,25 @@ class Base(DeclarativeBase):
 
 
 async def init_db() -> None:
-    """Create all tables (idempotent). Called once at startup."""
+    """Create all tables + apply additive column migrations.
+
+    Idempotent on every call:
+      • CREATE TABLE IF NOT EXISTS — handled by SQLAlchemy `create_all`
+      • ALTER TABLE … ADD COLUMN IF NOT EXISTS — handled by
+        `_apply_additive_migrations()` for tables that gained columns
+        AFTER they shipped (Postgres ≥ 9.6 supports IF NOT EXISTS on
+        ADD COLUMN; we target 17 in prod).
+
+    Existing data is never touched. This function is safe to run on
+    every Railway deploy.
+    """
     if engine is None:
         log.warning("DATABASE_URL not set — skipping DB init")
         return
     # Import triggers model registration against Base.metadata.
+    # NOTE: piece_registry is populated by scripts/sync_pieces.py CLI,
+    # never at startup — a 688-piece fetch would block the Railway
+    # health check and cause rollback loops on deploys.
     from models import (  # noqa: F401
         Project,
         ProjectIdentity,
@@ -132,11 +146,84 @@ async def init_db() -> None:
         TenantApiKey,
         TenantAuditLog,
         FlowRegistry,
+        PieceRegistry,
+        EncryptedToken,
+        OAuthSaga,
     )
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await _apply_additive_migrations(conn)
     log.info("Database tables ensured")
+
+
+async def _apply_additive_migrations(conn) -> None:
+    """Apply ADD COLUMN / CREATE INDEX migrations that `create_all`
+    cannot deliver on existing tables.
+
+    ONLY additive operations — never drop, rename, or alter type.
+    Every statement uses Postgres `IF NOT EXISTS` guards so re-running
+    is a no-op. This is the contract: any future column addition lives
+    here, no Alembic, no migration history table.
+    """
+    from sqlalchemy import text
+
+    statements = [
+        # Phase-9 — TenantAuditLog gains OAuth event columns
+        "ALTER TABLE tenant_audit_log "
+        "ADD COLUMN IF NOT EXISTS event_type VARCHAR(64)",
+        "ALTER TABLE tenant_audit_log "
+        "ADD COLUMN IF NOT EXISTS event_meta JSONB",
+        # Phase-9 — partial index for OAuth events lookup. SQLAlchemy's
+        # create_all skips indexes on PRE-EXISTING tables, so we must
+        # add it explicitly here. The IF NOT EXISTS makes it idempotent.
+        "CREATE INDEX IF NOT EXISTS ix_tal_oauth_events "
+        "ON tenant_audit_log (project_id, event_type) "
+        "WHERE event_type LIKE 'oauth.%'",
+        # Phase-8 (retroactive fix) — FlowRegistry gained schema_version
+        # in models.py:166 but if the table predates that change on a
+        # given DB, create_all won't add it. Idempotent ALTER fixes that.
+        "ALTER TABLE flow_registry "
+        "ADD COLUMN IF NOT EXISTS schema_version VARCHAR(8)",
+        # Phase 4.6 hardening — Q4 (AP sync recovery) + Q1 (cross-replica lease)
+        "ALTER TABLE encrypted_tokens "
+        "ADD COLUMN IF NOT EXISTS ap_sync_pending BOOLEAN NOT NULL DEFAULT false",
+        "ALTER TABLE encrypted_tokens "
+        "ADD COLUMN IF NOT EXISTS processing_until TIMESTAMP WITH TIME ZONE",
+        # Partial index — only the rows the AP-retry path scans
+        "CREATE INDEX IF NOT EXISTS ix_et_ap_sync_pending "
+        "ON encrypted_tokens (status) "
+        "WHERE ap_sync_pending = true AND status = 'ACTIVE'",
+        # Lease cleanup index — finds expired leases for crashed-worker recovery
+        "CREATE INDEX IF NOT EXISTS ix_et_processing_lease "
+        "ON encrypted_tokens (processing_until) "
+        "WHERE processing_until IS NOT NULL",
+        # Phase-12a — Dahae scoring on piece_registry (§15)
+        "ALTER TABLE piece_registry "
+        "ADD COLUMN IF NOT EXISTS dahae_score SMALLINT",
+        "ALTER TABLE piece_registry "
+        "ADD COLUMN IF NOT EXISTS laziness_score SMALLINT",
+        "ALTER TABLE piece_registry "
+        "ADD COLUMN IF NOT EXISTS effective_dahae SMALLINT",
+        "ALTER TABLE piece_registry "
+        "ADD COLUMN IF NOT EXISTS dahae_breakdown JSONB",
+        # Index for ranker hot-path lookups by effective_dahae
+        "CREATE INDEX IF NOT EXISTS ix_pr_effective_dahae "
+        "ON piece_registry (effective_dahae DESC) "
+        "WHERE effective_dahae IS NOT NULL",
+    ]
+
+    for stmt in statements:
+        try:
+            await conn.execute(text(stmt))
+        except Exception as e:
+            # Log and re-raise — additive migrations should never fail
+            # in normal operation. If they do, the deploy must abort
+            # rather than continue with an inconsistent schema.
+            log.error("Additive migration failed: %s — %s", stmt, e)
+            raise
+
+    log.info("Additive migrations applied (%d statements)", len(statements))
 
 
 async def get_session() -> AsyncSession:

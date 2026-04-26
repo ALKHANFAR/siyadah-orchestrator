@@ -107,6 +107,7 @@ async def _clean_state(_schema):
 
     async with async_session() as s:
         await s.execute(delete(models.FlowRegistry))
+        await s.execute(delete(models.PieceRegistry))
         await s.execute(delete(models.TenantAuditLog))
         await s.execute(delete(models.TenantApiKey))
         await s.execute(delete(models.Project).where(

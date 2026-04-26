@@ -25,6 +25,7 @@ import hmac
 import json
 import logging
 import os
+import re
 import uuid
 from typing import Optional
 
@@ -45,6 +46,18 @@ PUBLIC_PATHS = frozenset({
     "/favicon.ico",
 })
 
+# Phase-9 — patterns that bypass require_tenant because they authenticate
+# via a different proof of possession:
+#   • OAuth callback: state token (HMAC-signed) carries the tenant id
+#   • Provider webhooks (Layer 4): JWT/HMAC signature verification
+#
+# Each handler MUST verify the alternative proof immediately; falling off
+# the require_tenant path means there's no other gate.
+PUBLIC_PATH_PATTERNS = (
+    re.compile(r"^/v2/oauth/[a-z0-9_-]+/callback$"),
+    re.compile(r"^/v2/webhooks/[a-z0-9_-]+/[a-z0-9_-]+$"),
+)
+
 # Path prefixes that REQUIRE tenant enforcement when ENFORCE=true.
 PROTECTED_PREFIXES = ("/v2/",)
 
@@ -56,6 +69,11 @@ def _hash_key(raw: str) -> str:
 
 def _needs_enforcement(path: str) -> bool:
     if path in PUBLIC_PATHS:
+        return False
+    # Phase-9 — OAuth callbacks + provider webhooks authenticate via
+    # state-token HMAC or signature verification, not X-API-Key. The
+    # handlers themselves are the gate; bypass require_tenant here.
+    if any(p.match(path) for p in PUBLIC_PATH_PATTERNS):
         return False
     return any(path.startswith(p) for p in PROTECTED_PREFIXES)
 
