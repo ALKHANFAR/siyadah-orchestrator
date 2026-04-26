@@ -66,8 +66,11 @@ _BOOLEAN_FIELD_NAMES = frozenset({
 # environment. The values below are historically stale — e.g. gmail here
 # is 0.11.6 while AP production already ships 0.12.1.
 PIECE_VERSIONS: Dict[str, str] = {
-    "webhook": "~0.1.31",
-    "gmail": "~0.11.6",
+    # Refreshed 2026-04-26 from piece_registry. The Sniper Validator
+    # rejects builds whose pieceVersion is not in the registry, so this
+    # cold-fallback dict must stay in sync with what sync_pieces wrote.
+    "webhook": "~0.1.32",
+    "gmail": "~0.12.1",
     "google-sheets": "~0.14.6",
     "google-drive": "~0.7.1",
     "schedule": "~0.1.0",
