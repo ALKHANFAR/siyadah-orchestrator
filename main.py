@@ -226,6 +226,20 @@ class SiyadahEngine:
             "displayName": display_name, "trigger": trigger,
         })
 
+    async def update_metadata(self, fid: str, metadata: dict) -> dict:
+        """Sovereign Tightening — stamp owner identity onto a flow.
+
+        AP's flow object exposes a free-form `metadata` (jsonb-ish) field
+        that is preserved across IMPORT_FLOW + LOCK_AND_PUBLISH. The
+        Sovereign Tightening protocol uses this field as the immutable
+        bearer of (tenantId, ownerEmail, stamped_at) so list/update/
+        delete operations can verify ownership without a second DB
+        round-trip. The flow_registry table is the cache; this is the
+        ground truth — if both diverge, AP wins because it is what
+        actually owns the runtime side of the flow.
+        """
+        return await self._fop(fid, "UPDATE_METADATA", {"metadata": metadata})
+
     async def verify_flow(self, fid: str) -> dict:
         """Golden Protocol Step 2 — GET-verify (never trust 200 alone)."""
         flow = await self._r("GET", f"/v1/flows/{fid}")
@@ -367,6 +381,87 @@ def resolve_conns(override: Dict[str, str] | None) -> Dict[str, str]:
     if override:
         conns.update(override)
     return conns
+
+
+def resolve_owner_email(request: Request) -> Optional[str]:
+    """Read the owner email from the BFF's X-Siyadah-Owner-Email header.
+
+    Sovereign Tightening: the BFF (orchestrator-server.ts) injects this
+    header for every server-side fetch so the orchestrator can stamp
+    every newly-built flow with the founder's email. None when the
+    header is missing (e.g., legacy callers, internal probes); the
+    metadata field then carries only `tenantId`.
+    """
+    return (request.headers.get("X-Siyadah-Owner-Email", "") or "").strip() or None
+
+
+# ─── Sovereign Tightening — ownership gate ──────────────────────────
+#
+# Every flow-mutating endpoint (PATCH /v2/flows/{id}, /diagnose,
+# /reimport, list filters) MUST run flow_id through this gate before
+# proceeding. The gate is two-tiered:
+#
+#   1. Fast path — the orchestrator's own `flow_registry` table.
+#      Indexed on (tenant_id, flow_id), O(1) lookup.
+#   2. Slow path — fall back to AP `metadata.tenantId` when the row
+#      is not in the registry yet (legacy/orphan flows from before
+#      the Tightening).
+#
+# Both paths must agree with `request.state.project_id` from the auth
+# middleware. Mismatch raises HTTPException(403) with a sovereign
+# error envelope; the chat path then surfaces the branded message.
+
+async def _flow_belongs_to(engine, fid: str, tenant_pid: str) -> bool:
+    """Return True iff the flow is owned by `tenant_pid`.
+
+    Reads flow_registry first (O(1) DB hit), falls back to fetching
+    AP metadata when the registry lacks an entry. Returns False on
+    any read error so the gate fails closed.
+    """
+    if not fid or not tenant_pid:
+        return False
+    # 1. flow_registry fast path
+    try:
+        from database import async_session as _s
+        from models import FlowRegistry
+        from sqlalchemy import select as _select
+        if _s is not None:
+            async with _s() as sess:
+                row = (await sess.execute(
+                    _select(FlowRegistry).where(FlowRegistry.flow_id == fid)
+                )).scalar_one_or_none()
+                if row is not None:
+                    return row.tenant_id == tenant_pid
+    except Exception as e:
+        log.warning("[ownership] flow_registry read failed for %s: %s", fid, e)
+    # 2. AP metadata fallback (slower; one extra GET to AP)
+    try:
+        flow = await engine.get_flow(fid)
+        meta = flow.get("metadata") or {}
+        if isinstance(meta, dict):
+            return meta.get("tenantId") == tenant_pid
+    except Exception as e:
+        log.warning("[ownership] AP metadata read failed for %s: %s", fid, e)
+    return False
+
+
+async def assert_flow_ownership(engine, fid: str, tenant_pid: str) -> None:
+    """Hard gate. Raises HTTPException(403) on mismatch."""
+    owns = await _flow_belongs_to(engine, fid, tenant_pid)
+    if not owns:
+        log.warning(
+            "[ownership-block] tenant=%s attempted to touch flow=%s "
+            "but does not own it (sovereign tightening)",
+            tenant_pid, fid,
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "flow_not_owned",
+                "message": "هذا الفلو ليس لك. الحركة مرفوضة.",
+                "flow_id": fid,
+            },
+        )
 
 
 def resolve_pid(request: Request, body_pid: Optional[str]) -> str:
@@ -1344,7 +1439,8 @@ def _build_smart_pulse(trigger: dict) -> dict:
 # GOLDEN PROTOCOL PIPELINE
 # ═══════════════════════════════════════════════════════════════
 async def golden_build(engine: SiyadahEngine, pid: str, name: str,
-                       trigger: dict, *, self_test: bool = True) -> dict:
+                       trigger: dict, *, self_test: bool = True,
+                       owner_email: Optional[str] = None) -> dict:
     """Full Golden Protocol: IMPORT_FLOW → GET-verify → LOCK_AND_PUBLISH → ENABLE.
 
     Phase-8 pre-flight: the trigger tree is validated against piece_registry
@@ -1381,6 +1477,27 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
     flow = await engine.create_flow(pid, name)
     fid = flow["id"]
     log.info("[golden] Created flow %s", fid)
+
+    # ── Sovereign Tightening — stamp identity IMMEDIATELY ──
+    # The metadata field is the ground truth for ownership. Stamped
+    # before IMPORT_FLOW so even if the import fails the flow is
+    # already attributable. AP preserves this field across publish/
+    # enable. Both list and update paths verify against it.
+    sovereign_meta = {
+        "tenantId":   pid,
+        "ownerEmail": owner_email or "",
+        "stampedAt":  datetime.now(timezone.utc).isoformat(),
+        "stampedBy":  "siyadah:golden_build",
+    }
+    try:
+        await engine.update_metadata(fid, sovereign_meta)
+        log.info("[golden] metadata stamped on %s → tenant=%s owner=%s",
+                 fid, pid, owner_email or "<anon>")
+    except Exception as meta_err:
+        log.error("[golden] metadata stamp failed for %s — aborting: %s", fid, meta_err)
+        try: await engine.delete_flow(fid)
+        except Exception: pass
+        raise HTTPException(500, detail=f"sovereign-tightening: failed to stamp metadata on {fid}")
 
     await engine.import_flow(fid, name, trigger)
     webhook_url = f"https://activepieces-production-2499.up.railway.app/api/v1/webhooks/{fid}"
@@ -1468,12 +1585,59 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
     if client_email:
         log.info("[golden] Client email extracted: %s", client_email)
 
+    # ── Sovereign Tightening — write to flow_registry as the durable
+    # cache for ownership lookups. Best-effort: a registry write
+    # failure must not undo the AP build (the metadata stamp on AP is
+    # the ground truth). Idempotent ON CONFLICT in case a retry hits.
+    try:
+        from database import async_session as _reg_session
+        from models import FlowRegistry
+        from sqlalchemy.dialects.postgresql import insert as _pg_insert
+        if _reg_session is not None:
+            trigger_type_val = (trigger.get("type") or
+                               (trigger.get("settings") or {}).get("triggerName") or
+                               "WEBHOOK")
+            piece_manifest = {
+                "owner_email": owner_email or "",
+                "stamped_at":  sovereign_meta["stampedAt"],
+                "ap_status":   final_status,
+                "trigger_type_detail": ttype,
+                "client_email_extracted": client_email,
+            }
+            async with _reg_session() as _rs:
+                stmt = _pg_insert(FlowRegistry).values(
+                    tenant_id      = pid,
+                    flow_id        = fid,
+                    display_name   = name,
+                    trigger_type   = trigger_type_val,
+                    webhook_url    = webhook_url,
+                    piece_manifest = piece_manifest,
+                    schema_version = "v1",
+                ).on_conflict_do_update(
+                    index_elements=["flow_id"],
+                    set_={
+                        "tenant_id":      pid,
+                        "display_name":   name,
+                        "trigger_type":   trigger_type_val,
+                        "webhook_url":    webhook_url,
+                        "piece_manifest": piece_manifest,
+                        "updated_at":     datetime.now(timezone.utc),
+                    },
+                )
+                await _rs.execute(stmt)
+                await _rs.commit()
+            log.info("[golden] flow_registry upsert OK for %s (tenant=%s)", fid, pid)
+    except Exception as reg_err:
+        log.warning("[golden] flow_registry write failed for %s — AP metadata is the truth: %s", fid, reg_err)
+
     return {"flow_id": fid, "trigger_type": ttype,
             "publish": pub, "diagnosis": diagnosis,
             "webhook_url": webhook_url,
             "resource_link": resource_link,
             "pulse_sent": pulse_sent,
-            "client_email": client_email}
+            "client_email": client_email,
+            "owner_email": owner_email,
+            "metadata": sovereign_meta}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -2084,7 +2248,7 @@ async def v2_build(request: Request, body: BuildBody):
 
     log.info("BUILD template=%s name=%s pid=%s", t, body.display_name or t, pid)
     trigger = tdef["fn"](body.config, cn)
-    result = await golden_build(e, pid, body.display_name or tdef["desc"], trigger)
+    result = await golden_build(e, pid, body.display_name or tdef["desc"], trigger, owner_email=resolve_owner_email(request))
 
     is_scheduled = t.startswith("scheduled")
     wh = (f"{AP_BASE}/api/v1/webhooks/{result['flow_id']}"
@@ -2155,7 +2319,7 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
         trigger_ver, trigger_name, trigger_input,
         body.display_name + " — Trigger", first_action)
 
-    result = await golden_build(e, pid, body.display_name, trigger)
+    result = await golden_build(e, pid, body.display_name, trigger, owner_email=resolve_owner_email(request))
 
     is_webhook = "webhook" in full_t.lower()
     webhook_url = result.get("webhook_url") if is_webhook else None
@@ -2203,7 +2367,7 @@ async def v2_build_router(request: Request, body: RouterBuildBody):
     counter[0] += 1
     trigger = wh_trigger("استقبال بيانات", router)
 
-    result = await golden_build(e, pid, body.display_name, trigger)
+    result = await golden_build(e, pid, body.display_name, trigger, owner_email=resolve_owner_email(request))
     return {"status": "deployed", "flow_id": result["flow_id"],
             "type": "ROUTER", "branches_count": len(branch_defs),
             "webhook_url": result.get("webhook_url"),
@@ -2242,7 +2406,7 @@ async def v2_build_loop(request: Request, body: LoopBuildBody):
         first_action = loop
 
     trigger = wh_trigger("استقبال بيانات", first_action)
-    result = await golden_build(e, pid, body.display_name, trigger)
+    result = await golden_build(e, pid, body.display_name, trigger, owner_email=resolve_owner_email(request))
     return {"status": "deployed", "flow_id": result["flow_id"],
             "type": "LOOP", "items_expression": body.items_expression,
             "webhook_url": result.get("webhook_url"),
@@ -2277,7 +2441,7 @@ async def v2_build_complex(request: Request, body: ComplexBuildBody):
             )
         trigger = wh_trigger("استقبال بيانات", first_action)
         log.info("Final Payload Ready for AP")
-        result = await golden_build(e, pid, body.display_name, trigger)
+        result = await golden_build(e, pid, body.display_name, trigger, owner_email=resolve_owner_email(request))
         if not isinstance(result, dict) or not result.get("flow_id"):
             raise HTTPException(
                 500,
@@ -2339,7 +2503,7 @@ async def v2_build_preset(request: Request, body: PresetBuildBody):
     pdef = PRESETS[body.preset]
     default_name, trigger = pdef["fn"](body.params, cn)
     name = body.display_name or default_name
-    result = await golden_build(e, pid, name, trigger)
+    result = await golden_build(e, pid, name, trigger, owner_email=resolve_owner_email(request))
     return {"status": "deployed", "flow_id": result["flow_id"],
             "preset": body.preset, "display_name": name,
             "webhook_url": result.get("webhook_url"),
@@ -2424,7 +2588,7 @@ async def v2_build_smart(request: Request, body: SmartBuildBody):
         chain = step
 
     trigger = wh_trigger(body.display_name + " — Trigger", chain)
-    result = await golden_build(e, pid, body.display_name, trigger)
+    result = await golden_build(e, pid, body.display_name, trigger, owner_email=resolve_owner_email(request))
     response_dict = {
         "status": "deployed", "flow_id": result["flow_id"],
         "type": "SMART", "steps": steps_info,
@@ -2513,16 +2677,61 @@ async def v2_validate(body: ValidateBody):
 # V2 — CLIENT STATUS
 # ═══════════════════════════════════════════════════════════════
 @app.get("/v2/client-status")
-async def v2_status():
+async def v2_status(request: Request):
+    """Per-tenant operations summary.
+
+    Sovereign Tightening: scopes to `request.state.project_id` (no
+    DEFAULT_PID fallback) and filters every flow/run by the
+    `metadata.tenantId` stamp written by `golden_build`. Until legacy
+    flows are stamped, founders see [] — the bitter truth, not the
+    141-flow shared-project leak.
+    """
+    from database import async_session as _ds
+    from models import FlowRegistry as _FR
+    from sqlalchemy import select as _select
+
     e = E()
-    flows = await e.list_flows(DEFAULT_PID)
-    conns = await e.list_connections(DEFAULT_PID)
-    runs = await e.list_runs(DEFAULT_PID)
+    pid = resolve_pid(request, None)
+
+    flows_raw = await e.list_flows(pid)
+    conns_raw = await e.list_connections(pid)
+    runs_raw  = await e.list_runs(pid)
+
+    # ── Sovereign Tightening — registry + metadata ownership ──
+    # A flow counts for this tenant only if BOTH:
+    #   • it's in `flow_registry` for this tenant, OR
+    #   • its AP `metadata.tenantId` matches this tenant.
+    registered_ids: set[str] = set()
+    if _ds is not None:
+        async with _ds() as _s:
+            rows = (await _s.execute(
+                _select(_FR.flow_id).where(_FR.tenant_id == pid)
+            )).scalars().all()
+        registered_ids = set(rows)
+
+    def _owns(f: dict) -> bool:
+        fid = f.get("id") or ""
+        if fid and fid in registered_ids:
+            return True
+        meta = f.get("metadata") or {}
+        return isinstance(meta, dict) and meta.get("tenantId") == pid
+
+    flows = [f for f in flows_raw if _owns(f)]
+    owned_ids = {f.get("id") for f in flows if f.get("id")}
+    runs = [r for r in runs_raw if r.get("flowId") in owned_ids]
+
+    # Connections: AP scopes by projectId already; an extra defensive
+    # check keeps us safe if AP returns a wider set under list_connections.
+    conns = [
+        c for c in conns_raw
+        if (c.get("projectId") or c.get("project_id") or pid) == pid
+    ]
+
     active = [f for f in flows if f.get("status") == "ENABLED"]
     failed = [r for r in runs if r.get("status") == "FAILED"]
     recent = sorted(runs, key=lambda r: r.get("created", ""), reverse=True)[:10]
     return {
-        "project_id": DEFAULT_PID,
+        "project_id": pid,
         "summary": {"total_flows": len(flows), "active_flows": len(active),
                      "total_connections": len(conns), "total_runs": len(runs),
                      "failed_runs": len(failed)},
@@ -2542,8 +2751,14 @@ async def v2_status():
 # V2 — FLOW MANAGEMENT (enable/disable/delete)
 # ═══════════════════════════════════════════════════════════════
 @app.patch("/v2/flows/{flow_id}")
-async def v2_flow_patch(flow_id: str, body: FlowPatchBody):
+async def v2_flow_patch(flow_id: str, request: Request, body: FlowPatchBody):
+    # ── Sovereign Tightening — ownership gate before any AP mutation ──
+    # Verifies metadata.tenantId == caller pid (or flow_registry hit).
+    # Cross-tenant attempts → 403 with audit log.
     e = E()
+    pid = resolve_pid(request, None)
+    await assert_flow_ownership(e, flow_id, pid)
+
     if body.action == "enable":
         await e._fop(flow_id, "CHANGE_STATUS", {"status": "ENABLED"})
         return {"flow_id": flow_id, "status": "ENABLED"}
@@ -2552,6 +2767,18 @@ async def v2_flow_patch(flow_id: str, body: FlowPatchBody):
         return {"flow_id": flow_id, "status": "DISABLED"}
     elif body.action == "delete":
         await e.delete_flow(flow_id)
+        # Evict from flow_registry so /v2/flows doesn't keep a ghost row.
+        try:
+            from database import async_session as _ds
+            from models import FlowRegistry as _FR
+            from sqlalchemy import delete as _delete
+            if _ds is not None:
+                async with _ds() as _s:
+                    await _s.execute(_delete(_FR).where(_FR.flow_id == flow_id))
+                    await _s.commit()
+        except Exception as _reg_err:
+            log.warning("[flow_patch] flow_registry delete failed for %s: %s",
+                        flow_id, _reg_err)
         return {"flow_id": flow_id, "status": "DELETED"}
     else:
         raise HTTPException(400,
@@ -2577,6 +2804,10 @@ async def v2_reimport(flow_id: str, request: Request, body: ReimportBody):
     """Re-import flow with new structure. Golden Protocol on existing flow."""
     e = E()
     pid = resolve_pid(request, body.project_id)
+    # Sovereign Tightening — reimport rewrites the AP flow JSON and
+    # re-publishes. That is a destructive update from the foreign tenant's
+    # POV. Gate before doing any work.
+    await assert_flow_ownership(e, flow_id, pid)
     cn = resolve_conns(body.connection_ids)
     result = {"flow_id": flow_id, "webhook_url": None, "publish": {}, "diagnosis": None}
 
@@ -2871,14 +3102,13 @@ async def v2_list_flows(
     e = E()
     pid = resolve_pid(request, None)
 
-    ap_flows_raw = await e.list_flows(pid)
-    # Defensive: AP sometimes returns flows for other projects if the
-    # projectId query is ignored; double-check.
-    ap_flows = [
-        f for f in ap_flows_raw
-        if (f.get("projectId") or f.get("project_id") or pid) == pid
-    ]
-
+    # ── Sovereign Tightening — registry is the source of truth ──
+    # In shared-project mode, AP returns ALL flows in the pool. The
+    # only durable ownership signal is `flow_registry` (written by
+    # `golden_build`) plus the `metadata.tenantId` stamp on AP itself.
+    # We treat the registry as authoritative, then enrich with AP
+    # status. Founders with no registered flows see []. That is the
+    # bitter truth — no leak from the legacy pool.
     registered_ids: set[str] = set()
     registry_rows: dict[str, dict] = {}
     if async_session is not None:
@@ -2897,20 +3127,59 @@ async def v2_list_flows(
                 "registered_at": r.created_at.isoformat() if r.created_at else None,
             }
 
-    items: list[dict] = []
-    for f in ap_flows[:limit]:
-        fid = f.get("id") or f.get("flowId") or ""
-        is_registered = fid in registered_ids
-        if orphan and is_registered:
+    ap_flows_raw = await e.list_flows(pid)
+    # Enrich registry rows with live AP status. Drop AP rows that
+    # neither match `metadata.tenantId` nor appear in the registry —
+    # those are foreign tenants leaking via the shared project.
+    def _ap_project_ok(f: dict) -> bool:
+        return (f.get("projectId") or f.get("project_id") or pid) == pid
+
+    def _meta_tenant_ok(f: dict) -> bool:
+        meta = f.get("metadata") or {}
+        return isinstance(meta, dict) and meta.get("tenantId") == pid
+
+    ap_by_id: dict[str, dict] = {}
+    for f in ap_flows_raw:
+        if not _ap_project_ok(f):
             continue
-        items.append({
-            "flow_id": fid,
-            "ap_display_name": (f.get("version") or {}).get("displayName") or f.get("displayName"),
-            "ap_status": f.get("status"),
-            "registered": is_registered,
-            "orphan": not is_registered,
-            **({"registry": registry_rows[fid]} if is_registered else {}),
-        })
+        fid = f.get("id") or f.get("flowId") or ""
+        if not fid:
+            continue
+        # Accept if either the metadata stamp or the registry confirms
+        # ownership. Either gate alone is enough; the AND elsewhere is
+        # for /v2/client-status where registry isn't joined.
+        if _meta_tenant_ok(f) or fid in registered_ids:
+            ap_by_id[fid] = f
+
+    items: list[dict] = []
+    if orphan:
+        # AP-side flows owned by us (metadata stamp) but missing from
+        # registry — recovery path for golden_build crashes between the
+        # AP write and the registry insert.
+        for fid, f in ap_by_id.items():
+            if fid in registered_ids:
+                continue
+            items.append({
+                "flow_id": fid,
+                "ap_display_name": (f.get("version") or {}).get("displayName") or f.get("displayName"),
+                "ap_status": f.get("status"),
+                "registered": False,
+                "orphan": True,
+            })
+    else:
+        # Default path: registry first (source of truth), AP enrichment optional.
+        for fid in registered_ids:
+            f = ap_by_id.get(fid) or {}
+            items.append({
+                "flow_id": fid,
+                "ap_display_name": (f.get("version") or {}).get("displayName") or f.get("displayName") or registry_rows[fid]["display_name"],
+                "ap_status": f.get("status"),
+                "registered": True,
+                "orphan": False,
+                "registry": registry_rows[fid],
+            })
+
+    items = items[:limit]
 
     return {
         "tenant_id": pid,
@@ -4449,7 +4718,7 @@ async def v2_mcp_execute(request: Request, body: MCPExecuteBody):
         e = E()
 
     try:
-        result = await _mcp_dispatch(e, tool, p, pid, cn)
+        result = await _mcp_dispatch(e, tool, p, pid, cn, owner_email=resolve_owner_email(request))
         hint = await _generate_smart_hint(pid)
         return {"tool": tool, "success": True,
                 "result": compress_response(result), "_hint": hint}
@@ -4461,7 +4730,8 @@ async def v2_mcp_execute(request: Request, body: MCPExecuteBody):
 
 
 async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
-                        pid: str, cn: Dict[str, str]) -> Any:
+                        pid: str, cn: Dict[str, str],
+                        owner_email: Optional[str] = None) -> Any:
     """Route MCP tool calls to internal logic."""
 
     if tool == "check_system_health":
@@ -4519,7 +4789,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
         config = p.get("config", {})
         trigger = tdef["fn"](config, cn)
         name = p.get("display_name", tdef["desc"])
-        result = await golden_build(e, pid, name, trigger)
+        result = await golden_build(e, pid, name, trigger, owner_email=resolve_owner_email(request))
         wh = (f"{AP_BASE}/api/v1/webhooks/{result['flow_id']}"
               if not tpl.startswith("scheduled") else None)
         return {**result, "webhook_url": wh, "template": tpl}
@@ -4561,7 +4831,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
                                 trig_in,
                                 "Trigger", first)
         name = p.get("display_name", "سيادة — أتمتة مخصصة")
-        result = await golden_build(e, pid, name, trigger)
+        result = await golden_build(e, pid, name, trigger, owner_email=resolve_owner_email(request))
         return {**result}
 
     if tool == "build_from_preset":
@@ -4570,7 +4840,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
             raise HTTPException(400, f"Unknown preset: {preset}")
         default_name, trigger = PRESETS[preset]["fn"](p.get("params", {}), cn)
         name = p.get("display_name", default_name)
-        return await golden_build(e, pid, name, trigger)
+        return await golden_build(e, pid, name, trigger, owner_email=owner_email)
 
     if tool == "validate_flow":
         vb = ValidateBody(trigger=p.get("trigger", {}),
