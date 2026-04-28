@@ -26,7 +26,12 @@ FIRECRAWL_KEY = os.getenv("FIRECRAWL_API_KEY", "")
 
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_KEY = os.getenv("ANTHROPIC_API_KEY", "")
-CLAUDE_MODEL = "claude-sonnet-4-20250514"
+# Model rotation contract: env override wins, with claude-sonnet-4-5 as the
+# secure default (replaces claude-sonnet-4-20250514 which reaches EOL on
+# 2026-06-15). Set ANTHROPIC_MODEL in env to roll forward without a code
+# change. See INVESTIGATION_REPORT.md Issue #1.
+# Uses `or` (not getenv default) so empty string env values fall back too.
+CLAUDE_MODEL = os.getenv("ANTHROPIC_MODEL") or "claude-sonnet-4-5"
 
 MAX_CONTENT_CHARS = 15_000
 
