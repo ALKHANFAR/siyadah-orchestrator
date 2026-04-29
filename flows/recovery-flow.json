@@ -1,0 +1,52 @@
+{
+  "display_name": "استرجاع السلة السيادي - عبدالصمد القرشي",
+  "trigger": {
+    "type": "PIECE_TRIGGER",
+    "piece": "@activepieces/piece-webhook",
+    "settings": { "input": { "authType": "none", "responseType": "ACKNOWLEDGE" } }
+  },
+  "actions": [
+    {
+      "name": "W1_Reminder",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-twilio",
+      "settings": { "input": { "body": "حياك الله {{trigger.customer_name}}، ذوقك الرفيع قادك لاختيار «{{trigger.product_name}}».. لا يزال عطرك المفضل ينتظرك في السلة. هل نحفظه لك؟" } }
+    },
+    {
+      "name": "Wait_24h",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-delay",
+      "settings": { "input": { "delayFor": 24, "unit": "hours" } }
+    },
+    {
+      "name": "W2_Claude_Persuasion",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-claude",
+      "settings": {
+        "input": {
+          "model": "claude-3-5-sonnet-latest",
+          "system_prompt": "أنت مستشار عطور سيادي. اكتب رسالة واتساب سعودية فخمة تصف ثبات وجمال العطر دون استخدام كلمة 'اشتر'.",
+          "user_prompt": "العطر: {{trigger.product_name}}، السعر: {{trigger.price}} ريال."
+        }
+      }
+    },
+    {
+      "name": "W3_Discount",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-twilio",
+      "settings": { "input": { "body": "تقديراً لاهتمامك، إليك 'الخصم السيادي' (10% + شحن مجاني) على طلبك. الرابط صالح لـ 24 ساعة: {{trigger.checkout_url}}?discount=SOV10" } }
+    },
+    {
+      "name": "Update_ROI",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-http",
+      "settings": {
+        "input": {
+          "method": "POST",
+          "url": "https://siyadah-65-production.up.railway.app/api/v10/insights/record",
+          "body": { "type": "roi_update", "value": "{{trigger.cart_value}}", "tenantId": "{{trigger.tenant_id}}" }
+        }
+      }
+    }
+  ]
+}

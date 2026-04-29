@@ -1,0 +1,137 @@
+{
+  "_meta": {
+    "purpose": "SANDBOX simulation flow — generic abandoned-cart recovery (not tenant-locked)",
+    "created": "2026-04-28",
+    "test_recipient_strategy": "Founder fires curl at webhook_url with their own phone in customer_phone — W1 message arrives within 30 minutes. Cancel via AP UI before W2 if you only want to test W1.",
+    "doctrine_compliance": {
+      "I12_no_fabrication": "Persona block forbids inventing thabaat/sillage numbers",
+      "tenant_neutral": "No product/brand names hardcoded — all from trigger payload",
+      "test_friendly": "30/30/30 minute waves (not 30m/24h/24h) so the full funnel completes in ~1.5 hours during testing"
+    }
+  },
+
+  "display_name": "محاكاة استرجاع السلّة — Sandbox v1",
+
+  "trigger": {
+    "type": "PIECE_TRIGGER",
+    "piece": "@activepieces/piece-webhook",
+    "triggerName": "catch_request",
+    "displayName": "Webhook — Cart Abandoned",
+    "settings": {
+      "input": { "authType": "none", "responseType": "ACKNOWLEDGE" }
+    }
+  },
+
+  "actions": [
+    {
+      "name": "S01_persist",
+      "displayName": "حفظ الجلسة",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-store",
+      "actionName": "put",
+      "settings": {
+        "input": {
+          "store": "siyadah_sandbox",
+          "key": "cart_{{trigger.cart_id}}",
+          "value": {
+            "phone": "{{trigger.customer_phone}}",
+            "name": "{{trigger.customer_name}}",
+            "product": "{{trigger.product_name}}",
+            "price": "{{trigger.price}}",
+            "checkout": "{{trigger.checkout_url}}",
+            "started_at": "{{now}}"
+          }
+        }
+      }
+    },
+
+    {
+      "name": "S02_delay_w1",
+      "displayName": "انتظار 30 دقيقة قبل W1",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-delay",
+      "actionName": "delay_for",
+      "settings": { "input": { "unit": "minutes", "delayFor": 30 } }
+    },
+
+    {
+      "name": "S03_w1_reminder",
+      "displayName": "W1 — تَذكير ودود",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-twilio",
+      "actionName": "send_whatsapp_message",
+      "settings": {
+        "input": {
+          "from": "whatsapp:{{config.SANDBOX_TWILIO_FROM}}",
+          "to": "whatsapp:{{trigger.customer_phone}}",
+          "body": "حياك الله {{trigger.customer_name}}،\n\nلاحظنا أنّك اخترت «{{trigger.product_name}}» ولا يزال يَنتظرك.\n\nنَحفظه لك حتى تُكمل؟ ردّ بـ «نعم»."
+        }
+      }
+    },
+
+    {
+      "name": "S04_delay_w2",
+      "displayName": "انتظار 30 دقيقة قبل W2 (مُختصَر للتجارب)",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-delay",
+      "actionName": "delay_for",
+      "settings": { "input": { "unit": "minutes", "delayFor": 30 } }
+    },
+
+    {
+      "name": "S05_w2_compose",
+      "displayName": "W2 — صياغة رسالة الإقناع بـ Claude",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-claude",
+      "actionName": "ask_claude",
+      "settings": {
+        "input": {
+          "model": "claude-sonnet-4-5",
+          "max_tokens": 200,
+          "temperature": 0.55,
+          "system_prompt": "أنت مُستشار سيادي. اكتب رسالة WhatsApp واحدة بنبرة سعوديّة هادئة وفاخرة. السقف 60 كلمة. ممنوع كلمات «اشترِ» و«اطلب». ممنوع اختلاق أرقام أو نِسَب. اِنتهِ بسؤال ودود واحد.",
+          "user_prompt": "المنتج: {{trigger.product_name}}\nالسعر: {{trigger.price}} ر.س\nالعميل: {{trigger.customer_name}}"
+        }
+      }
+    },
+
+    {
+      "name": "S06_w2_send",
+      "displayName": "W2 — إرسال الإقناع",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-twilio",
+      "actionName": "send_whatsapp_message",
+      "settings": {
+        "input": {
+          "from": "whatsapp:{{config.SANDBOX_TWILIO_FROM}}",
+          "to": "whatsapp:{{trigger.customer_phone}}",
+          "body": "{{S05_w2_compose.message}}"
+        }
+      }
+    },
+
+    {
+      "name": "S07_delay_w3",
+      "displayName": "انتظار 30 دقيقة قبل W3 (مُختصَر للتجارب)",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-delay",
+      "actionName": "delay_for",
+      "settings": { "input": { "unit": "minutes", "delayFor": 30 } }
+    },
+
+    {
+      "name": "S08_w3_discount",
+      "displayName": "W3 — الخصم السيادي + رابط الإغلاق",
+      "type": "PIECE",
+      "piece": "@activepieces/piece-twilio",
+      "actionName": "send_whatsapp_message",
+      "settings": {
+        "input": {
+          "from": "whatsapp:{{config.SANDBOX_TWILIO_FROM}}",
+          "to": "whatsapp:{{trigger.customer_phone}}",
+          "body": "تَقديراً لاهتمامك يا {{trigger.customer_name}}،\n\nخَصصنا لك «الخصم السيادي»: 10% + شحن مَجّاني على «{{trigger.product_name}}».\n\nالرابط صالح لـ 24 ساعة:\n{{trigger.checkout_url}}?d=SOV10\n\nلا تَدع الفرصة تَفوتك."
+        }
+      }
+    }
+  ]
+}

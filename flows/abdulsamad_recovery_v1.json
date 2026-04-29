@@ -1,0 +1,179 @@
+{
+  "_meta": {
+    "version": "v1.1 — snake_case fix (replaces camelCase v1.0)",
+    "created": "2026-04-28",
+    "tenant_target": "abdulsamad-qurashi",
+    "doctrine_compliance": {
+      "I1_multi_tenant": "OK — flow scoped per AP project, no global state",
+      "I12_no_fabrication": "OK — no ROI numbers in any message body, only product fields from trigger payload",
+      "deploy_via": "POST {SIYADAH_BFF}/api/orchestrator/v2/build-dynamic",
+      "shape_contract": "Matches orchestrator-native dict access in main.py:2278-2304 (trigger_name, action_name, display_name, flat input)",
+      "stripped_at_deploy": "_meta is removed by deploy_recovery.sh via jq before POST"
+    },
+    "expected_payload_from_website": {
+      "cart_id": "string (UNIQUE per cart event)",
+      "customer_phone": "+9665XXXXXXXX (E.164)",
+      "customer_name": "string",
+      "customer_email": "string (optional)",
+      "first_product_name": "string (Arabic)",
+      "first_product_price_sar": "number",
+      "first_product_url": "string",
+      "first_product_image": "string (URL, optional)",
+      "scent_family": "musk|oud|rose|saffron|sandalwood|other",
+      "cart_value_sar": "number",
+      "checkout_resume_url": "string (signed, includes cart token)",
+      "abandoned_at": "ISO-8601"
+    },
+    "router_note": "Human-handoff ROUTER from v1.0 removed — /v2/build-dynamic is linear-chain only. For branching logic, deploy a separate parallel flow via /v2/build-router."
+  },
+
+  "display_name": "استرجاع السلّة السيادي — عبد الصمد القرشي v1.1",
+
+  "trigger": {
+    "piece": "@activepieces/piece-webhook",
+    "trigger_name": "catch_request",
+    "input": {
+      "authType": "none",
+      "responseType": "ACKNOWLEDGE"
+    }
+  },
+
+  "actions": [
+    {
+      "piece": "@activepieces/piece-store",
+      "action_name": "put",
+      "display_name": "حفظ جلسة العميل في الذاكرة المؤقّتة",
+      "input": {
+        "store": "siyadah_recovery",
+        "key": "cart_{{trigger.cart_id}}",
+        "value": {
+          "phone": "{{trigger.customer_phone}}",
+          "name": "{{trigger.customer_name}}",
+          "product": "{{trigger.first_product_name}}",
+          "price": "{{trigger.first_product_price_sar}}",
+          "cart_value": "{{trigger.cart_value_sar}}",
+          "checkout_url": "{{trigger.checkout_resume_url}}",
+          "wave": "QUEUED_W1",
+          "started_at": "{{now}}"
+        }
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-http",
+      "action_name": "send_request",
+      "display_name": "تسجيل بدء الاسترجاع — siyadah.insights",
+      "input": {
+        "method": "POST",
+        "url": "{{config.SIYADAH_BFF_URL}}/api/internal/recovery/insights",
+        "headers": {
+          "Authorization": "Bearer {{config.SIYADAH_INTERNAL_TOKEN}}",
+          "Content-Type": "application/json",
+          "X-Siyadah-Tenant": "{{config.TENANT_ID}}"
+        },
+        "body": {
+          "event": "recovery_initiated",
+          "cart_id": "{{trigger.cart_id}}",
+          "cart_value_sar": "{{trigger.cart_value_sar}}",
+          "first_product": "{{trigger.first_product_name}}"
+        }
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-delay",
+      "action_name": "delay_for",
+      "display_name": "انتظار 30 دقيقة قبل W1",
+      "input": {
+        "unit": "minutes",
+        "delayFor": 30
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-twilio",
+      "action_name": "send_whatsapp_message",
+      "display_name": "W1 — رسالة الذكرى الودودة",
+      "input": {
+        "from": "whatsapp:{{config.BUSINESS_WHATSAPP_NUMBER}}",
+        "to": "whatsapp:{{trigger.customer_phone}}",
+        "body": "حياك الله {{trigger.customer_name}}،\n\nلاحظنا أنّ ذوقك الرفيع قادك لاختيار «{{trigger.first_product_name}}»، ولا يزال يَنتظرك في سلّتك.\n\nهل نَحفظه لك؟ ردّ بـ «نعم» وسنُؤكّده فوراً.\n\nعبد الصمد القرشي"
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-delay",
+      "action_name": "delay_for",
+      "display_name": "انتظار 24 ساعة قبل W2",
+      "input": {
+        "unit": "hours",
+        "delayFor": 24
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-claude",
+      "action_name": "ask_claude",
+      "display_name": "W2 — صياغة رسالة الإقناع بـ Claude",
+      "input": {
+        "model": "claude-sonnet-4-5",
+        "max_tokens": 220,
+        "temperature": 0.55,
+        "system_prompt": "أنت مُستشار عطور سيادي لعبد الصمد القرشي. اكتب رسالة WhatsApp فاخرة بنبرة سعوديّة هادئة. السقف: 65 كلمة. ممنوع كلمات «اشترِ» و«اطلب». استخدم لغة الإحساس والثَبات والفُوحان. اِذكر تَفصيلاً عَطريّاً واحداً صادقاً عن العَطر بناءً على عائلته (لا تَخترع أرقاماً ولا نِسَب ثبات). انتهِ بسؤال واحد ودود.",
+        "user_prompt": "العَطر: {{trigger.first_product_name}}\nعائلته: {{trigger.scent_family}}\nاسم العميل: {{trigger.customer_name}}"
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-twilio",
+      "action_name": "send_whatsapp_message",
+      "display_name": "W2 — إرسال رسالة الإقناع",
+      "input": {
+        "from": "whatsapp:{{config.BUSINESS_WHATSAPP_NUMBER}}",
+        "to": "whatsapp:{{trigger.customer_phone}}",
+        "body": "{{step_6.message}}"
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-delay",
+      "action_name": "delay_for",
+      "display_name": "انتظار 24 ساعة قبل W3",
+      "input": {
+        "unit": "hours",
+        "delayFor": 24
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-twilio",
+      "action_name": "send_whatsapp_message",
+      "display_name": "W3 — الخصم السيادي + رابط الإغلاق",
+      "input": {
+        "from": "whatsapp:{{config.BUSINESS_WHATSAPP_NUMBER}}",
+        "to": "whatsapp:{{trigger.customer_phone}}",
+        "body": "تَقديراً لاهتمامك يا {{trigger.customer_name}}،\n\nخَصصنا لك «الخصم السيادي»: 10% + شحن مَجّاني على «{{trigger.first_product_name}}».\n\nالرابط صالح لـ 24 ساعة:\n{{trigger.checkout_resume_url}}?d=SOV10\n\nلا تَدع الرائحة تَفوتك."
+      }
+    },
+
+    {
+      "piece": "@activepieces/piece-http",
+      "action_name": "send_request",
+      "display_name": "تسجيل اكتمال المسار في siyadah.insights",
+      "input": {
+        "method": "POST",
+        "url": "{{config.SIYADAH_BFF_URL}}/api/internal/recovery/insights",
+        "headers": {
+          "Authorization": "Bearer {{config.SIYADAH_INTERNAL_TOKEN}}",
+          "Content-Type": "application/json",
+          "X-Siyadah-Tenant": "{{config.TENANT_ID}}"
+        },
+        "body": {
+          "event": "funnel_completed",
+          "cart_id": "{{trigger.cart_id}}",
+          "waves_sent": 3
+        }
+      }
+    }
+  ]
+}
