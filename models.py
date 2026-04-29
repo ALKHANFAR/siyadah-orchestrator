@@ -11,7 +11,7 @@ from sqlalchemy import (
     ARRAY, BigInteger, Boolean, Column, DateTime, ForeignKey, Index,
     Integer, LargeBinary, SmallInteger, String, Text, UniqueConstraint, func,
 )
-from sqlalchemy.dialects.postgresql import JSONB, INET
+from sqlalchemy.dialects.postgresql import JSONB, INET, UUID as PG_UUID
 from sqlalchemy.orm import relationship
 
 from database import Base
@@ -93,6 +93,11 @@ class TenantApiKey(Base):
     __table_args__ = (
         Index("ix_tak_project_id", "project_id"),
         Index("ix_tak_active", "key_hash", postgresql_where=Column("revoked_at").is_(None)),
+        # Wave-2 / Pattern B — partial index on tenant_uuid for forward-compat
+        # reverse lookups ("list keys for tenant X"). Kept partial so the 11
+        # legacy phase-4.x keys with tenant_uuid IS NULL don't bloat it.
+        Index("ix_tak_tenant_uuid", "tenant_uuid",
+              postgresql_where=Column("tenant_uuid").isnot(None)),
     )
 
     id = Column(String(36), primary_key=True, default=_uuid)
@@ -107,6 +112,10 @@ class TenantApiKey(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     revoked_at = Column(DateTime(timezone=True), nullable=True)
     last_used_at = Column(DateTime(timezone=True), nullable=True)
+    # Wave-2 / Pattern B — Siyadah tenant identity (decoupled from AP routing).
+    # NULL during the transition window for legacy keys; require_tenant
+    # falls back to project_id comparison when this is NULL.
+    tenant_uuid = Column(PG_UUID(as_uuid=False), nullable=True)
 
 
 class TenantAuditLog(Base):

@@ -215,19 +215,37 @@ async def require_tenant(request: Request, call_next):
             else:
                 if not claimed_pid:
                     violation = "missing_tenant_header"
-                elif not hmac.compare_digest(
-                    resolved.project_id.encode("utf-8"),
-                    claimed_pid.encode("utf-8"),
-                ):
-                    violation = "tenant_mismatch"
                 else:
-                    request.state.project_id = resolved.project_id
-                    request.state.scopes = list(resolved.scopes or [])
-                    # Bind tenant onto the log context so downstream
-                    # log.info() calls in the route handler inherit it.
-                    bind_request_context(tenant_id=resolved.project_id)
-                    # fire-and-forget last_used_at update
-                    asyncio.create_task(_touch_last_used(resolved.key_hash))
+                    # Wave-2 / Pattern B — decouple Siyadah identity from
+                    # Activepieces routing. The header now carries the
+                    # Siyadah tenant UUID (siyadah.tenants.id), checked
+                    # against tenant_api_keys.tenant_uuid.
+                    #
+                    # Legacy fallback: 11 phase-4.x test keys pre-date
+                    # the column and have tenant_uuid IS NULL. They keep
+                    # authenticating against project_id (the AP nanoid)
+                    # so dev/forensic flows survive the transition.
+                    # Revoke or backfill those keys to close this path.
+                    expected_identity = (
+                        resolved.tenant_uuid or resolved.project_id
+                    )
+                    if not hmac.compare_digest(
+                        expected_identity.encode("utf-8"),
+                        claimed_pid.encode("utf-8"),
+                    ):
+                        violation = "tenant_mismatch"
+                    else:
+                        # Critical invariant: state.project_id stays the AP
+                        # nanoid. Every downstream route handler treats it
+                        # as the project to forward AP calls to — changing
+                        # the semantics here would ripple across 30+ sites.
+                        request.state.project_id = resolved.project_id
+                        request.state.scopes = list(resolved.scopes or [])
+                        # Bind tenant onto the log context so downstream
+                        # log.info() calls in the route handler inherit it.
+                        bind_request_context(tenant_id=resolved.project_id)
+                        # fire-and-forget last_used_at update
+                        asyncio.create_task(_touch_last_used(resolved.key_hash))
 
         # Violation classification:
         # - API_KEY violations are ALWAYS enforced (parity with pre-Wave-1).

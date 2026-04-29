@@ -52,7 +52,7 @@ async def _run(args: argparse.Namespace) -> int:
     try:
         from database import async_session
         from models import TenantApiKey, Project
-        from sqlalchemy import select, update
+        from sqlalchemy import select, update, text
     except Exception as exc:
         print(f"[seed] import failed: {exc}", file=sys.stderr)
         return 2
@@ -115,11 +115,37 @@ async def _run(args: argparse.Namespace) -> int:
             print(f"[seed] rotated: marked {n} active key(s) as revoked "
                   f"for project {args.project_id}")
 
+        # Wave-2 / Pattern B — bind every new key to its Siyadah tenant.
+        # The middleware compares X-Siyadah-Tenant against tenant_uuid;
+        # an unbound key authenticates only via the legacy project_id
+        # fallback, which is being phased out. Three resolution modes:
+        #   1. --tenant-uuid <uuid>      → use as-is, trust the operator
+        #   2. (default)                 → JOIN siyadah.tenants on project_id
+        #   3. --orphan-allowed          → permit NULL (test/forensic keys)
+        tenant_uuid: Optional[str] = args.tenant_uuid
+        if tenant_uuid is None:
+            row_tu = (await s.execute(text(
+                "SELECT id::text FROM siyadah.tenants "
+                "WHERE project_id = :pid LIMIT 1"
+            ), {"pid": args.project_id})).scalar_one_or_none()
+            tenant_uuid = row_tu
+
+        if tenant_uuid is None and not args.orphan_allowed:
+            print(
+                f"[seed] no siyadah.tenants row matches project_id="
+                f"{args.project_id!r}. Pass --tenant-uuid <uuid> to bind "
+                "explicitly, or --orphan-allowed to insert without a "
+                "tenant binding (test/forensic keys only).",
+                file=sys.stderr,
+            )
+            return 5
+
         row = TenantApiKey(
             project_id=args.project_id,
             key_hash=key_hash,
             label=args.label,
             scopes=(args.scopes.split(",") if args.scopes else ["read", "write"]),
+            tenant_uuid=tenant_uuid,
         )
         s.add(row)
         await s.commit()
@@ -161,6 +187,18 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--autocreate-project", action="store_true",
                    help="If the projects table lacks a row for project_id, "
                         "insert a stub row instead of erroring.")
+    # Wave-2 / Pattern B — Siyadah tenant binding (decouple identity
+    # from AP routing). One of three resolution modes is required:
+    #   • --tenant-uuid <uuid>  → trust operator, bind directly
+    #   • (omitted)             → auto-resolve via siyadah.tenants JOIN
+    #   • --orphan-allowed      → permit NULL (test/forensic keys only)
+    p.add_argument("--tenant-uuid", default=None,
+                   help="Siyadah tenant UUID (siyadah.tenants.id). When "
+                        "omitted, auto-resolved from project_id. Required "
+                        "for production keys; --orphan-allowed bypasses.")
+    p.add_argument("--orphan-allowed", action="store_true",
+                   help="Permit NULL tenant_uuid (legacy/test/forensic "
+                        "keys). New production keys MUST be bound.")
     args = p.parse_args(argv)
 
     if args.raw_key and args.from_env:
