@@ -4789,7 +4789,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
         config = p.get("config", {})
         trigger = tdef["fn"](config, cn)
         name = p.get("display_name", tdef["desc"])
-        result = await golden_build(e, pid, name, trigger, owner_email=resolve_owner_email(request))
+        result = await golden_build(e, pid, name, trigger, owner_email=owner_email)
         wh = (f"{AP_BASE}/api/v1/webhooks/{result['flow_id']}"
               if not tpl.startswith("scheduled") else None)
         return {**result, "webhook_url": wh, "template": tpl}
@@ -4831,7 +4831,7 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
                                 trig_in,
                                 "Trigger", first)
         name = p.get("display_name", "سيادة — أتمتة مخصصة")
-        result = await golden_build(e, pid, name, trigger, owner_email=resolve_owner_email(request))
+        result = await golden_build(e, pid, name, trigger, owner_email=owner_email)
         return {**result}
 
     if tool == "build_from_preset":
