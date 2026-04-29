@@ -4787,6 +4787,20 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
             raise HTTPException(400, f"Unknown template: {tpl}")
         tdef = TEMPLATES[tpl]
         config = p.get("config", {})
+
+        # Wave 1G-A: Validate required config fields (mirrors REST endpoint at line 2240)
+        # Without this check, the LLM can call build_from_template with empty config,
+        # causing AP to reject silently. This raises a structured error the LLM can parse.
+        missing = [k for k in tdef.get("req", []) if k not in config or not config[k]]
+        if missing:
+            raise HTTPException(422, detail={
+                "error": "missing_required_config",
+                "template": tpl,
+                "missing_fields": missing,
+                "available_templates": list(TEMPLATES.keys()),
+                "hint": f"Template '{tpl}' requires: {tdef.get('req', [])}. Ask user for these values before building, or choose a simpler template like webhook_to_email which only needs recipient_email."
+            })
+
         trigger = tdef["fn"](config, cn)
         name = p.get("display_name", tdef["desc"])
         result = await golden_build(e, pid, name, trigger, owner_email=owner_email)
