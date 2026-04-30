@@ -98,6 +98,8 @@ class TenantApiKey(Base):
         # legacy phase-4.x keys with tenant_uuid IS NULL don't bloat it.
         Index("ix_tak_tenant_uuid", "tenant_uuid",
               postgresql_where=Column("tenant_uuid").isnot(None)),
+        # Wave-1G-F: align ORM with Tier 1 hardening (table moved to siyadah schema)
+        {"schema": "siyadah"},
     )
 
     id = Column(String(36), primary_key=True, default=_uuid)
