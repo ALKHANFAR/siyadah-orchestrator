@@ -871,6 +871,14 @@ def generate_property_settings(props: dict, input_config: dict) -> dict:
                     settings[pname] = {"type": "STATIC_DROPDOWN"}
         except Exception as e:
             log.error(f"Error processing field {pname}: {e}")
+
+    # ── FALLBACK: any configured prop without registration → MANUAL ──
+    for pname in input_config.keys():
+        if pname == "auth":
+            continue
+        if pname not in settings:
+            settings[pname] = {"type": "MANUAL"}
+
     return settings
 
 
@@ -887,7 +895,7 @@ def resolve_piece_version(schema: dict, piece_name: str) -> str:
 def build_trigger(piece: str, ver: str, tname: str, inp: dict,
                   display: str = "Trigger", next_action=None) -> dict:
     t: Dict[str, Any] = {
-        "name": "trigger", "valid": True, "displayName": display,
+        "name": "trigger", "valid": True, "skip": False, "displayName": display,
         "type": "PIECE_TRIGGER",
         "settings": {
             "pieceName": piece, "pieceVersion": ver,
@@ -905,7 +913,7 @@ def build_action(sname: str, piece: str, ver: str, aname: str, inp: dict,
                  display: str = "Action", next_action=None,
                  property_settings: dict | None = None) -> dict:
     a: Dict[str, Any] = {
-        "name": sname, "valid": True, "displayName": display,
+        "name": sname, "valid": True, "skip": False, "displayName": display,
         "type": "PIECE",
         "settings": {
             "pieceName": piece, "pieceVersion": ver,
@@ -928,7 +936,7 @@ def build_router_step(name: str, display_name: str,
                       branches: list, children: list,
                       next_action=None) -> dict:
     step: Dict[str, Any] = {
-        "name": name, "type": "ROUTER", "valid": True,
+        "name": name, "type": "ROUTER", "valid": True, "skip": False,
         "displayName": display_name,
         "settings": {
             "branches": branches,
@@ -1500,7 +1508,7 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
         raise HTTPException(500, detail=f"sovereign-tightening: failed to stamp metadata on {fid}")
 
     await engine.import_flow(fid, name, trigger)
-    webhook_url = f"https://activepieces-production-2499.up.railway.app/api/v1/webhooks/{fid}"
+    webhook_url = f"{os.getenv("AP_BASE_URL", "https://activepieces-production-2499.up.railway.app")}/api/v1/webhooks/{fid}"
     log.info("[golden] IMPORT_FLOW → %s", fid)
 
     verified = await engine.verify_flow(fid)
