@@ -54,8 +54,9 @@ from sqlalchemy import delete
 import main
 
 from sqlalchemy import event
+from database import engine
 
-@event.listens_for(main.engine.sync_engine, "connect")
+@event.listens_for(engine.sync_engine, "connect")
 def _create_siyadah_schema_on_connect(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     try:
