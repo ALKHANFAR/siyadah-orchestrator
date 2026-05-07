@@ -1508,7 +1508,7 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
         raise HTTPException(500, detail=f"sovereign-tightening: failed to stamp metadata on {fid}")
 
     await engine.import_flow(fid, name, trigger)
-    webhook_url = f"{os.getenv("AP_BASE_URL", "https://activepieces-production-2499.up.railway.app")}/api/v1/webhooks/{fid}"
+    webhook_url = f"{os.getenv('AP_BASE_URL', 'https://activepieces-production-2499.up.railway.app')}/api/v1/webhooks/{fid}"
     log.info("[golden] IMPORT_FLOW → %s", fid)
 
     verified = await engine.verify_flow(fid)
