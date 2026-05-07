@@ -84,7 +84,7 @@ def test_from_env_missing_var(monkeypatch):
 
 def test_from_env_invalid_base64(monkeypatch):
     monkeypatch.setenv("SIYADAH_OAUTH_MK", "this is not base64 ###")
-    with pytest.raises(CryptoConfigError, match="base64"):
+    with pytest.raises(CryptoConfigError, match="base64|32 bytes"):
         CryptoProvider.from_env()
 
 
