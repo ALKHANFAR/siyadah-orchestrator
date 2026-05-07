@@ -52,6 +52,21 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 
 import main
+
+from sqlalchemy import event
+from database import engine
+
+@event.listens_for(engine.sync_engine, "connect")
+def _create_siyadah_schema_on_connect(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("CREATE SCHEMA IF NOT EXISTS siyadah")
+        dbapi_connection.commit()
+    except Exception:
+        dbapi_connection.rollback()
+    finally:
+        cursor.close()
+
 import models
 from database import Base, async_session, engine
 

@@ -96,6 +96,7 @@ def _wh_trigger(next_action=None) -> dict:
 
 
 def _gmail_step(input_cfg: dict) -> dict:
+    input_cfg = {"auth": "{{connections['gmail']}}", **input_cfg}
     return {
         "name": "step_1",
         "type": "PIECE",
