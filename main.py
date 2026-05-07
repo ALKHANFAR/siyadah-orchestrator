@@ -3156,7 +3156,7 @@ async def v2_list_flows(
         # Accept if either the metadata stamp or the registry confirms
         # ownership. Either gate alone is enough; the AND elsewhere is
         # for /v2/client-status where registry isn't joined.
-        if _meta_tenant_ok(f) or fid in registered_ids:
+        if _meta_tenant_ok(f) or fid in registered_ids or _ap_project_ok(f):
             ap_by_id[fid] = f
 
     items: list[dict] = []
