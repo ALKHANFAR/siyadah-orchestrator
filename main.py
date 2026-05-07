@@ -3187,6 +3187,18 @@ async def v2_list_flows(
                 "registry": registry_rows[fid],
             })
 
+        # Also surface AP-owned flows that are not registered yet.
+        for fid, f in ap_by_id.items():
+            if fid in registered_ids:
+                continue
+            items.append({
+                "flow_id": fid,
+                "ap_display_name": (f.get("version") or {}).get("displayName") or f.get("displayName"),
+                "ap_status": f.get("status"),
+                "registered": False,
+                "orphan": True,
+            })
+
     items = items[:limit]
 
     return {
