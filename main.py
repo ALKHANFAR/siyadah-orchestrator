@@ -2295,6 +2295,11 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
 
     specs_for_chain: List[dict] = []
     for a in body.actions:
+        stype = a.get("type", "PIECE")
+        if stype != "PIECE":
+            specs_for_chain.append(a)
+            continue
+
         a_piece = a.get("piece", "")
         resolved_ap, sch = await auto_resolve_piece(e, a_piece)
         full_ap = resolved_ap if resolved_ap.startswith("@") else f"@activepieces/piece-{resolved_ap}"
