@@ -68,3 +68,48 @@ def test_connection_gate_classifies_active_error_and_missing_connections():
         assert "@activepieces/piece-hubspot" in blocked
 
     asyncio.run(run())
+
+
+
+def test_connection_gate_blocks_inactive_override():
+    async def run():
+        live_connections = [
+            {
+                "pieceName": "@activepieces/piece-google-sheets",
+                "status": "ERROR",
+                "externalId": "sheets-error",
+                "displayName": "Google Sheets",
+                "type": "CLOUD_OAUTH2",
+            }
+        ]
+
+        schemas = {
+            "@activepieces/piece-google-sheets": {
+                "auth": {"required": True, "type": "CLOUD_OAUTH2"}
+            }
+        }
+
+        steps = [
+            {"type": "PIECE", "piece": "@activepieces/piece-google-sheets"},
+        ]
+
+        async def fetch_schema(piece):
+            return schemas[piece]
+
+        result = await classify_connection_requirements(
+            steps=steps,
+            live_connections=live_connections,
+            fetch_schema=fetch_schema,
+            connection_overrides={"google-sheets": "sheets-error"},
+        )
+
+        assert result["status"] == "PENDING_CONNECTIONS"
+        assert result["blocked_count"] == 1
+        assert result["runnable_count"] == 0
+        assert result["connection_ids"] == {}
+
+        blocked = result["blocked_pieces"][0]
+        assert blocked["piece"] == "@activepieces/piece-google-sheets"
+        assert blocked["status"] == "BLOCKED_CONNECTION_OVERRIDE_INACTIVE"
+
+    asyncio.run(run())
