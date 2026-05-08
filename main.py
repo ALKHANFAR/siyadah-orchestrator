@@ -2350,6 +2350,8 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
 
         return {
             "status": "PENDING_CONNECTIONS",
+            "mode": "DRAFT_ONLY",
+            "skip_compile": True,
             "display_name": body.display_name,
             "pending_activation": saved_pending,
             "connection_gate": connection_gate,
