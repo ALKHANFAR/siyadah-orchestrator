@@ -1507,13 +1507,35 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
         except Exception: pass
         raise HTTPException(500, detail=f"sovereign-tightening: failed to stamp metadata on {fid}")
 
+    before_graph = _walk_flow_tree({"version": {"trigger": trigger}})
+    before_steps = before_graph.get("total_steps", 0)
+
     await engine.import_flow(fid, name, trigger)
     webhook_url = f"{os.getenv('AP_BASE_URL', 'https://activepieces-production-2499.up.railway.app')}/api/v1/webhooks/{fid}"
     log.info("[golden] IMPORT_FLOW → %s", fid)
 
     verified = await engine.verify_flow(fid)
+    after_graph = _walk_flow_tree(verified)
+    after_steps = after_graph.get("total_steps", 0)
+
+    if after_steps < before_steps:
+        log.error("[golden] AP stripped graph after import: before=%s after=%s fid=%s",
+                  before_steps, after_steps, fid)
+        try:
+            await engine.delete_flow(fid)
+        except Exception:
+            pass
+        raise HTTPException(500, detail={
+            "error_code": "AP_STRIPPED_GRAPH_AFTER_IMPORT",
+            "flow_id": fid,
+            "expected_steps": before_steps,
+            "actual_steps": after_steps,
+            "before_graph": before_graph,
+            "after_graph": after_graph,
+        })
+
     ttype = verified.get("version", {}).get("trigger", {}).get("type", "?")
-    log.info("[golden] Verified %s → trigger=%s", fid, ttype)
+    log.info("[golden] Verified %s → trigger=%s steps=%s", fid, ttype, after_steps)
 
     pub = await engine.publish_and_enable(fid)
     log.info("[golden] Published %s → %s", fid, pub)
