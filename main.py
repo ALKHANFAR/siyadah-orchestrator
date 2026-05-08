@@ -2315,6 +2315,50 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
     full_t = resolved_t if resolved_t.startswith("@") else f"@activepieces/piece-{resolved_t}"
     pieces_used = [full_t]
 
+    # Gate-6C — Build now, connect later.
+    # Before compiling/publishing, classify all required connections from
+    # Activepieces. If any required piece has no ACTIVE connection, we save
+    # a PendingActivationPlan and return PENDING_CONNECTIONS instead of
+    # creating a broken/enabled flow.
+    from services.connection_gate import classify_connection_requirements
+    from services.pending_activation import save_pending_activation_plan
+
+    async def _gate_fetch_schema(piece: str) -> dict:
+        return await fetch_piece_schema(e, piece)
+
+    gate_steps = [{"type": "PIECE", "piece": full_t}] + list(body.actions)
+    live_connections = await e.list_connections(pid)
+    connection_gate = await classify_connection_requirements(
+        steps=gate_steps,
+        live_connections=live_connections,
+        fetch_schema=_gate_fetch_schema,
+        connection_overrides=cn,
+    )
+
+    if connection_gate.get("blocked_count", 0) > 0:
+        from database import async_session
+        from models import PendingActivationPlan
+
+        saved_pending = await save_pending_activation_plan(
+            async_session=async_session,
+            PendingActivationPlan=PendingActivationPlan,
+            tenant_id=pid,
+            display_name=body.display_name,
+            graph_plan=jsonable_encoder(body.model_dump()),
+            connection_gate=connection_gate,
+        )
+
+        return {
+            "status": "PENDING_CONNECTIONS",
+            "display_name": body.display_name,
+            "pending_activation": saved_pending,
+            "connection_gate": connection_gate,
+            "message": "تم تجهيز الفلو وحفظه كخطة معلقة بانتظار ربط الحسابات.",
+        }
+
+    # Use ACTIVE connection externalIds discovered from Activepieces.
+    cn.update(connection_gate.get("connection_ids", {}))
+
     specs_for_chain: List[dict] = []
     for a in body.actions:
         stype = a.get("type", "PIECE")

@@ -132,15 +132,35 @@ async def classify_connection_requirements(
         override_id = connection_overrides.get(short, "")
         active = active_by_piece.get(full)
 
+        override_conn = None
         if override_id:
-            connection_ids[short] = override_id
-            runnable_pieces.append({
+            for conn in live_connections or []:
+                if conn.get("externalId") == override_id or conn.get("id") == override_id:
+                    override_conn = conn
+                    break
+
+            if override_conn and override_conn.get("status") == "ACTIVE":
+                connection_ids[short] = override_id
+                runnable_pieces.append({
+                    "piece": full,
+                    "short": short,
+                    "requires_auth": True,
+                    "auth_type": schema_auth_type(schema),
+                    "status": "RUNNABLE_WITH_OVERRIDE",
+                    "connection_external_id": override_id,
+                    "connection_type": override_conn.get("type"),
+                    "connection_display_name": override_conn.get("displayName"),
+                })
+                continue
+
+            blocked_pieces.append({
                 "piece": full,
                 "short": short,
                 "requires_auth": True,
                 "auth_type": schema_auth_type(schema),
-                "status": "RUNNABLE_WITH_OVERRIDE",
-                "connection_external_id": override_id,
+                "status": "BLOCKED_CONNECTION_OVERRIDE_INACTIVE",
+                "errored_connections": [override_conn] if override_conn else errored_by_piece.get(full, []),
+                "reason": "override_connection_missing_or_inactive",
             })
             continue
 
