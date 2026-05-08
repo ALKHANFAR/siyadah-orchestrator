@@ -146,6 +146,7 @@ async def init_db() -> None:
         TenantApiKey,
         TenantAuditLog,
         FlowRegistry,
+        PendingActivationPlan,
         PieceRegistry,
         EncryptedToken,
         OAuthSaga,

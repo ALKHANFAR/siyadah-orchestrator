@@ -209,6 +209,75 @@ class FlowRegistry(Base):
     )
 
 
+
+# ═══════════════════════════════════════════════════════════════
+# GATE-6 — PENDING ACTIVATION / DEFERRED CONNECTIONS
+# Stores a complete workflow plan when the user is not ready to connect
+# Gmail/Slack/HubSpot/etc. yet. The plan is visible in dashboard as
+# PENDING_CONNECTIONS and can be compiled/published later after OAuth.
+# ═══════════════════════════════════════════════════════════════
+
+class PendingActivationPlan(Base):
+    """A workflow plan fully designed but not yet operational.
+
+    Status meanings:
+      - READY: no auth-required pieces; can be published immediately
+      - PENDING_CONNECTIONS: blocked by missing connections
+      - PARTIALLY_ACTIVE: some no-auth steps can run, auth steps blocked
+      - ACTIVE: compiled, published, and enabled in Activepieces
+      - CANCELLED: user cancelled/archived it
+
+    This table does NOT store secrets. Only piece names, required providers,
+    graph plan, and reminder metadata.
+    """
+    __tablename__ = "pending_activation_plans"
+    __table_args__ = (
+        Index("ix_pap_tenant_status", "tenant_id", "status"),
+        Index("ix_pap_next_reminder", "next_reminder_at",
+              postgresql_where=Column("next_reminder_at").isnot(None)),
+    )
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    tenant_id = Column(
+        String(64),
+        ForeignKey("projects.project_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    display_name = Column(String(255), nullable=False)
+    status = Column(String(32), nullable=False, default="PENDING_CONNECTIONS")
+
+    # Complete deterministic graph plan before compile/publish.
+    graph_plan = Column(JSONB, nullable=False, default=dict)
+
+    # Example:
+    # [
+    #   {"piece": "@activepieces/piece-gmail", "provider": "google", "reason": "send email"},
+    #   {"piece": "@activepieces/piece-hubspot", "provider": "hubspot", "reason": "create deal"}
+    # ]
+    missing_connections = Column(JSONB, nullable=False, default=list)
+
+    # Pieces that can run without connection.
+    runnable_pieces = Column(JSONB, nullable=False, default=list)
+
+    # Pieces that require connection.
+    blocked_pieces = Column(JSONB, nullable=False, default=list)
+
+    # Optional AP flow id after final compile/publish.
+    flow_id = Column(String(64), nullable=True)
+    webhook_url = Column(Text, nullable=True)
+
+    reminder_count = Column(Integer, nullable=False, default=0)
+    last_reminder_at = Column(DateTime(timezone=True), nullable=True)
+    next_reminder_at = Column(DateTime(timezone=True), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(),
+    )
+
+
+
 # ═══════════════════════════════════════════════════════════════
 # PHASE-8 — PIECE REGISTRY (Sovereign Piece Vault)
 # Postgres-persisted cache of every Activepieces piece schema, keyed
