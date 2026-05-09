@@ -117,6 +117,11 @@ async def create_ap_visible_draft_flow(
     The flow stays DISABLED because publish/enable are NEVER called from
     this function. Forbidden ops not invoked: publish_and_enable,
     LOCK_AND_PUBLISH, CHANGE_STATUS, test_webhook.
+
+    Post-import GET-verify mirrors `SiyadahEngine.verify_flow`: AP can
+    answer 200 on IMPORT_FLOW and still leave `version.trigger.type` as
+    `"EMPTY"` — persisting that flow_id would record a draft with no
+    usable graph. The EMPTY check is non-negotiable per AGENTS.md.
     """
     if engine is None:
         raise RuntimeError("activepieces_engine_not_configured")
@@ -130,9 +135,20 @@ async def create_ap_visible_draft_flow(
     await engine.import_flow(fid, display_name, trigger)
 
     flow_after = await engine.get_flow(fid)
-    if isinstance(flow_after, dict) and flow_after.get("status") == "ENABLED":
+    if not isinstance(flow_after, dict):
+        raise RuntimeError("ap_visible_draft_get_flow_invalid_response")
+
+    if flow_after.get("status") == "ENABLED":
         # Defensive: AP_VISIBLE_DRAFT must never end up ENABLED.
         raise RuntimeError("ap_visible_draft_unexpectedly_enabled")
+
+    trigger_type = (
+        flow_after.get("version", {})
+        .get("trigger", {})
+        .get("type", "UNKNOWN")
+    )
+    if trigger_type == "EMPTY":
+        raise RuntimeError("ap_visible_draft_trigger_empty_after_import")
 
     return fid
 
