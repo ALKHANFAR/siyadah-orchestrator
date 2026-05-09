@@ -2338,6 +2338,68 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
     if connection_gate.get("blocked_count", 0) > 0:
         from database import async_session
         from models import PendingActivationPlan
+        from services.pending_activation import (
+            build_connection_gate_payload,
+            build_pending_activation_payload,
+            create_ap_visible_draft_flow,
+            gate6_ap_visible_draft_enabled,
+            sanitize_pieces,
+            save_pending_activation_plan,
+        )
+
+        sanitized_blocked = sanitize_pieces(connection_gate.get("blocked_pieces", []))
+        sanitized_runnable = sanitize_pieces(connection_gate.get("runnable_pieces", []))
+
+        # Gate-6 AP_VISIBLE_DRAFT — only when flag explicitly == "1".
+        # Builds the trigger tree and creates a DISABLED AP flow with it.
+        # Never publishes, never enables — flow stays as a draft until the
+        # user authorizes the missing connections.
+        flow_id_draft: Optional[str] = None
+        if gate6_ap_visible_draft_enabled():
+            cn.update(connection_gate.get("connection_ids", {}))
+
+            specs_for_chain_draft: List[dict] = []
+            for a in body.actions:
+                stype = a.get("type", "PIECE")
+                if stype != "PIECE":
+                    specs_for_chain_draft.append(a)
+                    continue
+                a_piece = a.get("piece", "")
+                resolved_ap, sch = await auto_resolve_piece(e, a_piece)
+                full_ap = resolved_ap if resolved_ap.startswith("@") else f"@activepieces/piece-{resolved_ap}"
+                short = resolved_ap.replace("@activepieces/piece-", "")
+                a_ver = a.get("version", "")
+                cleaned_in = clean_input_config(dict(a.get("input", {})))
+                if not a_ver:
+                    a_ver = resolve_piece_version(sch, resolved_ap)
+                    ps = generate_property_settings(
+                        get_action_props(sch, a.get("action_name", "")),
+                        cleaned_in)
+                else:
+                    ps = {}
+                conn_id = a.get("connection_id", cn.get(short, ""))
+                if conn_id:
+                    cleaned_in["auth"] = C(conn_id)
+                specs_for_chain_draft.append({
+                    "type": "PIECE", "piece": full_ap,
+                    "action_name": a.get("action_name", ""),
+                    "version": a_ver, "input": cleaned_in,
+                    "display_name": a.get("display_name", f"Action"),
+                    "property_settings": ps,
+                })
+
+            counter_draft = [1]
+            first_action_draft = await _build_action_chain(specs_for_chain_draft, counter_draft, e)
+            trigger_draft = build_trigger(
+                full_t,
+                trigger_ver, trigger_name, trigger_input,
+                body.display_name + " — Trigger", first_action_draft)
+
+            flow_id_draft = await create_ap_visible_draft_flow(
+                engine=e, pid=pid,
+                display_name=body.display_name,
+                trigger=trigger_draft,
+            )
 
         saved_pending = await save_pending_activation_plan(
             async_session=async_session,
@@ -2346,15 +2408,35 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
             display_name=body.display_name,
             graph_plan=jsonable_encoder(body.model_dump()),
             connection_gate=connection_gate,
+            flow_id=flow_id_draft,
         )
+
+        pending_payload = build_pending_activation_payload(saved_pending, sanitized_blocked)
+        gate_payload = build_connection_gate_payload(
+            connection_gate, sanitized_blocked, sanitized_runnable
+        )
+
+        if flow_id_draft is not None:
+            return {
+                "status": "PENDING_CONNECTIONS",
+                "mode": "AP_VISIBLE_DRAFT",
+                "flow_id": flow_id_draft,
+                "skip_publish": True,
+                "display_name": body.display_name,
+                "pending_activation": pending_payload,
+                "connection_gate": gate_payload,
+                "sanitized_missing_connections": sanitized_blocked,
+                "message": "تم إنشاء مسودة في Activepieces (DISABLED) بانتظار ربط الحسابات.",
+            }
 
         return {
             "status": "PENDING_CONNECTIONS",
             "mode": "DRAFT_ONLY",
             "skip_compile": True,
             "display_name": body.display_name,
-            "pending_activation": saved_pending,
-            "connection_gate": connection_gate,
+            "pending_activation": pending_payload,
+            "connection_gate": gate_payload,
+            "sanitized_missing_connections": sanitized_blocked,
             "message": "تم تجهيز الفلو وحفظه كخطة معلقة بانتظار ربط الحسابات.",
         }
 
