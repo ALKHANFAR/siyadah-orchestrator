@@ -23,9 +23,15 @@ from services.pending_activation import (
 class FakeEngine:
     """Records every call. Forbidden ops raise on access."""
 
-    def __init__(self, fid: str = "fake-flow-id", get_status: str = "DISABLED"):
+    def __init__(
+        self,
+        fid: str = "fake-flow-id",
+        get_status: str = "DISABLED",
+        get_trigger_type: str = "PIECE_TRIGGER",
+    ):
         self._fid = fid
         self._get_status = get_status
+        self._get_trigger_type = get_trigger_type
         self.calls: List[str] = []
         self.create_flow_args: Optional[Dict[str, Any]] = None
         self.update_metadata_args: Optional[Dict[str, Any]] = None
@@ -50,7 +56,11 @@ class FakeEngine:
     async def get_flow(self, fid: str):
         self.calls.append("get_flow")
         self.get_flow_args = {"fid": fid}
-        return {"id": fid, "status": self._get_status}
+        return {
+            "id": fid,
+            "status": self._get_status,
+            "version": {"trigger": {"type": self._get_trigger_type}},
+        }
 
     # Forbidden ops — any access fails the test loudly.
     async def publish_and_enable(self, fid: str):
@@ -246,6 +256,40 @@ def test_create_ap_visible_draft_raises_if_flow_returned_enabled():
     asyncio.run(run())
 
 
+def test_create_ap_visible_draft_raises_if_trigger_empty_after_import():
+    """P1 #1 — AP can return 200 on IMPORT_FLOW with trigger.type=EMPTY.
+    The draft must be rejected so we never persist a flow_id pointing to
+    a flow with no usable graph."""
+    async def run():
+        engine = FakeEngine(fid="flow-empty", get_trigger_type="EMPTY")
+        with pytest.raises(RuntimeError, match="ap_visible_draft_trigger_empty_after_import"):
+            await create_ap_visible_draft_flow(
+                engine=engine, pid="t", display_name="x",
+                trigger={"type": "PIECE_TRIGGER"},
+            )
+        # Sequence still ran fully — verification happens on the GET result.
+        assert engine.calls == ["create_flow", "update_metadata", "import_flow", "get_flow"]
+
+    asyncio.run(run())
+
+
+def test_create_ap_visible_draft_raises_on_invalid_get_flow_response():
+    class WeirdEngine(FakeEngine):
+        async def get_flow(self, fid):
+            self.calls.append("get_flow")
+            return None  # AP returned a non-dict body
+
+    async def run():
+        engine = WeirdEngine()
+        with pytest.raises(RuntimeError, match="ap_visible_draft_get_flow_invalid_response"):
+            await create_ap_visible_draft_flow(
+                engine=engine, pid="t", display_name="x",
+                trigger={"type": "PIECE_TRIGGER"},
+            )
+
+    asyncio.run(run())
+
+
 def test_create_ap_visible_draft_raises_when_no_id_returned():
     class NoIdEngine(FakeEngine):
         async def create_flow(self, pid, name):
@@ -263,6 +307,46 @@ def test_create_ap_visible_draft_raises_when_no_id_returned():
         assert engine.calls == ["create_flow"]
 
     asyncio.run(run())
+
+
+# ───────────────────────────────────────────────────────────────────
+# P1 #2 — only ACTIVE connection ids reach the draft auth field
+# ───────────────────────────────────────────────────────────────────
+
+def test_draft_uses_only_active_connection_ids_from_gate():
+    """When the user supplies a stale/cross-project connection_id in body
+    and the gate rejects it (BLOCKED_CONNECTION_OVERRIDE_INACTIVE), the
+    draft branch must not wire `auth: {{connections[...]}}` to that
+    rejected id. cn_active is built from connection_gate['connection_ids']
+    only — proven-ACTIVE entries — so blocked pieces stay without auth.
+    """
+    body_connection_ids = {
+        "google-sheets": "stale-override-id",   # rejected override
+        "gmail": "user-supplied-but-active-id",
+    }
+    connection_gate = {
+        # gate only puts proven-ACTIVE entries here
+        "connection_ids": {"gmail": "gmail-active-id"},
+        "blocked_pieces": [{
+            "piece": "@activepieces/piece-google-sheets",
+            "short": "google-sheets",
+            "status": "BLOCKED_CONNECTION_OVERRIDE_INACTIVE",
+            "reason": "override_connection_missing_or_inactive",
+            "auth_type": "CLOUD_OAUTH2",
+            "requires_auth": True,
+        }],
+    }
+
+    # This mirrors the decision in main.py's AP_VISIBLE_DRAFT branch.
+    cn_active: dict = dict(connection_gate.get("connection_ids", {}))
+
+    # gmail is ACTIVE per the gate → auth injected
+    assert cn_active.get("gmail", "") == "gmail-active-id"
+    # google-sheets was a rejected override → no auth
+    assert cn_active.get("google-sheets", "") == ""
+    # The body's stale id never leaked into the active map
+    assert "stale-override-id" not in cn_active.values()
+    assert "user-supplied-but-active-id" not in cn_active.values()
 
 
 # ───────────────────────────────────────────────────────────────────

@@ -2356,7 +2356,13 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
         # user authorizes the missing connections.
         flow_id_draft: Optional[str] = None
         if gate6_ap_visible_draft_enabled():
-            cn.update(connection_gate.get("connection_ids", {}))
+            # Use ONLY connection ids that classify_connection_requirements
+            # proved ACTIVE for this tenant. Do NOT fall back to body.connection_ids
+            # or DEFAULT_CONNECTIONS — a stale/cross-project override would
+            # otherwise wire `auth: {{connections[...]}}` to a rejected reference
+            # for a blocked piece. Blocked pieces stay without auth and wait
+            # for the user's new authorization.
+            cn_active: dict = dict(connection_gate.get("connection_ids", {}))
 
             specs_for_chain_draft: List[dict] = []
             for a in body.actions:
@@ -2377,7 +2383,8 @@ async def v2_build_dynamic(request: Request, body: DynamicBuildBody):
                         cleaned_in)
                 else:
                     ps = {}
-                conn_id = a.get("connection_id", cn.get(short, ""))
+                # Active-only: blocked pieces (absent from cn_active) get no auth.
+                conn_id = cn_active.get(short, "")
                 if conn_id:
                     cleaned_in["auth"] = C(conn_id)
                 specs_for_chain_draft.append({
