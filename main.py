@@ -4787,6 +4787,9 @@ async def v2_mcp_tools():
         {"name": "list_presets",
          "description": "List complex presets (ROUTER, LOOP combinations)",
          "parameters": {"type": "object", "properties": {}, "required": []}},
+        {"name": "list_connections",
+         "description": "List tenant Activepieces connections before building flows.",
+         "parameters": {"type": "object", "properties": {}, "additionalProperties": False}},
         {"name": "list_available_pieces",
          "description": "List all 600+ available automation pieces (Gmail, Slack, etc.)",
          "parameters": {"type": "object", "properties": {}, "required": []}},
@@ -4942,6 +4945,39 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
 
     if tool == "list_presets":
         return {k: v["desc"] for k, v in PRESETS.items()}
+
+    if tool == "list_connections":
+        try:
+            conns = await e.list_connections(pid)
+            compact = []
+            for c in conns:
+                if not isinstance(c, dict):
+                    continue
+                compact.append({
+                    "id": c.get("id"),
+                    "externalId": c.get("externalId"),
+                    "displayName": c.get("displayName") or c.get("name"),
+                    "pieceName": c.get("pieceName") or c.get("appName") or c.get("app"),
+                    "status": c.get("status"),
+                })
+            return {
+                "tool": tool,
+                "success": True,
+                "result": {
+                    "connections": compact,
+                    "count": len(compact),
+                    "connected_external_ids": [
+                        x.get("externalId") for x in compact if x.get("externalId")
+                    ],
+                },
+            }
+        except Exception as exc:
+            return {
+                "tool": tool,
+                "success": False,
+                "error": f"list_connections failed: {str(exc)[:300]}",
+                "status_code": 500,
+            }
 
     if tool == "list_available_pieces":
         raw = await e.list_pieces()
