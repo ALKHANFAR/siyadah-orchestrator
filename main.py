@@ -5027,14 +5027,52 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
         return {**result, "webhook_url": wh, "template": tpl}
 
     if tool == "build_dynamic_flow":
-        t = p.get("trigger", {})
-        piece_name = t.get("piece", "@activepieces/piece-webhook")
+        # Honor explicit trigger/actions verbatim. Mirror /v2/build-dynamic's
+        # iteration shape so non-PIECE specs (CODE/ROUTER/LOOP) pass through
+        # untouched instead of being silently mutated.
+        #
+        # Previous bug: this branch called auto_resolve_piece(e, a.get("piece",""))
+        # for every action. For a CODE step there is no `piece`, so the
+        # fallback fuzzy match at the end of auto_resolve_piece (`query in short`)
+        # matched the first piece in AP's catalog — `oneclickimpact` — and
+        # rewrote the user's explicit CODE step into a wrong PIECE. The guard
+        # below restores parity with /v2/build-dynamic.
+        t = p.get("trigger", {}) or {}
+        actions_in = p.get("actions", []) or []
+
+        piece_name = t.get("piece") or "@activepieces/piece-webhook"
         resolved_t, t_schema = await auto_resolve_piece(e, piece_name)
         full = resolved_t if resolved_t.startswith("@") else f"@activepieces/piece-{resolved_t}"
-        ver = resolve_piece_version(t_schema, resolved_t)
+        ver = t.get("version", "") or resolve_piece_version(t_schema, resolved_t)
+
         specs: List[dict] = []
-        for a in p.get("actions", []):
+        for a in actions_in:
+            stype = a.get("type", "PIECE")
+
+            if stype != "PIECE":
+                if stype == "CODE":
+                    # MCP callers often nest code under `input.code`; lift it
+                    # to the top level so _build_step_from_spec finds it.
+                    normalized = dict(a)
+                    inp = normalized.get("input")
+                    if isinstance(inp, dict):
+                        if "code" not in normalized and "code" in inp:
+                            normalized["code"] = inp["code"]
+                        if "code_input" not in normalized and "code_input" in inp:
+                            normalized["code_input"] = inp["code_input"]
+                    specs.append(normalized)
+                else:
+                    specs.append(a)
+                continue
+
             ap = a.get("piece", "")
+            if not ap:
+                raise HTTPException(
+                    400,
+                    f"PIECE action missing 'piece' field "
+                    f"(display_name={a.get('display_name','')}). "
+                    f"Refusing to auto-resolve an empty piece name.",
+                )
             resolved_ap, sch = await auto_resolve_piece(e, ap)
             full_ap = resolved_ap if resolved_ap.startswith("@") else f"@activepieces/piece-{resolved_ap}"
             short = resolved_ap.replace("@activepieces/piece-", "")
