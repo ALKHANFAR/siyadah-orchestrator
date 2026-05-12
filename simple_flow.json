@@ -1,0 +1,13 @@
+{
+  "template": "webhook_to_email",
+  "config": {
+    "recipient_email": "mohamedakacha01@gmail.com",
+    "subject": "اختبار من سيادة",
+    "email_body": "وصل اسم: {{trigger.body.name}}"
+  },
+  "display_name": "[TEST] Simple Flow",
+  "connection_ids": {
+    "gmail": "MKlKHKfL6OwZ7oqt0nt5h",
+    "google-sheets": "TtUKW8AMWsMBlY7ayqocf"
+  }
+}

@@ -124,8 +124,13 @@ class SiyadahEngine:
             # exhaust sockets. Tuned for Railway's single-worker default; raise
             # max_connections if we move to a multi-worker deploy.
             self._client = httpx.AsyncClient(
-                headers={"Authorization": f"Bearer {self.token}",
-                         "Content-Type": "application/json"},
+                # Content-Type is intentionally NOT set as a default. httpx
+                # adds `Content-Type: application/json` automatically when a
+                # request uses `json=...`, so POST/PATCH still work. Setting
+                # it as a default here causes Fastify (Activepieces) to reject
+                # bodyless requests (DELETE/GET) with FST_ERR_CTP_EMPTY_JSON_BODY:
+                # "Body cannot be empty when content-type is set to application/json".
+                headers={"Authorization": f"Bearer {self.token}"},
                 timeout=ORCHESTRATOR_HTTPX_TIMEOUT,
                 limits=httpx.Limits(
                     max_connections=50,
@@ -3433,11 +3438,19 @@ async def v2_available_pieces():
 
 @app.get("/v2/pieces/{piece_name}/schema")
 async def v2_piece_schema(piece_name: str):
+    """Return parsed schema for a piece, including auth metadata.
+ 
+    Phase-0.5 enhancement — exposes `auth_type` + `auth_props` so the BFF can
+    render a connection form dynamically. The shape is normalised across AP's
+    six auth families (OAUTH2 / CLOUD_OAUTH2 / PLATFORM_OAUTH2 / CUSTOM_AUTH
+    / BASIC_AUTH / SECRET_TEXT / NONE) — callers always get a `type` and a
+    `props` array, even when the underlying piece declares auth implicitly.
+    """
     e = E()
     _resolved, schema = await auto_resolve_piece(e, piece_name)
     if not schema:
         raise HTTPException(404, f"Piece not found: {piece_name}")
-
+ 
     def parse_props(props_dict):
         fields = []
         if not isinstance(props_dict, dict):
@@ -3454,7 +3467,110 @@ async def v2_piece_schema(piece_name: str):
                 "defaultValue": fdef.get("defaultValue"),
             })
         return fields
-
+ 
+    def parse_auth(auth):
+        """Extract auth requirements in a UI-renderable shape.
+ 
+        Returns:
+            {
+                "type":        str,                # NONE | OAUTH2 | ... | UNKNOWN
+                "props":       list[dict],         # fields the UI must collect
+                "description": str,                # human-readable hint
+                "scopes"?:     list[str],          # OAUTH2 only
+                "authUrl"?:    str,                # OAUTH2 only
+                "tokenUrl"?:   str,                # OAUTH2 only
+            }
+ 
+        Activepieces returns the piece's `auth` field as one of:
+          - None / missing  → no authentication required
+          - dict            → single auth config
+          - list[dict]      → multi-auth piece (e.g. some pieces accept either
+                              an API key or OAuth) — we pick the first entry
+        """
+        if not auth:
+            return {"type": "NONE", "props": [], "description": ""}
+ 
+        # Multi-auth pieces: AP returns a list. We don't yet expose a chooser
+        # to the BFF — pick the first valid entry. The UI surfaces only one
+        # auth path; the list-handling cohort is small (<5 pieces today).
+        if isinstance(auth, list):
+            auth = next((a for a in auth if isinstance(a, dict)), None)
+            if not auth:
+                return {"type": "UNKNOWN", "props": [], "description": ""}
+ 
+        if not isinstance(auth, dict):
+            return {"type": "UNKNOWN", "props": [], "description": ""}
+ 
+        auth_type = auth.get("type", "UNKNOWN")
+        description = auth.get("description", "") or ""
+        display_name = auth.get("displayName", "") or ""
+ 
+        # SECRET_TEXT — single field, no nested `props` object. Synthesize a
+        # one-prop schema so the UI's generic form renderer treats it the same
+        # as the other types.
+        if auth_type == "SECRET_TEXT":
+            return {
+                "type": auth_type,
+                "props": [{
+                    "name": "secret_text",
+                    "displayName": display_name or "API Key",
+                    "type": "SECRET_TEXT",
+                    "required": True,
+                    "description": description,
+                }],
+                "description": description,
+            }
+ 
+        # BASIC_AUTH — username + password. Older pieces declare these
+        # explicitly under `props`; newer ones rely on the implicit BASIC_AUTH
+        # contract. Synthesize the standard pair when props are absent.
+        if auth_type == "BASIC_AUTH":
+            props_dict = auth.get("props") or {}
+            if props_dict:
+                props = parse_props(props_dict)
+            else:
+                props = [
+                    {"name": "username", "displayName": "Username",
+                     "type": "TEXT", "required": True, "description": ""},
+                    {"name": "password", "displayName": "Password",
+                     "type": "SECRET_TEXT", "required": True, "description": ""},
+                ]
+            return {
+                "type": auth_type,
+                "props": props,
+                "description": description,
+            }
+ 
+        # CUSTOM_AUTH — schema is per-piece (Slack: { token }, Airtable:
+        # { token }, Trello: { api_key, token }, etc.). The UI must render
+        # whatever the piece declares.
+        if auth_type == "CUSTOM_AUTH":
+            return {
+                "type": auth_type,
+                "props": parse_props(auth.get("props") or {}),
+                "description": description,
+            }
+ 
+        # OAUTH2 family — the UI does NOT collect props directly; it triggers
+        # the OAuth saga. Return scopes + URLs for transparency and so the
+        # BFF can show the user what permissions will be requested.
+        if auth_type in ("OAUTH2", "CLOUD_OAUTH2", "PLATFORM_OAUTH2"):
+            return {
+                "type": auth_type,
+                "props": [],
+                "scopes": auth.get("scope") or auth.get("scopes") or [],
+                "authUrl": auth.get("authUrl", "") or "",
+                "tokenUrl": auth.get("tokenUrl", "") or "",
+                "description": description,
+            }
+ 
+        # Unknown / future type — return raw props so the UI can still try.
+        return {
+            "type": auth_type,
+            "props": parse_props(auth.get("props") or {}),
+            "description": description,
+        }
+ 
     actions_schema = {}
     for aname, adef in (schema.get("actions") or {}).items():
         if not isinstance(adef, dict):
@@ -3464,7 +3580,7 @@ async def v2_piece_schema(piece_name: str):
             "description": adef.get("description", ""),
             "fields": parse_props(adef.get("props", {})),
         }
-
+ 
     triggers_schema = {}
     for tname, tdef in (schema.get("triggers") or {}).items():
         if not isinstance(tdef, dict):
@@ -3474,14 +3590,15 @@ async def v2_piece_schema(piece_name: str):
             "description": tdef.get("description", ""),
             "fields": parse_props(tdef.get("props", {})),
         }
-
+ 
     return {
         "piece": schema.get("name", piece_name),
         "displayName": schema.get("displayName", ""),
         "version": schema.get("version", ""),
-        "actions": actions_schema, "triggers": triggers_schema,
+        "auth": parse_auth(schema.get("auth")),
+        "actions": actions_schema,
+        "triggers": triggers_schema,
     }
-
 
 # ═══════════════════════════════════════════════════════════════
 # V2 — TEST WEBHOOK
@@ -5048,6 +5165,156 @@ async def v2_connect(request: Request, body: ConnectBody):
     return {"status": "created", "connection_id": result.get("id"),
             "external_id": result.get("externalId"),
             "piece": full_piece, "project_id": pid}
+
+
+# ─── Pydantic models ────────────────────────────────────────────────────────
+ 
+class SecretTextConnectBody(BaseModel):
+    """SECRET_TEXT — single API key (OpenAI, Anthropic, Resend, etc.)"""
+    piece_name: str = Field(..., description="e.g. openai, anthropic, resend")
+    secret_text: str = Field(..., min_length=1, description="The API key / token")
+    display_name: str = Field("", description="Optional friendly label")
+ 
+ 
+class BasicAuthConnectBody(BaseModel):
+    """BASIC_AUTH — username + password (Twilio, ClickSend, MailJet, etc.)"""
+    piece_name: str = Field(..., description="e.g. twilio, mailjet, clicksend")
+    username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
+    display_name: str = Field("", description="Optional friendly label")
+ 
+ 
+class CustomAuthConnectBody(BaseModel):
+    """CUSTOM_AUTH — props match the piece's auth schema (Airtable PAT,
+    Supabase URL+key, Slack token, etc.). Caller must send exactly the
+    fields the piece declares; use /v2/pieces/{name}/schema to discover them.
+    """
+    piece_name: str = Field(..., description="e.g. airtable, supabase, slack")
+    props: Dict[str, Any] = Field(
+        ...,
+        description="Piece-specific auth fields, e.g. {\"token\": \"pat_xxx\"}",
+    )
+    display_name: str = Field("", description="Optional friendly label")
+ 
+ 
+# ─── Shared helper — used by all three endpoints ────────────────────────────
+ 
+async def _create_ap_connection_v2(
+    engine: SiyadahEngine,
+    pid: str,
+    piece_name: str,
+    display_name: str,
+    auth_type: str,
+    value_obj: dict,
+) -> dict:
+    """Create an Activepieces connection for non-OAuth auth types.
+ 
+    The payload shape matches what AP's Fastify validator requires (see
+    oauth_routes._create_ap_connection for the OAUTH2 sibling). The
+    externalId is generated here so we have a stable handle for flow
+    builds even before AP responds.
+    """
+    full = piece_name if piece_name.startswith("@") else f"@activepieces/piece-{piece_name}"
+    short = full.replace("@activepieces/piece-", "")
+    external_id = f"siyadah-{short}-{os.urandom(6).hex()}"
+    payload = {
+        "projectId":   pid,
+        "externalId":  external_id,
+        "displayName": display_name or short.replace("-", " ").title(),
+        "pieceName":   full,
+        "type":        auth_type,
+        "value":       value_obj,
+    }
+    log.info("[connect] type=%s piece=%s tenant=%s ext_id=%s",
+             auth_type, full, pid, external_id)
+    return await engine._r("POST", "/v1/app-connections/", payload)
+ 
+ 
+# ─── 3 endpoints — one per non-OAuth auth type ──────────────────────────────
+ 
+@app.post("/v2/connections/secret-text")
+async def v2_connect_secret_text(request: Request, body: SecretTextConnectBody):
+    """Create a SECRET_TEXT connection.
+ 
+    Covers ~49% of all pieces (OpenAI, Anthropic, Resend, ConvertKit,
+    Discord, Airtable-via-PAT, etc.) — anything that authenticates with
+    a single API key.
+    """
+    e = E()
+    pid = resolve_pid(request, None)
+    result = await _create_ap_connection_v2(
+        engine       = e,
+        pid          = pid,
+        piece_name   = body.piece_name,
+        display_name = body.display_name,
+        auth_type    = "SECRET_TEXT",
+        value_obj    = {"type": "SECRET_TEXT", "secret_text": body.secret_text},
+    )
+    return {
+        "status":        "created",
+        "connection_id": result.get("id"),
+        "external_id":   result.get("externalId"),
+        "piece":         result.get("pieceName"),
+        "project_id":    pid,
+    }
+ 
+ 
+@app.post("/v2/connections/basic-auth")
+async def v2_connect_basic_auth(request: Request, body: BasicAuthConnectBody):
+    """Create a BASIC_AUTH connection.
+ 
+    Covers ~1.5% of all pieces but includes high-value ones — Twilio,
+    ClickSend, MailJet, Trello, Aircall, Freshsales, PDFCrowd.
+    """
+    e = E()
+    pid = resolve_pid(request, None)
+    result = await _create_ap_connection_v2(
+        engine       = e,
+        pid          = pid,
+        piece_name   = body.piece_name,
+        display_name = body.display_name,
+        auth_type    = "BASIC_AUTH",
+        value_obj    = {
+            "type":     "BASIC_AUTH",
+            "username": body.username,
+            "password": body.password,
+        },
+    )
+    return {
+        "status":        "created",
+        "connection_id": result.get("id"),
+        "external_id":   result.get("externalId"),
+        "piece":         result.get("pieceName"),
+        "project_id":    pid,
+    }
+ 
+ 
+@app.post("/v2/connections/custom")
+async def v2_connect_custom(request: Request, body: CustomAuthConnectBody):
+    """Create a CUSTOM_AUTH connection.
+ 
+    Covers ~28% of all pieces — Supabase, Jira (Cloud + Data Center),
+    Smartsuite, Postiz, VTiger, Outseta, etc. The caller must send
+    exactly the auth fields the piece declares; the BFF can introspect
+    them via GET /v2/pieces/{name}/schema (the `auth.props` array).
+    """
+    e = E()
+    pid = resolve_pid(request, None)
+    result = await _create_ap_connection_v2(
+        engine       = e,
+        pid          = pid,
+        piece_name   = body.piece_name,
+        display_name = body.display_name,
+        auth_type    = "CUSTOM_AUTH",
+        value_obj    = {"type": "CUSTOM_AUTH", "props": body.props},
+    )
+    return {
+        "status":        "created",
+        "connection_id": result.get("id"),
+        "external_id":   result.get("externalId"),
+        "piece":         result.get("pieceName"),
+        "project_id":    pid,
+    }
 
 
 @app.get("/v2/connections/health")

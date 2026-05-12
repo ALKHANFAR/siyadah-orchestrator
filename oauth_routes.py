@@ -45,6 +45,11 @@ from oauth_providers import (
     get_provider,
 )
 from siyadah_crypto import CryptoProvider
+from siyadah_field_crypto import (
+    encrypt_field,
+    decrypt_field,
+    is_field_crypto_enabled,
+)
 from siyadah_oauth_state import (
     NonceNotFoundError,
     NonceReplayError,
@@ -74,6 +79,13 @@ PLACEHOLDER_REDIRECT = "<SLACK_REDIRECT_URI_NOT_SET>"
 class OAuthInitiateBody(BaseModel):
     return_path: str = Field(default="/", max_length=512)
     scopes: Optional[list[str]] = Field(default=None)
+    # Phase 4.6 — caller-chosen AP piece (e.g. "gmail", "google-sheets",
+    # "google-drive"). When None, falls back to the provider registry's
+    # default `piece_name`. Lets one OAuth provider serve multiple pieces,
+    # each producing a distinct AP connection row with its own pieceName
+    # and displayName. The value is stored in Redis (keyed by saga_id)
+    # for the callback to pick up — see `_create_ap_connection_delegated`.
+    piece_name: Optional[str] = Field(default=None, max_length=128)
 
 
 class OAuthInitiateResponse(BaseModel):
@@ -145,6 +157,7 @@ async def _exchange_code(
     if not cfg.token_url:
         raise TokenExchangeError(cfg.name, "token_url_not_configured")
     data = {
+        "grant_type":    "authorization_code",
         "client_id":     os.getenv(cfg.client_id_env, ""),
         "client_secret": os.getenv(cfg.client_secret_env, ""),
         "code":          code,
@@ -324,6 +337,79 @@ async def _find_saga_by_nonce(nonce: str) -> Optional[str]:
 # Phase 4.3 — AP connection linker + L5 compensating rollback
 # ═══════════════════════════════════════════════════════════════
 
+async def _create_ap_connection_delegated(
+    cfg: "ProviderConfig",
+    *,
+    code: str,
+    scopes: list[str],
+    saga_id: str,
+    tenant_id: str,
+    piece_name: Optional[str] = None,  # Phase 4.6 — caller's piece selection
+) -> dict:
+    """Phase 4.5 — Delegated OAuth: hand the raw code to AP.
+
+    AP exchanges the code itself using our client_id/secret/redirect_url
+    (passed in the value object) and stores the resulting tokens. We
+    don't keep a copy. AP becomes the canonical token store, including
+    refresh-token lifecycle.
+
+    Phase 4.6 — `piece_name`, when provided, overrides the provider
+    registry's default. Lets one provider (Google) serve many pieces
+    (Gmail, Google Sheets, Google Drive, …). When None, behaviour is
+    identical to Phase 4.5 (single-piece-per-provider).
+    """
+    ap_base = os.getenv("AP_BASE_URL", "").rstrip("/")
+    ap_pid = os.getenv("AP_PROJECT_ID", "")
+    if not ap_base or not ap_pid:
+        raise RuntimeError("AP_BASE_URL or AP_PROJECT_ID not set")
+
+    from main import _engine
+    if _engine is None or not _engine.token:
+        raise RuntimeError("AP engine not initialised")
+
+    external_id = f"siyadah-{saga_id[:16]}"
+    # Phase 4.6 — caller-supplied piece overrides provider default,
+    # which itself falls back to the provider name (e.g. "google").
+    effective_piece = piece_name or cfg.piece_name or cfg.name
+    # Friendly title for the AP UI: "google-sheets" → "Google Sheets",
+    # "gmail" → "Gmail", "google-drive" → "Google Drive".
+    piece_title = effective_piece.replace("-", " ").title()
+    display_name = f"Siyadah {piece_title} ({tenant_id})"
+
+    payload = {
+        "projectId":   ap_pid,
+        "externalId":  external_id,
+        "displayName": display_name,
+        "pieceName":   f"@activepieces/piece-{effective_piece}",
+        "type":        "OAUTH2",
+        "value": {
+            "type":          "OAUTH2",
+            "client_id":     os.getenv(cfg.client_id_env, ""),
+            "client_secret": os.getenv(cfg.client_secret_env, ""),
+            "redirect_url":  os.getenv(cfg.redirect_uri_env, ""),
+            "code":          code,
+            "scope":         " ".join(scopes),
+            "props":         {},
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=30) as c:
+        r = await c.post(
+            f"{ap_base}/api/v1/app-connections",
+            headers={"Authorization": f"Bearer {_engine.token}"},
+            json=payload,
+        )
+        if r.status_code >= 400:
+            try:
+                body = r.json()
+            except Exception:
+                body = {"raw": r.text[:300]}
+            raise RuntimeError(
+                f"AP delegated create-connection failed: {r.status_code} {body}"
+            )
+        return r.json()
+    
+
 async def _create_ap_connection(
     cfg: ProviderConfig,
     *,
@@ -366,7 +452,7 @@ async def _create_ap_connection(
         "projectId": ap_pid,
         "externalId": external_id,
         "displayName": display_name,
-        "pieceName": f"@activepieces/piece-{cfg.name}",
+        "pieceName": f"@activepieces/piece-{cfg.piece_name or cfg.name}",
         "type": cfg.ap_connection_type,
         "value": value_obj,
     }
@@ -517,7 +603,7 @@ async def _update_ap_connection(
         "projectId": ap_pid,
         "externalId": external_id,
         "displayName": display_name,
-        "pieceName": f"@activepieces/piece-{cfg.name}",
+        "pieceName": f"@activepieces/piece-{cfg.piece_name or cfg.name}",
         "type": cfg.ap_connection_type,
         "value": cfg.ap_value_builder(access_token, parsed),
     }
@@ -1198,12 +1284,21 @@ async def oauth_initiate(
     from models import OAuthSaga, TenantAuditLog
 
     async with async_session() as s:
+        # Wave 3C — Encrypt pkce_verifier at rest. Falls back to plaintext
+        # when SIYADAH_OAUTH_MK is unset (dev environments). The AAD binds
+        # the ciphertext to this column so a backup-swap leak can't
+        # decrypt it elsewhere.
+        stored_verifier = (
+            encrypt_field(pkce_verifier, aad="oauth_sagas.pkce_verifier")
+            if is_field_crypto_enabled()
+            else pkce_verifier
+        )
         saga = OAuthSaga(
             tenant_id=tenant_id,
             provider=cfg.name,
             scope=scopes,
             state_nonce=nonce,
-            pkce_verifier=pkce_verifier,
+            pkce_verifier=stored_verifier,
             status="INITIATED",
             expires_at=expires_at,
         )
@@ -1254,6 +1349,26 @@ async def oauth_initiate(
             await s.commit()
     except Exception as e:
         log.error("[oauth.initiate] audit write failed (non-fatal): %s", e)
+
+    # Phase 4.6 — stash the caller's piece selection in Redis keyed by
+    # saga_id so the callback can pick it up. TTL matches the saga
+    # window; missing/expired keys make `_create_ap_connection_delegated`
+    # fall back to `cfg.piece_name` (legacy single-piece behaviour),
+    # so a Redis hiccup degrades gracefully instead of failing the saga.
+    if body.piece_name:
+        try:
+            await redis.setex(
+                f"saga_piece:{saga_id}",
+                STATE_TTL_SECONDS,
+                body.piece_name,
+            )
+        except Exception as e:
+            log.warning(
+                "[oauth.initiate] piece_name redis-set failed "
+                "(saga=%s, piece=%s): %s — callback will fall back to "
+                "provider default piece",
+                saga_id, body.piece_name, e,
+            )
 
     auth_url = _build_authorize_url(
         cfg, state_token=state_token,
@@ -1342,7 +1457,9 @@ async def oauth_callback(
         raise HTTPException(409, f"saga is {saga.status}, expected INITIATED")
 
     saga_id = saga.id
-    pkce_verifier = saga.pkce_verifier
+    # Wave 3C — transparent decrypt. Legacy plaintext sagas pass through
+    # unchanged; encrypted sagas are decoded with the column AAD.
+    pkce_verifier = decrypt_field(saga.pkce_verifier, aad="oauth_sagas.pkce_verifier")
 
     # Atomic single-use nonce consume
     redis = await _get_redis()
@@ -1355,6 +1472,66 @@ async def oauth_callback(
         await _mark_saga_failed(saga_id, step="nonce_consume", reason=str(e))
         raise HTTPException(403, f"nonce check failed: {type(e).__name__}") from e
 
+    # ── Phase 4.5: delegated providers skip exchange + persist ──
+    if getattr(cfg, "delegate_oauth_to_ap", False):
+        # Phase 4.6 — recover the caller-chosen piece from Redis. Missing
+        # key (saga predates 4.6, Redis hiccup, or caller didn't send one)
+        # leaves `saga_piece_name=None`, which makes
+        # `_create_ap_connection_delegated` fall back to `cfg.piece_name`
+        # — i.e. legacy single-piece-per-provider behaviour.
+        saga_piece_name: Optional[str] = None
+        try:
+            val = await redis.get(f"saga_piece:{saga_id}")
+            if val is not None:
+                saga_piece_name = (
+                    val.decode() if isinstance(val, (bytes, bytearray)) else str(val)
+                )
+        except Exception as e:
+            log.warning(
+                "[oauth.callback] piece_name redis-get failed (saga=%s): %s "
+                "— falling back to provider default piece",
+                saga_id, e,
+            )
+        try:
+            ap_record = await _create_ap_connection_delegated(
+                cfg,
+                code=code,
+                scopes=saga.scope or list(cfg.default_scopes),
+                saga_id=saga_id,
+                tenant_id=tenant_id,
+                piece_name=saga_piece_name,
+            )
+            ap_external_id = ap_record.get("externalId") or ap_record.get("id", "")
+            if not ap_external_id:
+                raise RuntimeError(f"AP returned no externalId: {ap_record}")
+        except Exception as e:
+            await _mark_saga_failed(
+                saga_id, step="ap_create_delegated",
+                reason=f"{type(e).__name__}: {e}",
+            )
+            raise HTTPException(503, detail={
+                "error": "ap_connection_failed_delegated",
+                "saga_status": "FAILED",
+                "message": str(e)[:200],
+            }) from e
+
+        # Mark saga COMPLETED — no encrypted_token row for delegated
+        async with async_session() as s:
+            await s.execute(
+                update(OAuthSaga).where(OAuthSaga.id == saga_id).values(
+                    status="COMPLETED",
+                    ap_connection_external_id=ap_external_id,
+                    completed_at=datetime.now(timezone.utc),
+                )
+            )
+            await s.commit()
+
+        return OAuthCallbackResponse(
+            saga_id=saga_id,
+            status="COMPLETED",
+            ap_connection_external_id=ap_external_id,
+            return_path=claims.return_path or "/",
+        )
     # Exchange code → tokens
     try:
         parsed = await _exchange_code(
