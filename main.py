@@ -25,6 +25,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+from services.registry_reader import validate_action_against_registry
 from tenacity import (
     AsyncRetrying,
     retry_if_exception,
@@ -5154,6 +5155,14 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
             cid = a.get("connection_id", cn.get(short, ""))
             if cid and "auth" not in cleaned_in:
                 cleaned_in["auth"] = C(cid)
+
+            validate_action_against_registry({
+                "type": "PIECE",
+                "piece": full_ap,
+                "action_name": a.get("action_name", ""),
+                "input": cleaned_in,
+            })
+
             specs.append({"type": "PIECE", "piece": full_ap,
                           "action_name": a.get("action_name", ""),
                           "version": a_ver, "input": cleaned_in,
