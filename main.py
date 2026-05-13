@@ -1534,6 +1534,48 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
             "after_graph": after_graph,
         })
 
+    # ── Flow Validity Gate (Verify-Before-Claim) ──
+    # AP can return a 200 from IMPORT_FLOW with the step count intact
+    # while silently invalidating individual steps. Observed case: Google
+    # Sheets `insert_row` with DROPDOWN fields (spreadsheetId/sheetId)
+    # that AP can't resolve against a live connection — AP keeps the
+    # step shape but nulls the fields and marks `valid:false`. Enabling
+    # such a flow would either error at runtime or run with empty inputs.
+    # Hard-stop here so the BFF surfaces a typed failure to the user
+    # instead of persisting an unusable digital employee (Invariants I3,
+    # I9, I11).
+    invalid_steps_raw = [
+        s for s in after_graph.get("steps", []) if s.get("valid") is False
+    ]
+    if invalid_steps_raw:
+        invalid_summary = [
+            {
+                "name": s.get("name"),
+                "type": s.get("type"),
+                "piece": s.get("piece"),
+                "action": s.get("action"),
+                "displayName": s.get("displayName"),
+                "null_input_keys": s.get("null_input_keys", []),
+            }
+            for s in invalid_steps_raw
+        ]
+        log.error(
+            "[golden] AP invalidated %d step(s) after IMPORT_FLOW fid=%s steps=%s",
+            len(invalid_summary), fid, invalid_summary,
+        )
+        try:
+            await engine.delete_flow(fid)
+        except Exception:
+            pass
+        raise HTTPException(500, detail={
+            "error_code": "AP_INVALIDATED_STEP_AFTER_IMPORT",
+            "flow_id": fid,
+            "invalid_steps": invalid_summary,
+            "before_graph": before_graph,
+            "after_graph": after_graph,
+            "message": "Activepieces invalidated one or more steps after import",
+        })
+
     ttype = verified.get("version", {}).get("trigger", {}).get("type", "?")
     log.info("[golden] Verified %s → trigger=%s steps=%s", fid, ttype, after_steps)
 
@@ -1674,10 +1716,32 @@ async def golden_build(engine: SiyadahEngine, pid: str, name: str,
 # DIAGNOSE — walk the flow tree
 # ═══════════════════════════════════════════════════════════════
 def _walk_flow_tree(flow_data: dict) -> dict:
-    """Walk the version→trigger tree and enumerate all steps."""
+    """Walk the version→trigger tree and enumerate all steps.
+
+    Captures the AP-reported ``valid`` flag and a no-secrets summary of
+    input keys that AP nulled (e.g. Google Sheets DROPDOWN fields stripped
+    after IMPORT_FLOW when the dropdown options can't be resolved). The
+    ``valid`` field is what the Flow Validity Gate in ``golden_build``
+    inspects to detect silent post-import invalidations.
+    """
     version = flow_data.get("version", {})
     trigger = version.get("trigger", {})
     steps: List[dict] = []
+
+    def _null_input_keys(input_dict: Any) -> List[str]:
+        """Keys whose values are null/empty in the verified step input.
+
+        Skips ``auth`` so connection ids/tokens are never logged or
+        returned in error envelopes (Invariant I11)."""
+        if not isinstance(input_dict, dict):
+            return []
+        out: List[str] = []
+        for k, v in input_dict.items():
+            if k == "auth":
+                continue
+            if v is None or v == "" or v == {} or v == []:
+                out.append(k)
+        return out
 
     def walk(node, depth=0):
         if not node:
@@ -1685,6 +1749,7 @@ def _walk_flow_tree(flow_data: dict) -> dict:
         info: Dict[str, Any] = {
             "name": node.get("name"), "type": node.get("type"),
             "displayName": node.get("displayName"), "depth": depth,
+            "valid": node.get("valid", True),
         }
         ntype = node.get("type", "")
         if ntype == "ROUTER":
@@ -1706,6 +1771,7 @@ def _walk_flow_tree(flow_data: dict) -> dict:
             info["piece"] = settings.get("pieceName")
             info["action"] = (settings.get("actionName")
                               or settings.get("triggerName"))
+            info["null_input_keys"] = _null_input_keys(settings.get("input", {}))
             steps.append(info)
         walk(node.get("nextAction"), depth)
 
