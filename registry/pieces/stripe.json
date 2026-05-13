@@ -1,0 +1,1442 @@
+{
+  "actions": {
+    "cancel_subscription": {
+      "description": "Cancel an existing subscription, either immediately or at the end of the current billing period.",
+      "displayName": "Cancel Subscription",
+      "dropdown_fields": [
+        "subscription"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "cancel_at_period_end": "CHECKBOX",
+        "subscription": "DROPDOWN"
+      },
+      "props": {
+        "cancel_at_period_end": {
+          "defaultValue": false,
+          "description": "If true, the subscription remains active until the end of the current billing period. If false, it cancels immediately.",
+          "displayName": "Cancel at Period End",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "subscription": {
+          "displayName": "Subscription",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "subscription"
+      ]
+    },
+    "create_customer": {
+      "description": "Create a customer in stripe",
+      "displayName": "Create Customer",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "city": "SHORT_TEXT",
+        "country": "SHORT_TEXT",
+        "description": "LONG_TEXT",
+        "email": "SHORT_TEXT",
+        "line1": "SHORT_TEXT",
+        "name": "SHORT_TEXT",
+        "phone": "SHORT_TEXT",
+        "postal_code": "SHORT_TEXT",
+        "state": "SHORT_TEXT"
+      },
+      "props": {
+        "city": {
+          "displayName": "City",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "country": {
+          "displayName": "Country",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "description": {
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "email": {
+          "displayName": "Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "line1": {
+          "displayName": "Address Line 1",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "name": {
+          "displayName": "Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "phone": {
+          "displayName": "Phone",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "postal_code": {
+          "displayName": "Postal Code",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "state": {
+          "displayName": "State",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "email",
+        "name"
+      ]
+    },
+    "create_invoice": {
+      "description": "Create an Invoice in stripe",
+      "displayName": "Create Invoice",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "currency": "SHORT_TEXT",
+        "customer_id": "SHORT_TEXT",
+        "description": "LONG_TEXT"
+      },
+      "props": {
+        "currency": {
+          "description": "Currency for the invoice (e.g., USD)",
+          "displayName": "Currency",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "customer_id": {
+          "description": "Stripe Customer ID",
+          "displayName": "Customer ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "description": {
+          "description": "Description for the invoice",
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        }
+      },
+      "required_fields": [
+        "currency",
+        "customer_id"
+      ]
+    },
+    "create_payment_intent": {
+      "description": "Creates a new payment intent to start a payment flow.",
+      "displayName": "Create Payment (Payment Intent)",
+      "dropdown_fields": [
+        "customer"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "amount": "NUMBER",
+        "confirm": "CHECKBOX",
+        "currency": "STATIC_DROPDOWN",
+        "customer": "DROPDOWN",
+        "description": "LONG_TEXT",
+        "payment_method": "SHORT_TEXT",
+        "receipt_email": "SHORT_TEXT",
+        "return_url": "SHORT_TEXT"
+      },
+      "props": {
+        "amount": {
+          "description": "The amount to charge, in a decimal format (e.g., 10.50 for $10.50).",
+          "displayName": "Amount",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "confirm": {
+          "defaultValue": false,
+          "description": "If true, Stripe will attempt to charge the provided payment method. A `Payment Method ID` is required.",
+          "displayName": "Confirm Payment Immediately",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "currency": {
+          "description": "The three-letter ISO code for the currency.",
+          "displayName": "Currency",
+          "options": {
+            "options": [
+              {
+                "label": "US Dollar",
+                "value": "usd"
+              },
+              {
+                "label": "Euro",
+                "value": "eur"
+              },
+              {
+                "label": "Pound Sterling",
+                "value": "gbp"
+              },
+              {
+                "label": "Australian Dollar",
+                "value": "aud"
+              },
+              {
+                "label": "Canadian Dollar",
+                "value": "cad"
+              },
+              {
+                "label": "Swiss Franc",
+                "value": "chf"
+              },
+              {
+                "label": "Chinese Yuan",
+                "value": "cny"
+              },
+              {
+                "label": "Japanese Yen",
+                "value": "jpy"
+              },
+              {
+                "label": "Indian Rupee",
+                "value": "inr"
+              },
+              {
+                "label": "Singapore Dollar",
+                "value": "sgd"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "customer": {
+          "displayName": "Customer",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "description": {
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "payment_method": {
+          "description": "The ID of the Payment Method to attach (e.g., `pm_...`). Required if you want to confirm the payment immediately.",
+          "displayName": "Payment Method ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "receipt_email": {
+          "description": "The email address to send a receipt to. This will override the customer's email address.",
+          "displayName": "Receipt Email",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "return_url": {
+          "description": "The URL to redirect your customer back to after they authenticate their payment. Required when confirming the payment.",
+          "displayName": "Return URL",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "amount",
+        "currency",
+        "customer"
+      ]
+    },
+    "create_payment_link": {
+      "description": "Creates a shareable, Stripe-hosted payment link for one-time purchases or subscriptions.",
+      "displayName": "Create Payment Link",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "after_completion_redirect_url": "SHORT_TEXT",
+        "after_completion_type": "STATIC_DROPDOWN",
+        "allow_promotion_codes": "CHECKBOX",
+        "billing_address_collection": "STATIC_DROPDOWN",
+        "line_items": "ARRAY",
+        "metadata": "JSON"
+      },
+      "props": {
+        "after_completion_redirect_url": {
+          "description": "The URL to redirect the customer to after a successful purchase. Only used if the behavior is set to \"Redirect to URL\".",
+          "displayName": "Redirect URL",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "after_completion_type": {
+          "description": "Controls the behavior after the purchase is complete. Defaults to showing Stripe's hosted confirmation page.",
+          "displayName": "After Completion Behavior",
+          "options": {
+            "options": [
+              {
+                "label": "Show Confirmation Page",
+                "value": "hosted_confirmation"
+              },
+              {
+                "label": "Redirect to URL",
+                "value": "redirect"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "allow_promotion_codes": {
+          "description": "Enables the user to enter a promotion code on the Payment Link page.",
+          "displayName": "Allow Promotion Codes",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "billing_address_collection": {
+          "description": "Describes whether Checkout should collect the customer’s billing address.",
+          "displayName": "Billing Address Collection",
+          "options": {
+            "options": [
+              {
+                "label": "Auto",
+                "value": "auto"
+              },
+              {
+                "label": "Required",
+                "value": "required"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "line_items": {
+          "description": "The products and quantities to include in the payment link.",
+          "displayName": "Line Items",
+          "properties": {
+            "price": {
+              "description": "The ID of the price object (e.g., price_1J2X3Y4Z...). Find this in your Stripe Dashboard under Products.",
+              "displayName": "Price ID",
+              "required": true,
+              "type": "SHORT_TEXT"
+            },
+            "quantity": {
+              "displayName": "Quantity",
+              "required": true,
+              "type": "NUMBER"
+            }
+          },
+          "required": true,
+          "type": "ARRAY"
+        },
+        "metadata": {
+          "displayName": "Metadata",
+          "required": false,
+          "type": "JSON"
+        }
+      },
+      "required_fields": [
+        "line_items"
+      ]
+    },
+    "create_price": {
+      "description": "Create a price (one-time or recurring), associated with a product.",
+      "displayName": "Create Price",
+      "dropdown_fields": [
+        "product"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "currency": "STATIC_DROPDOWN",
+        "product": "DROPDOWN",
+        "recurring_interval": "STATIC_DROPDOWN",
+        "recurring_interval_count": "NUMBER",
+        "unit_amount": "NUMBER"
+      },
+      "props": {
+        "currency": {
+          "description": "The three-letter ISO code for the currency.",
+          "displayName": "Currency",
+          "options": {
+            "options": [
+              {
+                "label": "US Dollar",
+                "value": "usd"
+              },
+              {
+                "label": "Euro",
+                "value": "eur"
+              },
+              {
+                "label": "Pound Sterling",
+                "value": "gbp"
+              },
+              {
+                "label": "Indian Rupee",
+                "value": "inr"
+              },
+              {
+                "label": "Australian Dollar",
+                "value": "aud"
+              },
+              {
+                "label": "Canadian Dollar",
+                "value": "cad"
+              },
+              {
+                "label": "Swiss Franc",
+                "value": "chf"
+              },
+              {
+                "label": "Chinese Yuan",
+                "value": "cny"
+              },
+              {
+                "label": "Japanese Yen",
+                "value": "jpy"
+              },
+              {
+                "label": "Singapore Dollar",
+                "value": "sgd"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "product": {
+          "displayName": "Product",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "recurring_interval": {
+          "defaultValue": "one_time",
+          "description": "Specify the billing frequency. Select 'One-Time' for a single, non-recurring payment.",
+          "displayName": "Billing Interval",
+          "options": {
+            "options": [
+              {
+                "label": "One-Time",
+                "value": "one_time"
+              },
+              {
+                "label": "Daily",
+                "value": "day"
+              },
+              {
+                "label": "Weekly",
+                "value": "week"
+              },
+              {
+                "label": "Monthly",
+                "value": "month"
+              },
+              {
+                "label": "Yearly",
+                "value": "year"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "recurring_interval_count": {
+          "description": "The number of intervals between subscription billings (e.g., for billing every 3 months, set Interval to Monthly and Interval Count to 3). Only used for recurring prices.",
+          "displayName": "Interval Count",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "unit_amount": {
+          "description": "The price amount as a decimal, for example, 25.50 for $25.50.",
+          "displayName": "Unit Amount",
+          "required": true,
+          "type": "NUMBER"
+        }
+      },
+      "required_fields": [
+        "currency",
+        "product",
+        "recurring_interval",
+        "unit_amount"
+      ]
+    },
+    "create_product": {
+      "description": "Create a new product object in Stripe.",
+      "displayName": "Create Product",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "active": "CHECKBOX",
+        "description": "LONG_TEXT",
+        "images": "ARRAY",
+        "metadata": "JSON",
+        "name": "SHORT_TEXT",
+        "url": "SHORT_TEXT"
+      },
+      "props": {
+        "active": {
+          "description": "Whether the product is currently available for purchase. Defaults to true.",
+          "displayName": "Active",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "description": {
+          "description": "The product’s description, meant to be displayable to the customer.",
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "images": {
+          "description": "A list of up to 8 URLs of images for this product.",
+          "displayName": "Image URLs",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "metadata": {
+          "description": "A set of key-value pairs to store additional information about the product.",
+          "displayName": "Metadata",
+          "required": false,
+          "type": "JSON"
+        },
+        "name": {
+          "description": "The product’s name, meant to be displayable to the customer.",
+          "displayName": "Product Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "url": {
+          "description": "A publicly-accessible online page for this product.",
+          "displayName": "Product URL",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "name"
+      ]
+    },
+    "create_refund": {
+      "description": "Create a full or partial refund for a payment.",
+      "displayName": "Create a Refund",
+      "dropdown_fields": [
+        "payment_intent"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "amount": "NUMBER",
+        "metadata": "JSON",
+        "payment_intent": "DROPDOWN",
+        "reason": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "amount": {
+          "description": "The amount to refund (e.g., 12.99). If left blank, a full refund will be issued.",
+          "displayName": "Amount",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "metadata": {
+          "description": "A set of key-value pairs to store additional information about the refund.",
+          "displayName": "Metadata",
+          "required": false,
+          "type": "JSON"
+        },
+        "payment_intent": {
+          "displayName": "Payment Intent",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "reason": {
+          "description": "An optional reason for the refund.",
+          "displayName": "Reason",
+          "options": {
+            "options": [
+              {
+                "label": "Duplicate",
+                "value": "duplicate"
+              },
+              {
+                "label": "Fraudulent",
+                "value": "fraudulent"
+              },
+              {
+                "label": "Requested by Customer",
+                "value": "requested_by_customer"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "payment_intent"
+      ]
+    },
+    "create_subscription": {
+      "description": "Start a subscription for a customer with specified items/prices.",
+      "displayName": "Create Subscription",
+      "dropdown_fields": [
+        "customer"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "collection_method": "STATIC_DROPDOWN",
+        "customer": "DROPDOWN",
+        "days_until_due": "NUMBER",
+        "default_payment_method": "SHORT_TEXT",
+        "items": "ARRAY",
+        "metadata": "JSON",
+        "trial_period_days": "NUMBER"
+      },
+      "props": {
+        "collection_method": {
+          "description": "How to collect payment. 'charge_automatically' will try to bill the default payment method. 'send_invoice' will email an invoice.",
+          "displayName": "Collection Method",
+          "options": {
+            "options": [
+              {
+                "label": "Charge Automatically",
+                "value": "charge_automatically"
+              },
+              {
+                "label": "Send Invoice",
+                "value": "send_invoice"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "customer": {
+          "displayName": "Customer",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "days_until_due": {
+          "description": "Number of days before an invoice is due. Required if Collection Method is 'Send Invoice'.",
+          "displayName": "Days Until Due",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "default_payment_method": {
+          "description": "ID of the default payment method for the subscription (e.g., `pm_...`).",
+          "displayName": "Default Payment Method ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "items": {
+          "description": "A list of prices to subscribe the customer to.",
+          "displayName": "Subscription Items",
+          "properties": {
+            "price": {
+              "description": "The ID of the price object (e.g., price_...). You can find this in your Stripe Dashboard under Products.",
+              "displayName": "Price ID",
+              "required": true,
+              "type": "SHORT_TEXT"
+            },
+            "quantity": {
+              "description": "The number of units of this price to subscribe to. Defaults to 1.",
+              "displayName": "Quantity",
+              "required": false,
+              "type": "NUMBER"
+            }
+          },
+          "required": true,
+          "type": "ARRAY"
+        },
+        "metadata": {
+          "displayName": "Metadata",
+          "required": false,
+          "type": "JSON"
+        },
+        "trial_period_days": {
+          "description": "Integer representing the number of trial days the customer receives before the subscription bills for the first time.",
+          "displayName": "Trial Period (Days)",
+          "required": false,
+          "type": "NUMBER"
+        }
+      },
+      "required_fields": [
+        "customer",
+        "items"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": {
+            "description": "Secret key acquired from your Stripe dashboard",
+            "displayName": "Secret API Key",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": {
+            "description": "Secret key acquired from your Stripe dashboard",
+            "displayName": "Secret API Key",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "deactivate_payment_link": {
+      "description": "Disable or deactivate a Payment Link so it can no longer be used.",
+      "displayName": "Deactivate Payment Link",
+      "dropdown_fields": [
+        "payment_link_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "payment_link_id": "DROPDOWN"
+      },
+      "props": {
+        "payment_link_id": {
+          "displayName": "Payment Link",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "payment_link_id"
+      ]
+    },
+    "find_invoice": {
+      "description": "Finds an invoice by its unique ID.",
+      "displayName": "Find Invoice",
+      "dropdown_fields": [
+        "invoice_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "invoice_id": "DROPDOWN"
+      },
+      "props": {
+        "invoice_id": {
+          "displayName": "Invoice",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "invoice_id"
+      ]
+    },
+    "retrieve_customer": {
+      "description": "Retrieve a customer in stripe by id",
+      "displayName": "Retrieve Customer",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "id": "SHORT_TEXT"
+      },
+      "props": {
+        "id": {
+          "displayName": "ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "id"
+      ]
+    },
+    "retrieve_invoice": {
+      "description": "Retrieves the details of an existing invoice by its ID.",
+      "displayName": "Retrieve an Invoice",
+      "dropdown_fields": [
+        "invoice_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "invoice_id": "DROPDOWN"
+      },
+      "props": {
+        "invoice_id": {
+          "displayName": "Invoice",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "invoice_id"
+      ]
+    },
+    "retrieve_payment_intent": {
+      "description": "Retrieves the details of a payment by its unique Payment Intent ID.",
+      "displayName": "Find Payment (by Payment Intent ID)",
+      "dropdown_fields": [
+        "payment_intent_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "payment_intent_id": "DROPDOWN"
+      },
+      "props": {
+        "payment_intent_id": {
+          "displayName": "Payment Intent",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "payment_intent_id"
+      ]
+    },
+    "retrieve_payout": {
+      "description": "Retrieves the details of an existing payout by its ID.",
+      "displayName": "Retrieve a Payout",
+      "dropdown_fields": [
+        "payout_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "payout_id": "DROPDOWN"
+      },
+      "props": {
+        "payout_id": {
+          "displayName": "Payout",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "payout_id"
+      ]
+    },
+    "search_customer": {
+      "description": "Search for a customer in stripe by email",
+      "displayName": "Search Customer",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT"
+      },
+      "props": {
+        "email": {
+          "displayName": "Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "email"
+      ]
+    },
+    "search_subscriptions": {
+      "description": "Search for subscriptions by price ID, status, customer ID and other filters, including customer details",
+      "displayName": "Search Subscriptions",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "created_after": "DATE_TIME",
+        "created_before": "DATE_TIME",
+        "customer_id": "SHORT_TEXT",
+        "fetch_all": "CHECKBOX",
+        "include_customer_details": "CHECKBOX",
+        "limit": "NUMBER",
+        "price_ids": "LONG_TEXT",
+        "status": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "created_after": {
+          "description": "Filter subscriptions created after this date (YYYY-MM-DD format)",
+          "displayName": "Created After",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "created_before": {
+          "description": "Filter subscriptions created before this date (YYYY-MM-DD format)",
+          "displayName": "Created Before",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "customer_id": {
+          "description": "Filter by specific customer ID (optional)",
+          "displayName": "Customer ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "fetch_all": {
+          "defaultValue": false,
+          "description": "Fetch all matching subscriptions (ignores limit, may take longer for large datasets)",
+          "displayName": "Fetch All Results",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "include_customer_details": {
+          "defaultValue": true,
+          "description": "Fetch detailed customer information for each subscription",
+          "displayName": "Include Customer Details",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "limit": {
+          "defaultValue": 100,
+          "description": "Maximum number of subscriptions to return (default: 100, set to 0 for all)",
+          "displayName": "Limit",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "price_ids": {
+          "description": "Comma-separated list of price IDs to filter by (e.g., price_1ABC123, price_2DEF456)",
+          "displayName": "Price IDs",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "status": {
+          "description": "Filter by subscription status",
+          "displayName": "Subscription Status",
+          "options": {
+            "options": [
+              {
+                "label": "All Statuses",
+                "value": ""
+              },
+              {
+                "label": "Active",
+                "value": "active"
+              },
+              {
+                "label": "Past Due",
+                "value": "past_due"
+              },
+              {
+                "label": "Unpaid",
+                "value": "unpaid"
+              },
+              {
+                "label": "Canceled",
+                "value": "canceled"
+              },
+              {
+                "label": "Incomplete",
+                "value": "incomplete"
+              },
+              {
+                "label": "Incomplete Expired",
+                "value": "incomplete_expired"
+              },
+              {
+                "label": "Trialing",
+                "value": "trialing"
+              },
+              {
+                "label": "Paused",
+                "value": "paused"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": []
+    },
+    "update_customer": {
+      "description": "Modify an existing customer’s details.",
+      "displayName": "Update Customer",
+      "dropdown_fields": [
+        "customer"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "city": "SHORT_TEXT",
+        "country": "SHORT_TEXT",
+        "customer": "DROPDOWN",
+        "description": "LONG_TEXT",
+        "email": "SHORT_TEXT",
+        "line1": "SHORT_TEXT",
+        "name": "SHORT_TEXT",
+        "phone": "SHORT_TEXT",
+        "postal_code": "SHORT_TEXT",
+        "state": "SHORT_TEXT"
+      },
+      "props": {
+        "city": {
+          "displayName": "City",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "country": {
+          "displayName": "Country",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "customer": {
+          "displayName": "Customer",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "description": {
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "email": {
+          "displayName": "Email",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "line1": {
+          "displayName": "Address Line 1",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "name": {
+          "displayName": "Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "phone": {
+          "displayName": "Phone",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "postal_code": {
+          "displayName": "Postal Code",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "state": {
+          "displayName": "State",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "customer"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "SECRET_TEXT"
+  },
+  "displayName": "Stripe",
+  "pieceName": "@activepieces/piece-stripe",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:ff6bdb407baaac7458e0d2e96b97c7f1024eb7ef2cef002a5935d18a7afdff50",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-stripe",
+  "synced_at": "2026-05-13T11:35:43Z",
+  "triggers": {
+    "canceled_subscription": {
+      "description": "Fires when a subscription is canceled.",
+      "displayName": "Canceled Subscription",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "customer": "SHORT_TEXT"
+      },
+      "props": {
+        "customer": {
+          "description": "Only trigger for subscriptions belonging to this customer ID (e.g., `cus_...`).",
+          "displayName": "Customer ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "checkout_session_completed": {
+      "description": "Fires when a Stripe Checkout Session is successfully completed.",
+      "displayName": "Checkout Session Completed",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "customer": "SHORT_TEXT"
+      },
+      "props": {
+        "customer": {
+          "description": "Only trigger for checkout sessions created by this customer ID (e.g., `cus_...`).",
+          "displayName": "Customer ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "invoice_payment_failed": {
+      "description": "Fires when a payment against an invoice fails.",
+      "displayName": "Invoice Payment Failed",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "customer": "SHORT_TEXT"
+      },
+      "props": {
+        "customer": {
+          "description": "Only trigger for invoices belonging to this customer ID (e.g., `cus_...`).",
+          "displayName": "Customer ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "new_charge": {
+      "description": "Fires when a charge is successfully completed.",
+      "displayName": "New Charge",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new_customer": {
+      "description": "Triggers when a new customer is created",
+      "displayName": "New Customer",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new_dispute": {
+      "description": "Fires when a customer disputes a charge.",
+      "displayName": "New Dispute",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "charge": "SHORT_TEXT",
+        "payment_intent": "SHORT_TEXT"
+      },
+      "props": {
+        "charge": {
+          "description": "Only trigger for disputes related to this Charge ID (e.g., `ch_...`).",
+          "displayName": "Charge ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "payment_intent": {
+          "description": "Only trigger for disputes related to this Payment Intent ID (e.g., `pi_...`).",
+          "displayName": "Payment Intent ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "new_invoice": {
+      "description": "Fires when an invoice is created. Supports filters like status, customer, subscription.",
+      "displayName": "New Invoice",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "customer": "SHORT_TEXT",
+        "status": "STATIC_DROPDOWN",
+        "subscription": "SHORT_TEXT"
+      },
+      "props": {
+        "customer": {
+          "description": "Only trigger for invoices belonging to this customer ID (e.g., `cus_...`).",
+          "displayName": "Customer ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "status": {
+          "description": "Only trigger for invoices with this status.",
+          "displayName": "Status",
+          "options": {
+            "options": [
+              {
+                "label": "Draft",
+                "value": "draft"
+              },
+              {
+                "label": "Open",
+                "value": "open"
+              },
+              {
+                "label": "Paid",
+                "value": "paid"
+              },
+              {
+                "label": "Uncollectible",
+                "value": "uncollectible"
+              },
+              {
+                "label": "Void",
+                "value": "void"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "subscription": {
+          "description": "Only trigger for invoices belonging to this subscription ID (e.g., `sub_...`).",
+          "displayName": "Subscription ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "new_payment": {
+      "description": "Triggers when a new payment is made",
+      "displayName": "New Payment",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new_payment_link": {
+      "description": "Fires when a new Payment Link is created.",
+      "displayName": "New Payment Link",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new_refund": {
+      "description": "Fires when a charge is refunded (full or partial).",
+      "displayName": "New Refund",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "charge": "SHORT_TEXT",
+        "payment_intent": "SHORT_TEXT"
+      },
+      "props": {
+        "charge": {
+          "description": "Only trigger for refunds related to this Charge ID (e.g., `ch_...`).",
+          "displayName": "Charge ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "payment_intent": {
+          "description": "Only trigger for refunds related to this Payment Intent ID (e.g., `pi_...`).",
+          "displayName": "Payment Intent ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "new_subscription": {
+      "description": "Triggers when a new subscription is made",
+      "displayName": "New Subscription",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "payment_failed": {
+      "description": "Triggers when a payment fails",
+      "displayName": "Payment Failed",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "updated_subscription": {
+      "description": "Fires when an existing subscription is changed.",
+      "displayName": "Updated Subscription",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "customer": "SHORT_TEXT",
+        "status": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "customer": {
+          "description": "Only trigger for subscriptions belonging to this customer ID (e.g., `cus_...`).",
+          "displayName": "Customer ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "status": {
+          "description": "Only trigger when the subscription is updated to this status.",
+          "displayName": "New Status",
+          "options": {
+            "options": [
+              {
+                "label": "Incomplete",
+                "value": "incomplete"
+              },
+              {
+                "label": "Incomplete - Expired",
+                "value": "incomplete_expired"
+              },
+              {
+                "label": "Trialing",
+                "value": "trialing"
+              },
+              {
+                "label": "Active",
+                "value": "active"
+              },
+              {
+                "label": "Past Due",
+                "value": "past_due"
+              },
+              {
+                "label": "Canceled",
+                "value": "canceled"
+              },
+              {
+                "label": "Unpaid",
+                "value": "unpaid"
+              },
+              {
+                "label": "Paused",
+                "value": "paused"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": []
+    }
+  },
+  "version": "0.6.8"
+}

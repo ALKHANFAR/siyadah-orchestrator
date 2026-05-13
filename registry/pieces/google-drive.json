@@ -1,0 +1,1280 @@
+{
+  "actions": {
+    "create_new_gdrive_file": {
+      "description": "Create a new text file in your Google Drive from text",
+      "displayName": "Create new file",
+      "dropdown_fields": [
+        "parentFolder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileName": "SHORT_TEXT",
+        "fileType": "STATIC_DROPDOWN",
+        "include_team_drives": "CHECKBOX",
+        "parentFolder": "DROPDOWN",
+        "text": "LONG_TEXT"
+      },
+      "props": {
+        "fileName": {
+          "description": "The name of the new text file",
+          "displayName": "File name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "fileType": {
+          "defaultValue": "plain/text",
+          "description": "Select file type",
+          "displayName": "Content type",
+          "options": {
+            "options": [
+              {
+                "label": "Text",
+                "value": "plain/text"
+              },
+              {
+                "label": "CSV",
+                "value": "text/csv"
+              },
+              {
+                "label": "XML",
+                "value": "text/xml"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "parentFolder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "text": {
+          "description": "The text content to add to file",
+          "displayName": "Text",
+          "required": true,
+          "type": "LONG_TEXT"
+        }
+      },
+      "required_fields": [
+        "fileName",
+        "fileType",
+        "text"
+      ]
+    },
+    "create_new_gdrive_folder": {
+      "description": "Create a new empty folder in your Google Drive",
+      "displayName": "Create new folder",
+      "dropdown_fields": [
+        "parentFolder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folderName": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX",
+        "parentFolder": "DROPDOWN"
+      },
+      "props": {
+        "folderName": {
+          "description": "The name of the new folder",
+          "displayName": "Folder name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "parentFolder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "folderName"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "delete_gdrive_file": {
+      "description": "Delete permanently a file from your Google Drive",
+      "displayName": "Delete file",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX"
+      },
+      "props": {
+        "fileId": {
+          "description": "The ID of the file to delete",
+          "displayName": "File ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "fileId"
+      ]
+    },
+    "delete_permissions": {
+      "description": "Removes a role from an user for a file or folder",
+      "displayName": "Delete permissions",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "permission_name": "STATIC_DROPDOWN",
+        "user_email": "SHORT_TEXT"
+      },
+      "props": {
+        "fileId": {
+          "description": "The ID of the file or folder to update permissions for",
+          "displayName": "File or Folder ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "permission_name": {
+          "description": "The role to remove from user.",
+          "displayName": "Role",
+          "options": {
+            "options": [
+              {
+                "label": "Organizer",
+                "value": "organizer"
+              },
+              {
+                "label": "File Organizer",
+                "value": "fileOrganizer"
+              },
+              {
+                "label": "Writer",
+                "value": "writer"
+              },
+              {
+                "label": "Commenter",
+                "value": "commenter"
+              },
+              {
+                "label": "Reader",
+                "value": "reader"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "user_email": {
+          "description": "The email address of the user to update permissions for",
+          "displayName": "User email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "fileId",
+        "permission_name",
+        "user_email"
+      ]
+    },
+    "duplicate_file": {
+      "description": "Duplicate a file from Google Drive. Returns the new file ID.",
+      "displayName": "Duplicate File",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "folderId": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX",
+        "mimeType": "STATIC_DROPDOWN",
+        "name": "SHORT_TEXT"
+      },
+      "props": {
+        "fileId": {
+          "description": "The ID of the file to duplicate",
+          "displayName": "File ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "folderId": {
+          "description": "The ID of the folder where the file will be duplicated",
+          "displayName": "Folder ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "mimeType": {
+          "description": "If left unselected the file will be duplicated as it is",
+          "displayName": "Duplicate as",
+          "options": {
+            "options": [
+              {
+                "label": "Google Sheets",
+                "value": "application/vnd.google-apps.spreadsheet"
+              },
+              {
+                "label": "Google Docs",
+                "value": "application/vnd.google-apps.document"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "name": {
+          "description": "The name of the new file",
+          "displayName": "Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "fileId",
+        "folderId",
+        "name"
+      ]
+    },
+    "get-file-or-folder-by-id": {
+      "description": "Get a file folder for files/sub-folders",
+      "displayName": "Get File Information",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "id": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX"
+      },
+      "props": {
+        "id": {
+          "description": "The Id of the file/folder to search for.",
+          "displayName": "File / Folder Id",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "id"
+      ]
+    },
+    "google-drive-move-file": {
+      "description": "Moves a file from one folder to another.",
+      "displayName": "Move File",
+      "dropdown_fields": [
+        "folderId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "folderId": "DROPDOWN",
+        "include_team_drives": "CHECKBOX"
+      },
+      "props": {
+        "fileId": {
+          "description": "You can use **Search Folder/File** action to retrieve ID.",
+          "displayName": "File ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "folderId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "fileId"
+      ]
+    },
+    "list-files": {
+      "description": "List files from a Google Drive folder",
+      "displayName": "List files",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "depthLevel": "NUMBER",
+        "downloadFiles": "CHECKBOX",
+        "folderId": "SHORT_TEXT",
+        "includeTrashed": "CHECKBOX",
+        "include_team_drives": "CHECKBOX"
+      },
+      "props": {
+        "depthLevel": {
+          "defaultValue": 1,
+          "description": "How many levels deep to search for files. 1 = current folder only, 2 = current + next level, etc.",
+          "displayName": "Depth Level",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "downloadFiles": {
+          "defaultValue": false,
+          "description": "Download all file contents in a list",
+          "displayName": "Download Files",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "folderId": {
+          "description": "Folder ID coming from | New Folder -> id | (or any other source)",
+          "displayName": "Folder ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "includeTrashed": {
+          "defaultValue": false,
+          "description": "Include new files that have been trashed.",
+          "displayName": "Include Trashed",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "folderId"
+      ]
+    },
+    "read-file": {
+      "description": "Read a selected file from google drive file",
+      "displayName": "Read File Content",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "fileName": "SHORT_TEXT"
+      },
+      "props": {
+        "fileId": {
+          "description": "File ID coming from | New File -> id |",
+          "displayName": "File ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "fileName": {
+          "displayName": "Destination File name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "fileId"
+      ]
+    },
+    "save_file_as_pdf": {
+      "description": "Save a document as PDF in a Google Drive folder",
+      "displayName": "Save Document as PDF",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "documentId": "SHORT_TEXT",
+        "folderId": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX",
+        "name": "SHORT_TEXT"
+      },
+      "props": {
+        "documentId": {
+          "description": "The ID of the document to export",
+          "displayName": "Document ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "folderId": {
+          "description": "The ID of the folder where the file will be exported",
+          "displayName": "Folder ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "name": {
+          "description": "The name of the new file (do not include the extension)",
+          "displayName": "Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "documentId",
+        "folderId",
+        "name"
+      ]
+    },
+    "search-folder": {
+      "description": "Search a Google Drive folder for files/sub-folders",
+      "displayName": "Search",
+      "dropdown_fields": [
+        "parentFolder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "include_team_drives": "CHECKBOX",
+        "operator": "STATIC_DROPDOWN",
+        "parentFolder": "DROPDOWN",
+        "query": "SHORT_TEXT",
+        "queryTerm": "STATIC_DROPDOWN",
+        "type": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "operator": {
+          "defaultValue": "contains",
+          "description": "The operator to create criteria.",
+          "displayName": "Operator",
+          "options": {
+            "options": [
+              {
+                "label": "Contains",
+                "value": "contains"
+              },
+              {
+                "label": "Equals",
+                "value": "="
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "parentFolder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "query": {
+          "description": "Value of the field of file/folder to search for.",
+          "displayName": "Value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "queryTerm": {
+          "defaultValue": "name",
+          "description": "The Query term or field of file/folder to search upon.",
+          "displayName": "Query Term",
+          "options": {
+            "options": [
+              {
+                "label": "File name",
+                "value": "name"
+              },
+              {
+                "label": "Full text search",
+                "value": "fullText"
+              },
+              {
+                "label": "Content type",
+                "value": "mimeType"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "type": {
+          "defaultValue": "all",
+          "description": "(Optional) Choose between files and folders.",
+          "displayName": "File Type",
+          "options": {
+            "options": [
+              {
+                "label": "All",
+                "value": "all"
+              },
+              {
+                "label": "Files",
+                "value": "file"
+              },
+              {
+                "label": "Folders",
+                "value": "folder"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "operator",
+        "query",
+        "queryTerm"
+      ]
+    },
+    "set_public_access": {
+      "description": "Set public access for a file or folder",
+      "displayName": "Set public access",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "role": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "fileId": {
+          "description": "The ID of the file or folder to update permissions for",
+          "displayName": "File or Folder ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "role": {
+          "defaultValue": "reader",
+          "description": "The role to assign for public access",
+          "displayName": "Role",
+          "options": {
+            "options": [
+              {
+                "label": "Reader",
+                "value": "reader"
+              },
+              {
+                "label": "Commenter",
+                "value": "commenter"
+              },
+              {
+                "label": "Editor",
+                "value": "writer"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "fileId",
+        "role"
+      ]
+    },
+    "trash_gdrive_file": {
+      "description": "Move a file to the trash in your Google Drive",
+      "displayName": "Trash file",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX"
+      },
+      "props": {
+        "fileId": {
+          "description": "The ID of the file to trash",
+          "displayName": "File ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "fileId"
+      ]
+    },
+    "update_permissions": {
+      "description": "Update permissions for a file or folder",
+      "displayName": "Update permissions",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX",
+        "permission_name": "STATIC_DROPDOWN",
+        "send_invitation_email": "CHECKBOX",
+        "user_email": "SHORT_TEXT"
+      },
+      "props": {
+        "fileId": {
+          "description": "The ID of the file or folder to update permissions for",
+          "displayName": "File or Folder ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "permission_name": {
+          "description": "The role to grant to user. See more at: https://developers.google.com/drive/api/guides/ref-roles",
+          "displayName": "Role",
+          "options": {
+            "options": [
+              {
+                "label": "Organizer",
+                "value": "organizer"
+              },
+              {
+                "label": "File Organizer",
+                "value": "fileOrganizer"
+              },
+              {
+                "label": "Writer",
+                "value": "writer"
+              },
+              {
+                "label": "Commenter",
+                "value": "commenter"
+              },
+              {
+                "label": "Reader",
+                "value": "reader"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "send_invitation_email": {
+          "description": "Send an email to the user to notify them of the new permissions",
+          "displayName": "Send invitation email",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "user_email": {
+          "description": "The email address of the user to update permissions for",
+          "displayName": "User email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "fileId",
+        "permission_name",
+        "send_invitation_email",
+        "user_email"
+      ]
+    },
+    "upload_gdrive_file": {
+      "description": "Upload a file in your Google Drive",
+      "displayName": "Upload file",
+      "dropdown_fields": [
+        "parentFolder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "file": "FILE",
+        "fileName": "SHORT_TEXT",
+        "include_team_drives": "CHECKBOX",
+        "parentFolder": "DROPDOWN"
+      },
+      "props": {
+        "file": {
+          "description": "The file URL or base64 to upload",
+          "displayName": "File",
+          "required": true,
+          "type": "FILE"
+        },
+        "fileName": {
+          "description": "The name of the file",
+          "displayName": "File name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "parentFolder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "file",
+        "fileName"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "Google Drive",
+  "pieceName": "@activepieces/piece-google-drive",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:88006d936a19001a202ec639302003d218c5f463b17bd2d0d3b4fa244fcc3640",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-google-drive",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "new_file": {
+      "description": "Trigger when a new file is uploaded.",
+      "displayName": "New File",
+      "dropdown_fields": [
+        "parentFolder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "include_file_content": "CHECKBOX",
+        "include_team_drives": "CHECKBOX",
+        "parentFolder": "DROPDOWN"
+      },
+      "props": {
+        "include_file_content": {
+          "defaultValue": false,
+          "description": "Include the file content in the output. This will increase the time taken to fetch the files and might cause issues with large files.",
+          "displayName": "Include File Content",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "parentFolder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": []
+    },
+    "new_folder": {
+      "description": "Trigger when a new folder is created or uploaded.",
+      "displayName": "New Folder",
+      "dropdown_fields": [
+        "parentFolder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "include_team_drives": "CHECKBOX",
+        "parentFolder": "DROPDOWN"
+      },
+      "props": {
+        "include_team_drives": {
+          "defaultValue": false,
+          "description": "Determines if folders from Team Drives should be included in the results.",
+          "displayName": "Include Team Drives",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "parentFolder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access files without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The Drive folder to target. Leave empty to use the root of My Drive. Type in the box to search your Drive by folder name. If the folder still isn't listed, switch this field to 'Dynamic value' (the toggle next to the field) and paste the folder ID — you can copy it from the folder's URL in Drive, after /folders/ (e.g. https://drive.google.com/drive/folders/<FOLDER_ID>).",
+          "displayName": "Parent Folder",
+          "refreshOnSearch": true,
+          "refreshers": [
+            "include_team_drives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": []
+    }
+  },
+  "version": "0.7.5"
+}

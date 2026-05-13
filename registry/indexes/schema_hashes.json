@@ -1,0 +1,62 @@
+{
+  "@activepieces/piece-airtable": {
+    "hash": "sha256:204698d733eb6547e9b044f3b6fdc37d6e4af0eeb367f1863d1f7cdcd9cb6a07",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-airtable",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.6.7"
+  },
+  "@activepieces/piece-clickup": {
+    "hash": "sha256:3340296fa5e9939ce25471429f912dc60a1445f47717622870c927ebd72f174a",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-clickup",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.7.4"
+  },
+  "@activepieces/piece-gmail": {
+    "hash": "sha256:566901c4e3694ecf492e3979e08dc35b4b613ecf03dfd5e50e5d7cadedf47205",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-gmail",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.12.3"
+  },
+  "@activepieces/piece-google-calendar": {
+    "hash": "sha256:4b57bc0142b41fbc6f9bf992aefe692df184678b0c25bd6a4a7fec863c64386d",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-google-calendar",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.9.1"
+  },
+  "@activepieces/piece-google-drive": {
+    "hash": "sha256:88006d936a19001a202ec639302003d218c5f463b17bd2d0d3b4fa244fcc3640",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-google-drive",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.7.5"
+  },
+  "@activepieces/piece-google-sheets": {
+    "hash": "sha256:9d1a1abcfcedd120a784f44f710b0bcde90697fd283186cd2c42a094f1802064",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-google-sheets",
+    "synced_at": "2026-05-13T11:35:41Z",
+    "version": "0.14.6"
+  },
+  "@activepieces/piece-hubspot": {
+    "hash": "sha256:07c90d2e3cd2b6c7fddd9839347db4bf1e5a556a4a604680b2384326e354b4ea",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-hubspot",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.8.4"
+  },
+  "@activepieces/piece-slack": {
+    "hash": "sha256:69a5d9b0a4ae125b45091052ae219ec9898fb612f5c0e3828342b10cfa600074",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-slack",
+    "synced_at": "2026-05-13T11:35:42Z",
+    "version": "0.17.0"
+  },
+  "@activepieces/piece-stripe": {
+    "hash": "sha256:ff6bdb407baaac7458e0d2e96b97c7f1024eb7ef2cef002a5935d18a7afdff50",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-stripe",
+    "synced_at": "2026-05-13T11:35:43Z",
+    "version": "0.6.8"
+  },
+  "@activepieces/piece-webhook": {
+    "hash": "sha256:2977e8c4c6ce7ae219c94884dd875449c8d794f390ed26683f1560b19249c336",
+    "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-webhook",
+    "synced_at": "2026-05-13T11:38:24Z",
+    "version": "0.1.33"
+  }
+}

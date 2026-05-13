@@ -1,0 +1,217 @@
+{
+  "actions": {
+    "return_response": {
+      "description": "return a response",
+      "displayName": "Return Response",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "fields"
+      ],
+      "property_types": {
+        "fields": "DYNAMIC",
+        "respond": "STATIC_DROPDOWN",
+        "responseType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "fields": {
+          "displayName": "Response",
+          "refreshers": [
+            "responseType"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "respond": {
+          "defaultValue": "stop",
+          "displayName": "Flow Execution",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Stop",
+                "value": "stop"
+              },
+              {
+                "label": "Respond and Continue",
+                "value": "respond"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "responseType": {
+          "defaultValue": "json",
+          "displayName": "Response Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              },
+              {
+                "label": "Redirect",
+                "value": "redirect"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "fields"
+      ]
+    },
+    "return_response_and_wait_for_next_webhook": {
+      "description": "return a response and wait for the next webhook to resume the flow",
+      "displayName": "Respond and Wait for Next Webhook",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "fields"
+      ],
+      "property_types": {
+        "fields": "DYNAMIC",
+        "markdown": "MARKDOWN",
+        "responseType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "fields": {
+          "displayName": "Response",
+          "refreshers": [
+            "responseType"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "markdown": {
+          "description": "**Respond and Wait for Next Webhook**<br> \n            Check the response header (x-activepieces-resume-webhook-url) for the next webhook URL and call it to resume the flow. <br>\n            ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "responseType": {
+          "defaultValue": "json",
+          "displayName": "Response Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              },
+              {
+                "label": "Redirect",
+                "value": "redirect"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "fields"
+      ]
+    }
+  },
+  "auth": {
+    "required": false,
+    "type": null
+  },
+  "displayName": "Webhook",
+  "pieceName": "@activepieces/piece-webhook",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:2977e8c4c6ce7ae219c94884dd875449c8d794f390ed26683f1560b19249c336",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-webhook",
+  "synced_at": "2026-05-13T11:38:24Z",
+  "triggers": {
+    "catch_webhook": {
+      "description": "Receive incoming HTTP/webhooks using any HTTP method such as GET, POST, PUT, DELETE, etc.",
+      "displayName": "Catch Webhook",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "authFields"
+      ],
+      "property_types": {
+        "authFields": "DYNAMIC",
+        "authType": "STATIC_DROPDOWN",
+        "liveMarkdown": "MARKDOWN",
+        "syncMarkdown": "MARKDOWN",
+        "testMarkdown": "MARKDOWN"
+      },
+      "props": {
+        "authFields": {
+          "displayName": "Authentication Fields",
+          "refreshers": [
+            "authType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "authType": {
+          "defaultValue": "none",
+          "displayName": "Authentication",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "Basic Auth",
+                "value": "basic"
+              },
+              {
+                "label": "Header Auth",
+                "value": "header"
+              },
+              {
+                "label": "HMAC Signature",
+                "value": "hmac"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "liveMarkdown": {
+          "description": "**Live URL:**\n```text\n{{webhookUrl}}\n```\ngenerate sample data & triggers published flow.\n\n",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "BORDERLESS"
+        },
+        "syncMarkdown": {
+          "description": "**Synchronous Requests:**\n\nIf you expect a response from this webhook, add `/sync` to the end of the URL.\nIf it takes more than {{webhookTimeoutSeconds}} seconds, it will return a 408 Request Timeout response.\n\nTo return data, add an Webhook step to your flow with the Return Response action.\n",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "testMarkdown": {
+          "description": "\n**Test URL:**\n\nif you want to generate sample data without triggering the flow, append `/test` to your webhook URL.\n\n",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "authType"
+      ]
+    }
+  },
+  "version": "0.1.33"
+}

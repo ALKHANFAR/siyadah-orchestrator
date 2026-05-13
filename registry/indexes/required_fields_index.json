@@ -1,0 +1,861 @@
+{
+  "@activepieces/piece-airtable": {
+    "airtable_add_comment_to_record": [
+      "base",
+      "recordId",
+      "tableId",
+      "text"
+    ],
+    "airtable_clean_record": [
+      "base",
+      "fields",
+      "recordId",
+      "tableId"
+    ],
+    "airtable_create_base": [
+      "name",
+      "tables",
+      "workspaceId"
+    ],
+    "airtable_create_record": [
+      "base",
+      "fields",
+      "tableId"
+    ],
+    "airtable_create_table": [
+      "base",
+      "fields",
+      "name"
+    ],
+    "airtable_delete_record": [
+      "base",
+      "recordId",
+      "tableId"
+    ],
+    "airtable_find_base": [
+      "baseName"
+    ],
+    "airtable_find_record": [
+      "base",
+      "searchField",
+      "searchValue",
+      "tableId"
+    ],
+    "airtable_find_table": [
+      "base",
+      "tableName"
+    ],
+    "airtable_find_table_by_id": [
+      "base",
+      "tableId"
+    ],
+    "airtable_get_base_schema": [
+      "base"
+    ],
+    "airtable_get_record_by_id": [
+      "base",
+      "recordId",
+      "tableId"
+    ],
+    "airtable_update_record": [
+      "base",
+      "fields",
+      "recordId",
+      "tableId"
+    ],
+    "airtable_upload_file_to_column": [
+      "attachment_column",
+      "base",
+      "file",
+      "file_content_type",
+      "recordId",
+      "tableId"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ]
+  },
+  "@activepieces/piece-clickup": {
+    "create_channel": [
+      "name",
+      "visibility",
+      "workspace_id"
+    ],
+    "create_channel_in_space_folder_list": [
+      "locationId",
+      "locationType",
+      "visibility",
+      "workspace_id"
+    ],
+    "create_folderless_list": [
+      "name",
+      "space_id",
+      "workspace_id"
+    ],
+    "create_message": [
+      "content",
+      "type",
+      "workspace_id"
+    ],
+    "create_message_reaction": [
+      "emoji",
+      "message_id",
+      "workspace_id"
+    ],
+    "create_message_reply": [
+      "content",
+      "message_id",
+      "type",
+      "workspace_id"
+    ],
+    "create_subtask": [
+      "custom_fields",
+      "list_id",
+      "name",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "create_task": [
+      "custom_fields",
+      "list_id",
+      "name",
+      "space_id",
+      "workspace_id"
+    ],
+    "create_task_comments": [
+      "comment",
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "create_task_from_template": [
+      "list_id",
+      "name",
+      "space_id",
+      "template_id",
+      "workspace_id"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "delete_message": [
+      "message_id",
+      "workspace_id"
+    ],
+    "delete_message_reaction": [
+      "message_id",
+      "reaction_id",
+      "workspace_id"
+    ],
+    "delete_task": [
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "get_accessible_custom_fields": [
+      "list_id",
+      "space_id",
+      "workspace_id"
+    ],
+    "get_channel": [
+      "workspace_id"
+    ],
+    "get_channel_messages": [
+      "workspace_id"
+    ],
+    "get_channels": [
+      "workspace_id"
+    ],
+    "get_list": [
+      "list_id"
+    ],
+    "get_list_task": [
+      "task_id"
+    ],
+    "get_message_reactions": [
+      "message_id",
+      "workspace_id"
+    ],
+    "get_message_replies": [
+      "message_id",
+      "workspace_id"
+    ],
+    "get_space": [
+      "space_id"
+    ],
+    "get_spaces": [
+      "team_id"
+    ],
+    "get_task_by_name": [
+      "list_id",
+      "space_id",
+      "task_name",
+      "workspace_id"
+    ],
+    "get_task_comments": [
+      "task_id"
+    ],
+    "list_workspace_tasks": [
+      "workspace_id"
+    ],
+    "list_workspace_time_entries": [
+      "workspace_id"
+    ],
+    "set_custom_fields_value": [
+      "field_id",
+      "space_id",
+      "task_id",
+      "value",
+      "workspace_id"
+    ],
+    "update_message": [
+      "content",
+      "content_format",
+      "message_id",
+      "workspace_id"
+    ],
+    "update_task": [
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ]
+  },
+  "@activepieces/piece-gmail": {
+    "create_draft_reply": [
+      "body_type",
+      "include_original_message",
+      "message_id",
+      "reply_type"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "gmail_get_mail": [
+      "message_id"
+    ],
+    "gmail_search_mail": [],
+    "reply_to_email": [
+      "body",
+      "body_type",
+      "message_id",
+      "reply_type"
+    ],
+    "request_approval_in_mail": [
+      "body",
+      "receiver",
+      "subject"
+    ],
+    "send_email": [
+      "body",
+      "body_type",
+      "draft",
+      "receiver",
+      "subject"
+    ]
+  },
+  "@activepieces/piece-google-calendar": {
+    "create_google_calendar_event": [
+      "calendar_id",
+      "send_notifications",
+      "start_date_time",
+      "title"
+    ],
+    "create_quick_event": [
+      "calendar_id",
+      "text"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "delete_event": [
+      "calendar_id",
+      "eventId"
+    ],
+    "google-calendar-add-attendees": [
+      "attendees",
+      "calendar_id",
+      "eventId"
+    ],
+    "google_calendar_find_busy_free_periods": [
+      "calendar_ids",
+      "end_date",
+      "start_date"
+    ],
+    "google_calendar_get_event_by_id": [
+      "calendar_id",
+      "event_id"
+    ],
+    "google_calendar_get_events": [
+      "calendar_id",
+      "event_types",
+      "singleEvents"
+    ],
+    "update_event": [
+      "calendar_id",
+      "eventId"
+    ]
+  },
+  "@activepieces/piece-google-drive": {
+    "create_new_gdrive_file": [
+      "fileName",
+      "fileType",
+      "text"
+    ],
+    "create_new_gdrive_folder": [
+      "folderName"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "delete_gdrive_file": [
+      "fileId"
+    ],
+    "delete_permissions": [
+      "fileId",
+      "permission_name",
+      "user_email"
+    ],
+    "duplicate_file": [
+      "fileId",
+      "folderId",
+      "name"
+    ],
+    "get-file-or-folder-by-id": [
+      "id"
+    ],
+    "google-drive-move-file": [
+      "fileId"
+    ],
+    "list-files": [
+      "folderId"
+    ],
+    "read-file": [
+      "fileId"
+    ],
+    "save_file_as_pdf": [
+      "documentId",
+      "folderId",
+      "name"
+    ],
+    "search-folder": [
+      "operator",
+      "query",
+      "queryTerm"
+    ],
+    "set_public_access": [
+      "fileId",
+      "role"
+    ],
+    "trash_gdrive_file": [
+      "fileId"
+    ],
+    "update_permissions": [
+      "fileId",
+      "permission_name",
+      "send_invitation_email",
+      "user_email"
+    ],
+    "upload_gdrive_file": [
+      "file",
+      "fileName"
+    ]
+  },
+  "@activepieces/piece-google-sheets": {
+    "clear_sheet": [
+      "headerRow",
+      "is_first_row_headers",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "copy-worksheet": [
+      "desinationSpeadsheetId",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "create-column": [
+      "columnName",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "create-spreadsheet": [
+      "title"
+    ],
+    "create-worksheet": [
+      "spreadsheetId",
+      "title"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "delete-worksheet": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "delete_row": [
+      "rowId",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "export_sheet": [
+      "format",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "find-worksheet": [
+      "spreadsheetId",
+      "title"
+    ],
+    "find_row_by_num": [
+      "headerRow",
+      "rowNumber",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "find_rows": [
+      "columnName",
+      "headerRow",
+      "matchCase",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "find_spreadsheets": [
+      "spreadsheet_name"
+    ],
+    "format-row": [
+      "sheetId",
+      "spreadsheetId",
+      "startingRow"
+    ],
+    "get-many-rows": [
+      "first_row_headers",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "get_next_rows": [
+      "groupSize",
+      "headerRow",
+      "memKey",
+      "sheetId",
+      "spreadsheetId",
+      "startRow"
+    ],
+    "google-sheets-insert-multiple-rows": [
+      "headerRow",
+      "input_type",
+      "sheetId",
+      "spreadsheetId",
+      "values"
+    ],
+    "insert_row": [
+      "first_row_headers",
+      "sheetId",
+      "spreadsheetId",
+      "values"
+    ],
+    "rename-worksheet": [
+      "newName",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "update-multiple-rows": [
+      "headerRow",
+      "sheetId",
+      "spreadsheetId",
+      "values"
+    ],
+    "update_row": [
+      "first_row_headers",
+      "row_id",
+      "sheetId",
+      "spreadsheetId",
+      "values"
+    ]
+  },
+  "@activepieces/piece-hubspot": {
+    "add-contact-to-workflow": [
+      "email",
+      "workflowId"
+    ],
+    "add_contact_to_list": [
+      "email",
+      "listId"
+    ],
+    "create-associations": [
+      "associationType",
+      "fromObjectId",
+      "fromObjectType",
+      "toObjectIds",
+      "toObjectType"
+    ],
+    "create-blog-post": [
+      "authorId",
+      "body",
+      "contentGroupId",
+      "imageUrl",
+      "meta",
+      "slug",
+      "status",
+      "title"
+    ],
+    "create-company": [],
+    "create-contact": [],
+    "create-custome-object": [
+      "customObjectType"
+    ],
+    "create-deal": [
+      "dealname",
+      "pipelineId",
+      "pipelineStageId"
+    ],
+    "create-line-item": [
+      "productId"
+    ],
+    "create-or-update-contact": [
+      "email"
+    ],
+    "create-page": [
+      "internalPageName",
+      "pageTitle",
+      "pageType",
+      "slug",
+      "templatePath"
+    ],
+    "create-product": [],
+    "create-ticket": [
+      "pipelineId",
+      "pipelineStageId",
+      "ticketName"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "delete-page": [
+      "pageId",
+      "pageType"
+    ],
+    "find-associations": [
+      "fromObjectId",
+      "fromObjectType",
+      "toObjectType"
+    ],
+    "find-company": [
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "find-contact": [
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "find-custom-object": [
+      "customObjectType",
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "find-deal": [
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "find-line-item": [
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "find-product": [
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "find-ticket": [
+      "firstSearchPropertyName",
+      "firstSearchPropertyValue"
+    ],
+    "get-company": [
+      "companyId"
+    ],
+    "get-contact": [
+      "contactId"
+    ],
+    "get-custom-object": [
+      "customObjectId",
+      "customObjectType"
+    ],
+    "get-deal": [
+      "dealId"
+    ],
+    "get-line-item": [
+      "lineItemId"
+    ],
+    "get-owner-by-email": [
+      "email"
+    ],
+    "get-owner-by-id": [
+      "ownerId"
+    ],
+    "get-page": [
+      "pageId",
+      "pageType"
+    ],
+    "get-pipeline-stage-details": [
+      "objectType",
+      "pipelineId",
+      "stageId"
+    ],
+    "get-product": [
+      "productId"
+    ],
+    "get-ticket": [
+      "ticketId"
+    ],
+    "remove-associations": [
+      "associationType",
+      "fromObjectId",
+      "fromObjectType",
+      "toObjectIds",
+      "toObjectType"
+    ],
+    "remove-contact-from-list": [
+      "email",
+      "listId"
+    ],
+    "remove-email-subscription": [
+      "email"
+    ],
+    "update-company": [
+      "companyId"
+    ],
+    "update-contact": [
+      "contactId"
+    ],
+    "update-custome-object": [
+      "customObjectId",
+      "customObjectType"
+    ],
+    "update-deal": [
+      "dealId"
+    ],
+    "update-line-item": [
+      "lineItemId"
+    ],
+    "update-product": [
+      "productId"
+    ],
+    "update-ticket": [
+      "ticketId"
+    ],
+    "upload-file": [
+      "accessLevel",
+      "file",
+      "fileName",
+      "folderId"
+    ]
+  },
+  "@activepieces/piece-slack": {
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url",
+      "useUserToken"
+    ],
+    "delete-message": [
+      "channel",
+      "ts"
+    ],
+    "find-user-by-id": [
+      "id"
+    ],
+    "get-file": [
+      "fileId"
+    ],
+    "get-message": [
+      "channel",
+      "ts"
+    ],
+    "getChannelHistory": [
+      "channel",
+      "includeAllMetadata",
+      "inclusive"
+    ],
+    "get_group_by_handle": [
+      "handle"
+    ],
+    "invite-user-to-channel": [
+      "channel",
+      "userId"
+    ],
+    "listUsers": [
+      "includeBots",
+      "includeDisabled"
+    ],
+    "markdownToSlackFormat": [
+      "markdown"
+    ],
+    "request_action_direct_message": [
+      "actions",
+      "text",
+      "userId"
+    ],
+    "request_action_message": [
+      "actions",
+      "channel",
+      "text"
+    ],
+    "request_approval_direct_message": [
+      "text",
+      "userId"
+    ],
+    "request_approval_message": [
+      "channel",
+      "text"
+    ],
+    "retrieveThreadMessages": [
+      "channel",
+      "threadTs"
+    ],
+    "searchMessages": [
+      "query"
+    ],
+    "send_channel_message": [
+      "channel",
+      "sendAsBot"
+    ],
+    "send_direct_message": [
+      "text",
+      "userId"
+    ],
+    "set-channel-topic": [
+      "channel",
+      "topic"
+    ],
+    "slack-add-reaction-to-message": [
+      "channel",
+      "reactAsUser",
+      "reaction",
+      "ts"
+    ],
+    "slack-create-channel": [
+      "channelName"
+    ],
+    "slack-find-user-by-email": [
+      "email"
+    ],
+    "slack-find-user-by-handle": [
+      "handle"
+    ],
+    "slack-set-user-status": [
+      "text"
+    ],
+    "slack-update-profile": [],
+    "updateMessage": [
+      "channel",
+      "text",
+      "ts"
+    ],
+    "update_group_users": [
+      "appendUsers",
+      "handle"
+    ],
+    "uploadFile": [
+      "file"
+    ]
+  },
+  "@activepieces/piece-stripe": {
+    "cancel_subscription": [
+      "subscription"
+    ],
+    "create_customer": [
+      "email",
+      "name"
+    ],
+    "create_invoice": [
+      "currency",
+      "customer_id"
+    ],
+    "create_payment_intent": [
+      "amount",
+      "currency",
+      "customer"
+    ],
+    "create_payment_link": [
+      "line_items"
+    ],
+    "create_price": [
+      "currency",
+      "product",
+      "recurring_interval",
+      "unit_amount"
+    ],
+    "create_product": [
+      "name"
+    ],
+    "create_refund": [
+      "payment_intent"
+    ],
+    "create_subscription": [
+      "customer",
+      "items"
+    ],
+    "custom_api_call": [
+      "headers",
+      "method",
+      "queryParams",
+      "url"
+    ],
+    "deactivate_payment_link": [
+      "payment_link_id"
+    ],
+    "find_invoice": [
+      "invoice_id"
+    ],
+    "retrieve_customer": [
+      "id"
+    ],
+    "retrieve_invoice": [
+      "invoice_id"
+    ],
+    "retrieve_payment_intent": [
+      "payment_intent_id"
+    ],
+    "retrieve_payout": [
+      "payout_id"
+    ],
+    "search_customer": [
+      "email"
+    ],
+    "search_subscriptions": [],
+    "update_customer": [
+      "customer"
+    ]
+  },
+  "@activepieces/piece-webhook": {
+    "return_response": [
+      "fields"
+    ],
+    "return_response_and_wait_for_next_webhook": [
+      "fields"
+    ]
+  }
+}

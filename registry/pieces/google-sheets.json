@@ -1,0 +1,3370 @@
+{
+  "actions": {
+    "clear_sheet": {
+      "description": "Clears all rows on an existing sheet.",
+      "displayName": "Clear Sheet",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "headerRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "is_first_row_headers": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "headerRow": {
+          "defaultValue": 1,
+          "description": "Enter the row number where your column headers are located (usually row 1).",
+          "displayName": "Header Row Number",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "is_first_row_headers": {
+          "defaultValue": false,
+          "displayName": "First Row Contains Headers ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "headerRow",
+        "is_first_row_headers",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "copy-worksheet": {
+      "description": "Creates a new worksheet by copying an existing one.",
+      "displayName": "Copy Worksheet",
+      "dropdown_fields": [
+        "desinationSpeadsheetId",
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "desinationSpeadsheetId": "DROPDOWN",
+        "includeTeamDrives": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "desinationSpeadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "",
+          "displayName": "Spreadsheet to paste in",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "",
+          "displayName": "Worksheet to Copy",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "",
+          "displayName": "Spreadsheet Containing the Worksheet to Copy",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "desinationSpeadsheetId",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "create-column": {
+      "description": "Creates a new column in a specific spreadsheet.",
+      "displayName": "Create Spreadsheet Column",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "columnIndex": "NUMBER",
+        "columnName": "SHORT_TEXT",
+        "includeTeamDrives": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "columnIndex": {
+          "description": "The column index starts from 1.For example, if you want to add a column to the third column, enter 3.Ff the input is less than 1 the column will be added after the last current column.",
+          "displayName": "Column Index",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "columnName": {
+          "displayName": "Column Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "columnName",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "create-spreadsheet": {
+      "description": "Creates a blank spreadsheet.",
+      "displayName": "Create Spreadsheet",
+      "dropdown_fields": [
+        "folder"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder": "DROPDOWN",
+        "includeTeamDrives": "CHECKBOX",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "folder": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The folder to create the worksheet in.By default, the new worksheet is created in the root folder of drive.",
+          "displayName": "Parent Folder",
+          "refreshers": [
+            "auth",
+            "includeTeamDrives"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "title": {
+          "description": "The title of the new spreadsheet.",
+          "displayName": "Title",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "title"
+      ]
+    },
+    "create-worksheet": {
+      "description": "Create a new blank worksheet with a title.",
+      "displayName": "Create Worksheet",
+      "dropdown_fields": [
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "headers": "ARRAY",
+        "includeTeamDrives": "CHECKBOX",
+        "spreadsheetId": "DROPDOWN",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "headers": {
+          "displayName": "Headers",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "title": {
+          "description": "The title of the new worksheet.",
+          "displayName": "Title",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "spreadsheetId",
+        "title"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "delete-worksheet": {
+      "description": "Permanently delete a specific worksheet.",
+      "displayName": "Delete Worksheet",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to delete.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "delete_row": {
+      "description": "Delete a specific row from the selected sheet.",
+      "displayName": "Delete Row",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX",
+        "rowId": "NUMBER",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "rowId": {
+          "description": "The number of the row you want to delete.",
+          "displayName": "Row Number",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "rowId",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "export_sheet": {
+      "description": "Download a worksheet as a CSV or TSV file.",
+      "displayName": "Export Worksheet",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "format": "STATIC_DROPDOWN",
+        "includeTeamDrives": "CHECKBOX",
+        "returnAsText": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "format": {
+          "defaultValue": "csv",
+          "description": "Select the file type to export the sheet as.",
+          "displayName": "Export Format",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Comma Separated Values (.csv)",
+                "value": "csv"
+              },
+              {
+                "label": "Tab Separated Values (.tsv)",
+                "value": "tsv"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "returnAsText": {
+          "defaultValue": false,
+          "description": "Return the exported data as text instead of a file.",
+          "displayName": "Return as Text",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "format",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "find-worksheet": {
+      "description": "Finds a worksheet(s) by title.",
+      "displayName": "Find Worksheet(s)",
+      "dropdown_fields": [
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "exact_match": "CHECKBOX",
+        "includeTeamDrives": "CHECKBOX",
+        "spreadsheetId": "DROPDOWN",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "exact_match": {
+          "defaultValue": false,
+          "description": "If true, only return worksheets that exactly match the name. If false, return worksheets that contain the name.",
+          "displayName": "Exact Match",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "title": {
+          "displayName": "Title",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "spreadsheetId",
+        "title"
+      ]
+    },
+    "find_row_by_num": {
+      "description": "Retrieve a specific row using its unique ID.",
+      "displayName": "Get Single Row by ID",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "headerRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "rowNumber": "NUMBER",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "headerRow": {
+          "defaultValue": 1,
+          "description": "Enter the row number where your column headers are located (usually row 1).",
+          "displayName": "Header Row Number",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "rowNumber": {
+          "description": "Enter the row number you want to retrieve",
+          "displayName": "Row Number",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "headerRow",
+        "rowNumber",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "find_rows": {
+      "description": "Look up rows in a worksheet based on a column value.",
+      "displayName": "Find Rows",
+      "dropdown_fields": [
+        "columnName",
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "columnName": "DROPDOWN",
+        "headerRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "matchCase": "CHECKBOX",
+        "numberOfRows": "NUMBER",
+        "searchValue": "SHORT_TEXT",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "startingRow": "NUMBER",
+        "useHeaderNames": "CHECKBOX"
+      },
+      "props": {
+        "columnName": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The name of the column to search in",
+          "displayName": "Column Name",
+          "refreshers": [
+            "sheetId",
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "headerRow": {
+          "defaultValue": 1,
+          "description": "The row number that contains the column names.",
+          "displayName": "Header Row",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "matchCase": {
+          "defaultValue": false,
+          "description": "Only return rows where the cell value exactly matches the search value.",
+          "displayName": "Exact Match",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "numberOfRows": {
+          "defaultValue": 1,
+          "description": "How many rows to return. Defaults to 1 if not specified.",
+          "displayName": "Number of Rows",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "searchValue": {
+          "description": "The value to look for in the selected column. Leave empty to return all rows.",
+          "displayName": "Search Value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "startingRow": {
+          "description": "Start searching from this row number.",
+          "displayName": "Starting Row",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "useHeaderNames": {
+          "defaultValue": false,
+          "description": "Use column names as keys instead of A, B, C.",
+          "displayName": "Use Column Names",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "columnName",
+        "headerRow",
+        "matchCase",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "find_spreadsheets": {
+      "description": "Find spreadsheet(s) by name.",
+      "displayName": "Find Spreadsheet(s)",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "exact_match": "CHECKBOX",
+        "includeTeamDrives": "CHECKBOX",
+        "spreadsheet_name": "SHORT_TEXT"
+      },
+      "props": {
+        "exact_match": {
+          "defaultValue": false,
+          "description": "If true, only return spreadsheets that exactly match the name. If false, return spreadsheets that contain the name.",
+          "displayName": "Exact Match",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "spreadsheet_name": {
+          "description": "Enter the name of the spreadsheet to search for",
+          "displayName": "Spreadsheet Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "spreadsheet_name"
+      ]
+    },
+    "format-row": {
+      "description": "Format one or multiple rows in specific spreadsheet.",
+      "displayName": "Format Row(s)",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "bgColor": "SHORT_TEXT",
+        "bold": "CHECKBOX",
+        "endingRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "italic": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "startingRow": "NUMBER",
+        "strikethrough": "CHECKBOX",
+        "textColor": "SHORT_TEXT"
+      },
+      "props": {
+        "bgColor": {
+          "description": "Provide a HEX color code (example: #FFD966)",
+          "displayName": "Background Color",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "bold": {
+          "displayName": "Make text bold",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "endingRow": {
+          "description": "The last row number where formatting should stop (leave empty to format only the starting row).",
+          "displayName": "Ending row",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "italic": {
+          "displayName": "Make text Italic",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "startingRow": {
+          "description": "The first row number where formatting should begin.",
+          "displayName": "Starting row",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "strikethrough": {
+          "displayName": "Make text Strikethrough",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "textColor": {
+          "description": "Provide a HEX color code (example: #FFD966)",
+          "displayName": "Text Color",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "sheetId",
+        "spreadsheetId",
+        "startingRow"
+      ]
+    },
+    "get-many-rows": {
+      "description": "Get all the rows from a specific sheet.",
+      "displayName": "Get All Rows",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "first_row_headers": "CHECKBOX",
+        "includeTeamDrives": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "first_row_headers": {
+          "defaultValue": false,
+          "displayName": "First Row Contains Headers ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "first_row_headers",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "get_next_rows": {
+      "description": "Get next group of rows from a specifiec workheet",
+      "displayName": "Get next row(s)",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "groupSize": "NUMBER",
+        "headerRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "markdown": "MARKDOWN",
+        "memKey": "SHORT_TEXT",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "startRow": "NUMBER",
+        "useHeaderNames": "CHECKBOX"
+      },
+      "props": {
+        "groupSize": {
+          "defaultValue": 1,
+          "description": "The number of rows to get",
+          "displayName": "Group Size",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "headerRow": {
+          "defaultValue": 1,
+          "description": "Which row contains the headers?",
+          "displayName": "Header Row",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "markdown": {
+          "description": "\n**Notes:**\n\n- Memory key is used to remember where last row was processed and will be used in the following runs.\n- Republishing the flow **keeps** the memory key value, If you want to start over **change** the memory key.\n",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "memKey": {
+          "defaultValue": "row_number",
+          "description": "The key used to store the current row number in memory",
+          "displayName": "Memory Key",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "startRow": {
+          "defaultValue": 1,
+          "description": "Which row to start from?",
+          "displayName": "Start Row",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "useHeaderNames": {
+          "defaultValue": false,
+          "description": "Map A/B/C… to the actual column headers (row specified above).",
+          "displayName": "Use header names for keys",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "groupSize",
+        "headerRow",
+        "memKey",
+        "sheetId",
+        "spreadsheetId",
+        "startRow"
+      ]
+    },
+    "google-sheets-insert-multiple-rows": {
+      "description": "Add multiple rows of data at once to a specific spreadsheet.",
+      "displayName": "Add Multiple Rows",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [
+        "check_for_duplicate_column",
+        "values"
+      ],
+      "property_types": {
+        "as_string": "CHECKBOX",
+        "check_for_duplicate": "CHECKBOX",
+        "check_for_duplicate_column": "DYNAMIC",
+        "headerRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "input_type": "STATIC_DROPDOWN",
+        "overwrite": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "values": "DYNAMIC"
+      },
+      "props": {
+        "as_string": {
+          "description": "Inserted values that are dates and formulas will be entered as strings and have no effect",
+          "displayName": "As String",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "check_for_duplicate": {
+          "defaultValue": false,
+          "description": "Enable this option to check for duplicate values before inserting data into the sheet. Only unique rows will be added based on the selected column.",
+          "displayName": "Avoid Duplicates?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "check_for_duplicate_column": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The column to check for duplicate values.",
+          "displayName": "Duplicate Value Column",
+          "refreshers": [
+            "spreadsheetId",
+            "sheetId",
+            "check_for_duplicate",
+            "headerRow"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "headerRow": {
+          "defaultValue": 1,
+          "description": "Enter the row number where your column headers are located (usually row 1).",
+          "displayName": "Header Row Number",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "input_type": {
+          "defaultValue": "column_names",
+          "description": "Select the format of the input values to be added into the worksheet.",
+          "displayName": "Rows Data Format",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "CSV",
+                "value": "csv"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Column Names",
+                "value": "column_names"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "overwrite": {
+          "defaultValue": false,
+          "description": "Enable this option to replace all existing data in the sheet with new data from your input. This will clear any extra rows beyond the updated range.",
+          "displayName": "Overwrite Existing Data?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "values": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The values to add.",
+          "displayName": "Values",
+          "refreshers": [
+            "sheetId",
+            "spreadsheetId",
+            "input_type",
+            "headerRow"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headerRow",
+        "input_type",
+        "sheetId",
+        "spreadsheetId",
+        "values"
+      ]
+    },
+    "insert_row": {
+      "description": "Add a new row of data to a specific spreadsheet.",
+      "displayName": "Add Row",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [
+        "values"
+      ],
+      "property_types": {
+        "as_string": "CHECKBOX",
+        "first_row_headers": "CHECKBOX",
+        "includeTeamDrives": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "values": "DYNAMIC"
+      },
+      "props": {
+        "as_string": {
+          "description": "Inserted values that are dates and formulas will be entered strings and have no effect",
+          "displayName": "As String",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "first_row_headers": {
+          "defaultValue": false,
+          "displayName": "First Row Contains Headers ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "values": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The values to add",
+          "displayName": "Values",
+          "refreshers": [
+            "sheetId",
+            "spreadsheetId",
+            "first_row_headers"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "first_row_headers",
+        "sheetId",
+        "spreadsheetId",
+        "values"
+      ]
+    },
+    "rename-worksheet": {
+      "description": "Rename specific worksheet.",
+      "displayName": "Rename Worksheet",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX",
+        "newName": "SHORT_TEXT",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "newName": {
+          "displayName": "New Sheet Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to rename.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "newName",
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "update-multiple-rows": {
+      "description": "Updates multiple rows in a specific spreadsheet.",
+      "displayName": "Update Multiple Rows",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [
+        "values"
+      ],
+      "property_types": {
+        "as_string": "CHECKBOX",
+        "headerRow": "NUMBER",
+        "includeTeamDrives": "CHECKBOX",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "values": "DYNAMIC"
+      },
+      "props": {
+        "as_string": {
+          "description": "Inserted values that are dates and formulas will be entered as strings and have no effect",
+          "displayName": "As String",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headerRow": {
+          "defaultValue": 1,
+          "description": "Which row contains the headers?",
+          "displayName": "Header Row",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "values": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The values to update.",
+          "displayName": "Values",
+          "refreshers": [
+            "sheetId",
+            "spreadsheetId",
+            "headerRow"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headerRow",
+        "sheetId",
+        "spreadsheetId",
+        "values"
+      ]
+    },
+    "update_row": {
+      "description": "Update the data in an existing row.",
+      "displayName": "Update Row",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [
+        "values"
+      ],
+      "property_types": {
+        "first_row_headers": "CHECKBOX",
+        "includeTeamDrives": "CHECKBOX",
+        "row_id": "NUMBER",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "values": "DYNAMIC"
+      },
+      "props": {
+        "first_row_headers": {
+          "defaultValue": false,
+          "displayName": "First Row Contains Headers ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "row_id": {
+          "description": "The row number to update",
+          "displayName": "Row Number",
+          "required": true,
+          "type": "NUMBER"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "values": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The values to add",
+          "displayName": "Values",
+          "refreshers": [
+            "sheetId",
+            "spreadsheetId",
+            "first_row_headers"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "first_row_headers",
+        "row_id",
+        "sheetId",
+        "spreadsheetId",
+        "values"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "Google Sheets",
+  "pieceName": "@activepieces/piece-google-sheets",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:9d1a1abcfcedd120a784f44f710b0bcde90697fd283186cd2c42a094f1802064",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-google-sheets",
+  "synced_at": "2026-05-13T11:35:41Z",
+  "triggers": {
+    "google-sheets-new-or-updated-row": {
+      "description": "Triggers when a new row is added or modified in a spreadsheet.",
+      "displayName": "New or Updated Row",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId",
+        "trigger_column"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX",
+        "info": "MARKDOWN",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN",
+        "trigger_column": "DROPDOWN"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "info": {
+          "description": "Please note that there might be a delay of up to 3 minutes for the trigger to be fired, due to a delay from Google.",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "trigger_column": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "defaultValue": "all_columns",
+          "description": "Trigger on changes to cells in this column only. \nSelect **Any Column** if you want the flow to trigger on changes to any cell within the row.",
+          "displayName": "Trigger Column",
+          "refreshers": [
+            "spreadsheetId",
+            "sheetId"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "googlesheets_new_row_added": {
+      "description": "Triggers when a new row is added to bottom of a spreadsheet.",
+      "displayName": "New Row Added",
+      "dropdown_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX",
+        "info": "MARKDOWN",
+        "sheetId": "DROPDOWN",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "info": {
+          "description": "Please note that there might be a delay of up to 3 minutes for the trigger to be fired, due to a delay from Google.",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "sheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the worksheet to use.",
+          "displayName": "Worksheet",
+          "refreshers": [
+            "spreadsheetId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "The ID of the spreadsheet to use.",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "sheetId",
+        "spreadsheetId"
+      ]
+    },
+    "new-spreadsheet": {
+      "description": "Triggers when a new spreadsheet is created.",
+      "displayName": "New Spreadsheet",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": []
+    },
+    "new-worksheet": {
+      "description": "Triggers when a worksheet is created in a spreadsheet.",
+      "displayName": "New Worksheet",
+      "dropdown_fields": [
+        "spreadsheetId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeTeamDrives": "CHECKBOX",
+        "spreadsheetId": "DROPDOWN"
+      },
+      "props": {
+        "includeTeamDrives": {
+          "defaultValue": false,
+          "description": "Turn this on to also see spreadsheets from Shared Drives.",
+          "displayName": "Include Shared Drive Sheets ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "spreadsheetId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/spreadsheets",
+                "https://www.googleapis.com/auth/drive.readonly",
+                "https://www.googleapis.com/auth/drive"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access spreadsheets without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to files/folders you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "",
+          "displayName": "Spreadsheet",
+          "refreshers": [
+            "includeTeamDrives"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "spreadsheetId"
+      ]
+    }
+  },
+  "version": "0.14.6"
+}

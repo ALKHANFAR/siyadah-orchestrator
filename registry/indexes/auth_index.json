@@ -1,0 +1,42 @@
+{
+  "@activepieces/piece-airtable": {
+    "required": true,
+    "type": "SECRET_TEXT"
+  },
+  "@activepieces/piece-clickup": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-gmail": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-google-calendar": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-google-drive": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-google-sheets": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-hubspot": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-slack": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "@activepieces/piece-stripe": {
+    "required": true,
+    "type": "SECRET_TEXT"
+  },
+  "@activepieces/piece-webhook": {
+    "required": false,
+    "type": null
+  }
+}

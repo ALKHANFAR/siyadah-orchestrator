@@ -1,0 +1,1145 @@
+{
+  "actions": {
+    "airtable_add_comment_to_record": {
+      "description": "Adds a comment to an existing record.",
+      "displayName": "Add Comment to Record",
+      "dropdown_fields": [
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "parentCommentId": "SHORT_TEXT",
+        "recordId": "SHORT_TEXT",
+        "tableId": "DROPDOWN",
+        "text": "LONG_TEXT"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "parentCommentId": {
+          "description": "Optional. The ID of a parent comment to create a threaded reply.",
+          "displayName": "Parent Comment ID",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "recordId": {
+          "description": "The ID of the record.",
+          "displayName": "Record ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "text": {
+          "description": "The content of the comment. To mention a user, use the format `@[userId]` or `@[userEmail]`.",
+          "displayName": "Comment Text",
+          "required": true,
+          "type": "LONG_TEXT"
+        }
+      },
+      "required_fields": [
+        "base",
+        "recordId",
+        "tableId",
+        "text"
+      ]
+    },
+    "airtable_clean_record": {
+      "description": "Clears fields in a record. Empty values will clear the corresponding fields.",
+      "displayName": "Clean Record",
+      "dropdown_fields": [
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [
+        "fields"
+      ],
+      "property_types": {
+        "base": "DROPDOWN",
+        "fields": "DYNAMIC",
+        "recordId": "SHORT_TEXT",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "fields": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "recordId": {
+          "description": "The ID of the record.",
+          "displayName": "Record ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "fields",
+        "recordId",
+        "tableId"
+      ]
+    },
+    "airtable_create_base": {
+      "description": "Create a new base with a specified table structure.",
+      "displayName": "Create Base",
+      "dropdown_fields": [
+        "workspaceId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "name": "SHORT_TEXT",
+        "tables": "JSON",
+        "workspaceId": "DROPDOWN"
+      },
+      "props": {
+        "name": {
+          "description": "The name for the new base.",
+          "displayName": "Base Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tables": {
+          "defaultValue": [
+            {
+              "fields": [
+                {
+                  "name": "Name",
+                  "type": "singleLineText"
+                },
+                {
+                  "name": "Status",
+                  "options": {
+                    "choices": [
+                      {
+                        "name": "Todo"
+                      },
+                      {
+                        "name": "In Progress"
+                      },
+                      {
+                        "name": "Done"
+                      }
+                    ]
+                  },
+                  "type": "singleSelect"
+                }
+              ],
+              "name": "My First Table"
+            }
+          ],
+          "description": "Define the tables for the new base. Use the default value as a template. The first field for each table will be its primary field.",
+          "displayName": "Tables",
+          "required": true,
+          "type": "JSON"
+        },
+        "workspaceId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "name",
+        "tables",
+        "workspaceId"
+      ]
+    },
+    "airtable_create_record": {
+      "description": "Adds a record into an airtable",
+      "displayName": "Create Airtable Record",
+      "dropdown_fields": [
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [
+        "fields"
+      ],
+      "property_types": {
+        "base": "DROPDOWN",
+        "fields": "DYNAMIC",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "fields": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "fields",
+        "tableId"
+      ]
+    },
+    "airtable_create_table": {
+      "description": "Create a new table in an existing base.",
+      "displayName": "Create Table",
+      "dropdown_fields": [
+        "base"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "description": "LONG_TEXT",
+        "fields": "JSON",
+        "name": "SHORT_TEXT"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "description": {
+          "description": "An optional description for the new table.",
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "fields": {
+          "defaultValue": [
+            {
+              "description": "This will be the primary field",
+              "name": "Name",
+              "type": "singleLineText"
+            },
+            {
+              "name": "Notes",
+              "type": "multilineText"
+            }
+          ],
+          "description": "A JSON array of fields for the new table. The first field in the array will become the primary field.",
+          "displayName": "Fields",
+          "required": true,
+          "type": "JSON"
+        },
+        "name": {
+          "description": "The name for the new table.",
+          "displayName": "Table Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "base",
+        "fields",
+        "name"
+      ]
+    },
+    "airtable_delete_record": {
+      "description": "Deletes a record in airtable",
+      "displayName": "Delete Airtable Record",
+      "dropdown_fields": [
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "recordId": "SHORT_TEXT",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "recordId": {
+          "description": "The ID of the record.",
+          "displayName": "Record ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "recordId",
+        "tableId"
+      ]
+    },
+    "airtable_find_base": {
+      "description": "Find a base by its name or a keyword.",
+      "displayName": "Find Base",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "baseName": "SHORT_TEXT"
+      },
+      "props": {
+        "baseName": {
+          "description": "The name or keyword to search for within your base names.",
+          "displayName": "Base Name or Keyword",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "baseName"
+      ]
+    },
+    "airtable_find_record": {
+      "description": "Find a record in airtable",
+      "displayName": "Find Airtable Record",
+      "dropdown_fields": [
+        "base",
+        "limitToView",
+        "searchField",
+        "tableId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "limitToView": "DROPDOWN",
+        "searchField": "DROPDOWN",
+        "searchValue": "SHORT_TEXT",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "limitToView": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "View",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "searchField": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Search Field",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "searchValue": {
+          "displayName": "Search Value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "searchField",
+        "searchValue",
+        "tableId"
+      ]
+    },
+    "airtable_find_table": {
+      "description": "Find a table in a given base by its name.",
+      "displayName": "Find Table",
+      "dropdown_fields": [
+        "base"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "tableName": "SHORT_TEXT"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "tableName": {
+          "description": "The exact name of the table you want to find.",
+          "displayName": "Table Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "base",
+        "tableName"
+      ]
+    },
+    "airtable_find_table_by_id": {
+      "description": "Get a table's details and schema using its ID.",
+      "displayName": "Find Table by ID",
+      "dropdown_fields": [
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "tableId"
+      ]
+    },
+    "airtable_get_base_schema": {
+      "description": "Retrieve the schema for a specific base, including all its tables and fields.",
+      "displayName": "Get Base Schema",
+      "dropdown_fields": [
+        "base"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base"
+      ]
+    },
+    "airtable_get_record_by_id": {
+      "description": "Retrieve a single record from a table by its unique ID.",
+      "displayName": "Get Record by ID",
+      "dropdown_fields": [
+        "base",
+        "recordId",
+        "tableId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "recordId": "DROPDOWN",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "recordId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Record",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "recordId",
+        "tableId"
+      ]
+    },
+    "airtable_update_record": {
+      "description": "Update a record in airtable",
+      "displayName": "Update Airtable Record",
+      "dropdown_fields": [
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [
+        "fields"
+      ],
+      "property_types": {
+        "base": "DROPDOWN",
+        "fields": "DYNAMIC",
+        "recordId": "SHORT_TEXT",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "fields": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "recordId": {
+          "description": "The ID of the record.",
+          "displayName": "Record ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "fields",
+        "recordId",
+        "tableId"
+      ]
+    },
+    "airtable_upload_file_to_column": {
+      "description": "Uploads a file to attachment type column.",
+      "displayName": "Upload File to Column",
+      "dropdown_fields": [
+        "attachment_column",
+        "base",
+        "tableId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "attachment_column": "DROPDOWN",
+        "base": "DROPDOWN",
+        "file": "FILE",
+        "file_content_type": "SHORT_TEXT",
+        "filename": "SHORT_TEXT",
+        "recordId": "SHORT_TEXT",
+        "tableId": "DROPDOWN"
+      },
+      "props": {
+        "attachment_column": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Attachment Column",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "file": {
+          "description": "The file to be uploaded, which can be provided either as a public file URL or in Base64 encoded format.",
+          "displayName": "File",
+          "required": true,
+          "type": "FILE"
+        },
+        "file_content_type": {
+          "description": "Specifies the MIME type of the file being uploaded (e.g., 'image/png', 'application/pdf').",
+          "displayName": "File Content Type",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "filename": {
+          "description": "The name of the file as it should appear after upload.",
+          "displayName": "File Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "recordId": {
+          "description": "The ID of the record to which you want to upload the file.",
+          "displayName": "Record ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "attachment_column",
+        "base",
+        "file",
+        "file_content_type",
+        "recordId",
+        "tableId"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "SECRET_TEXT"
+  },
+  "displayName": "Airtable",
+  "pieceName": "@activepieces/piece-airtable",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:204698d733eb6547e9b044f3b6fdc37d6e4af0eeb367f1863d1f7cdcd9cb6a07",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-airtable",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "new_record": {
+      "description": "Triggers when a new record is added to the selected table.",
+      "displayName": "New Record",
+      "dropdown_fields": [
+        "base",
+        "tableId",
+        "viewId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "tableId": "DROPDOWN",
+        "viewId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "viewId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "View",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "tableId"
+      ]
+    },
+    "updated_record": {
+      "description": "Triggers when a record is created or updated in selected table.",
+      "displayName": "New or Updated Record",
+      "dropdown_fields": [
+        "base",
+        "sortFields",
+        "tableId",
+        "viewId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "base": "DROPDOWN",
+        "sortFields": "DROPDOWN",
+        "tableId": "DROPDOWN",
+        "viewId": "DROPDOWN"
+      },
+      "props": {
+        "base": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Base",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "sortFields": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "description": "**Last Modified Time** field will be used to watch new or updated records.Please create **Last Modified Time** field in your schema,if you don't have any timestamp field.",
+          "displayName": "Trigger field",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "tableId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "Table",
+          "refreshers": [
+            "base"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "viewId": {
+          "auth": {
+            "description": "\n    To obtain your personal token, follow these steps:\n\n    1. Log in to your Airtable account.\n    2. Visit https://airtable.com/create/tokens/ to create one\n    3. Click on \"+ Add a base\" and select the base you want to use or all bases.\n    4. Click on \"+ Add a scope\" and select \"data.records.read\", \"data.records.write\" and \"schema.bases.read\".\n    5. Click on \"Create token\" and copy the token.\n    ",
+            "displayName": "Personal Access Token",
+            "required": true,
+            "type": "SECRET_TEXT"
+          },
+          "displayName": "View",
+          "refreshers": [
+            "base",
+            "tableId"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "base",
+        "sortFields",
+        "tableId"
+      ]
+    }
+  },
+  "version": "0.6.7"
+}

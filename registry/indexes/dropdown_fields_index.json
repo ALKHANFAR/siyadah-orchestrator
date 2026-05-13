@@ -1,0 +1,600 @@
+{
+  "@activepieces/piece-airtable": {
+    "airtable_add_comment_to_record": [
+      "base",
+      "tableId"
+    ],
+    "airtable_clean_record": [
+      "base",
+      "tableId"
+    ],
+    "airtable_create_base": [
+      "workspaceId"
+    ],
+    "airtable_create_record": [
+      "base",
+      "tableId"
+    ],
+    "airtable_create_table": [
+      "base"
+    ],
+    "airtable_delete_record": [
+      "base",
+      "tableId"
+    ],
+    "airtable_find_base": [],
+    "airtable_find_record": [
+      "base",
+      "limitToView",
+      "searchField",
+      "tableId"
+    ],
+    "airtable_find_table": [
+      "base"
+    ],
+    "airtable_find_table_by_id": [
+      "base",
+      "tableId"
+    ],
+    "airtable_get_base_schema": [
+      "base"
+    ],
+    "airtable_get_record_by_id": [
+      "base",
+      "recordId",
+      "tableId"
+    ],
+    "airtable_update_record": [
+      "base",
+      "tableId"
+    ],
+    "airtable_upload_file_to_column": [
+      "attachment_column",
+      "base",
+      "tableId"
+    ],
+    "custom_api_call": []
+  },
+  "@activepieces/piece-clickup": {
+    "create_channel": [
+      "workspace_id"
+    ],
+    "create_channel_in_space_folder_list": [
+      "workspace_id"
+    ],
+    "create_folderless_list": [
+      "space_id",
+      "workspace_id"
+    ],
+    "create_message": [
+      "channel_id",
+      "workspace_id"
+    ],
+    "create_message_reaction": [
+      "workspace_id"
+    ],
+    "create_message_reply": [
+      "workspace_id"
+    ],
+    "create_subtask": [
+      "assignee_id",
+      "list_id",
+      "space_id",
+      "status_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "create_task": [
+      "assignee_id",
+      "list_id",
+      "space_id",
+      "status_id",
+      "workspace_id"
+    ],
+    "create_task_comments": [
+      "assignee_id",
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "create_task_from_template": [
+      "list_id",
+      "space_id",
+      "template_id",
+      "workspace_id"
+    ],
+    "custom_api_call": [],
+    "delete_message": [
+      "workspace_id"
+    ],
+    "delete_message_reaction": [
+      "workspace_id"
+    ],
+    "delete_task": [
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "get_accessible_custom_fields": [
+      "list_id",
+      "space_id",
+      "workspace_id"
+    ],
+    "get_channel": [
+      "channel_id",
+      "workspace_id"
+    ],
+    "get_channel_messages": [
+      "channel_id",
+      "workspace_id"
+    ],
+    "get_channels": [
+      "workspace_id"
+    ],
+    "get_list": [],
+    "get_list_task": [],
+    "get_message_reactions": [
+      "workspace_id"
+    ],
+    "get_message_replies": [
+      "workspace_id"
+    ],
+    "get_space": [
+      "space_id"
+    ],
+    "get_spaces": [
+      "team_id"
+    ],
+    "get_task_by_name": [
+      "list_id",
+      "space_id",
+      "workspace_id"
+    ],
+    "get_task_comments": [],
+    "list_workspace_tasks": [
+      "assignees",
+      "folder_id",
+      "list_id",
+      "space_id",
+      "tags",
+      "workspace_id"
+    ],
+    "list_workspace_time_entries": [
+      "assignee",
+      "folder_id",
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "set_custom_fields_value": [
+      "field_id",
+      "list_id",
+      "space_id",
+      "task_id",
+      "workspace_id"
+    ],
+    "update_message": [
+      "workspace_id"
+    ],
+    "update_task": [
+      "add_assignee",
+      "list_id",
+      "rem_assignee",
+      "space_id",
+      "status_id",
+      "task_id",
+      "workspace_id"
+    ]
+  },
+  "@activepieces/piece-gmail": {
+    "create_draft_reply": [
+      "message_id"
+    ],
+    "custom_api_call": [],
+    "gmail_get_mail": [],
+    "gmail_search_mail": [
+      "label"
+    ],
+    "reply_to_email": [
+      "message_id"
+    ],
+    "request_approval_in_mail": [],
+    "send_email": []
+  },
+  "@activepieces/piece-google-calendar": {
+    "create_google_calendar_event": [
+      "calendar_id",
+      "colorId"
+    ],
+    "create_quick_event": [
+      "calendar_id"
+    ],
+    "custom_api_call": [],
+    "delete_event": [
+      "calendar_id"
+    ],
+    "google-calendar-add-attendees": [
+      "calendar_id"
+    ],
+    "google_calendar_find_busy_free_periods": [
+      "calendar_ids"
+    ],
+    "google_calendar_get_event_by_id": [
+      "calendar_id"
+    ],
+    "google_calendar_get_events": [
+      "calendar_id"
+    ],
+    "update_event": [
+      "calendar_id",
+      "colorId"
+    ]
+  },
+  "@activepieces/piece-google-drive": {
+    "create_new_gdrive_file": [
+      "parentFolder"
+    ],
+    "create_new_gdrive_folder": [
+      "parentFolder"
+    ],
+    "custom_api_call": [],
+    "delete_gdrive_file": [],
+    "delete_permissions": [],
+    "duplicate_file": [],
+    "get-file-or-folder-by-id": [],
+    "google-drive-move-file": [
+      "folderId"
+    ],
+    "list-files": [],
+    "read-file": [],
+    "save_file_as_pdf": [],
+    "search-folder": [
+      "parentFolder"
+    ],
+    "set_public_access": [],
+    "trash_gdrive_file": [],
+    "update_permissions": [],
+    "upload_gdrive_file": [
+      "parentFolder"
+    ]
+  },
+  "@activepieces/piece-google-sheets": {
+    "clear_sheet": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "copy-worksheet": [
+      "desinationSpeadsheetId",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "create-column": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "create-spreadsheet": [
+      "folder"
+    ],
+    "create-worksheet": [
+      "spreadsheetId"
+    ],
+    "custom_api_call": [],
+    "delete-worksheet": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "delete_row": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "export_sheet": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "find-worksheet": [
+      "spreadsheetId"
+    ],
+    "find_row_by_num": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "find_rows": [
+      "columnName",
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "find_spreadsheets": [],
+    "format-row": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "get-many-rows": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "get_next_rows": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "google-sheets-insert-multiple-rows": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "insert_row": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "rename-worksheet": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "update-multiple-rows": [
+      "sheetId",
+      "spreadsheetId"
+    ],
+    "update_row": [
+      "sheetId",
+      "spreadsheetId"
+    ]
+  },
+  "@activepieces/piece-hubspot": {
+    "add-contact-to-workflow": [
+      "workflowId"
+    ],
+    "add_contact_to_list": [
+      "listId"
+    ],
+    "create-associations": [
+      "associationType",
+      "fromObjectType",
+      "toObjectIds",
+      "toObjectType"
+    ],
+    "create-blog-post": [
+      "authorId",
+      "contentGroupId"
+    ],
+    "create-company": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "create-contact": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "create-custome-object": [
+      "customObjectType"
+    ],
+    "create-deal": [
+      "additionalPropertiesToRetrieve",
+      "pipelineId",
+      "pipelineStageId"
+    ],
+    "create-line-item": [
+      "additionalPropertiesToRetrieve",
+      "productId"
+    ],
+    "create-or-update-contact": [],
+    "create-page": [],
+    "create-product": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "create-ticket": [
+      "additionalPropertiesToRetrieve",
+      "pipelineId",
+      "pipelineStageId"
+    ],
+    "custom_api_call": [],
+    "delete-page": [],
+    "find-associations": [
+      "fromObjectType",
+      "toObjectType"
+    ],
+    "find-company": [
+      "additionalPropertiesToRetrieve",
+      "firstSearchPropertyName",
+      "secondSearchPropertyName"
+    ],
+    "find-contact": [
+      "additionalPropertiesToRetrieve",
+      "firstSearchPropertyName",
+      "secondSearchPropertyName"
+    ],
+    "find-custom-object": [
+      "customObjectType"
+    ],
+    "find-deal": [
+      "additionalPropertiesToRetrieve",
+      "firstSearchPropertyName",
+      "secondSearchPropertyName"
+    ],
+    "find-line-item": [
+      "additionalPropertiesToRetrieve",
+      "firstSearchPropertyName",
+      "secondSearchPropertyName"
+    ],
+    "find-product": [
+      "additionalPropertiesToRetrieve",
+      "firstSearchPropertyName",
+      "secondSearchPropertyName"
+    ],
+    "find-ticket": [
+      "additionalPropertiesToRetrieve",
+      "firstSearchPropertyName",
+      "secondSearchPropertyName"
+    ],
+    "get-company": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "get-contact": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "get-custom-object": [
+      "customObjectType"
+    ],
+    "get-deal": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "get-line-item": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "get-owner-by-email": [],
+    "get-owner-by-id": [],
+    "get-page": [],
+    "get-pipeline-stage-details": [],
+    "get-product": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "get-ticket": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "remove-associations": [
+      "associationType",
+      "fromObjectType",
+      "toObjectIds",
+      "toObjectType"
+    ],
+    "remove-contact-from-list": [
+      "listId"
+    ],
+    "remove-email-subscription": [],
+    "update-company": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "update-contact": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "update-custome-object": [
+      "customObjectType"
+    ],
+    "update-deal": [
+      "additionalPropertiesToRetrieve",
+      "pipelineId",
+      "pipelineStageId"
+    ],
+    "update-line-item": [
+      "additionalPropertiesToRetrieve",
+      "productId"
+    ],
+    "update-product": [
+      "additionalPropertiesToRetrieve"
+    ],
+    "update-ticket": [
+      "additionalPropertiesToRetrieve",
+      "pipelineId",
+      "pipelineStageId"
+    ],
+    "upload-file": [
+      "folderId"
+    ]
+  },
+  "@activepieces/piece-slack": {
+    "custom_api_call": [],
+    "delete-message": [
+      "channel"
+    ],
+    "find-user-by-id": [],
+    "get-file": [],
+    "get-message": [
+      "channel"
+    ],
+    "getChannelHistory": [
+      "channel"
+    ],
+    "get_group_by_handle": [],
+    "invite-user-to-channel": [
+      "channel",
+      "userId"
+    ],
+    "listUsers": [],
+    "markdownToSlackFormat": [],
+    "request_action_direct_message": [
+      "userId"
+    ],
+    "request_action_message": [
+      "channel"
+    ],
+    "request_approval_direct_message": [
+      "userId"
+    ],
+    "request_approval_message": [
+      "channel"
+    ],
+    "retrieveThreadMessages": [
+      "channel"
+    ],
+    "searchMessages": [],
+    "send_channel_message": [
+      "channel"
+    ],
+    "send_direct_message": [
+      "userId"
+    ],
+    "set-channel-topic": [
+      "channel"
+    ],
+    "slack-add-reaction-to-message": [
+      "channel"
+    ],
+    "slack-create-channel": [],
+    "slack-find-user-by-email": [],
+    "slack-find-user-by-handle": [],
+    "slack-set-user-status": [],
+    "slack-update-profile": [],
+    "updateMessage": [
+      "channel"
+    ],
+    "update_group_users": [],
+    "uploadFile": [
+      "channel"
+    ]
+  },
+  "@activepieces/piece-stripe": {
+    "cancel_subscription": [
+      "subscription"
+    ],
+    "create_customer": [],
+    "create_invoice": [],
+    "create_payment_intent": [
+      "customer"
+    ],
+    "create_payment_link": [],
+    "create_price": [
+      "product"
+    ],
+    "create_product": [],
+    "create_refund": [
+      "payment_intent"
+    ],
+    "create_subscription": [
+      "customer"
+    ],
+    "custom_api_call": [],
+    "deactivate_payment_link": [
+      "payment_link_id"
+    ],
+    "find_invoice": [
+      "invoice_id"
+    ],
+    "retrieve_customer": [],
+    "retrieve_invoice": [
+      "invoice_id"
+    ],
+    "retrieve_payment_intent": [
+      "payment_intent_id"
+    ],
+    "retrieve_payout": [
+      "payout_id"
+    ],
+    "search_customer": [],
+    "search_subscriptions": [],
+    "update_customer": [
+      "customer"
+    ]
+  },
+  "@activepieces/piece-webhook": {
+    "return_response": [],
+    "return_response_and_wait_for_next_webhook": []
+  }
+}

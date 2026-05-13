@@ -1,0 +1,3125 @@
+{
+  "actions": {
+    "add-contact-to-workflow": {
+      "description": "Adds a contact to a specified workflow in your HubSpot account.",
+      "displayName": "Add Contact to Workflow",
+      "dropdown_fields": [
+        "workflowId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT",
+        "workflowId": "DROPDOWN"
+      },
+      "props": {
+        "email": {
+          "description": "The email of the contact to add to the workflow.",
+          "displayName": "Contact's Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workflowId": {
+          "displayName": "Workflow",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "email",
+        "workflowId"
+      ]
+    },
+    "add_contact_to_list": {
+      "description": "Add contact to list",
+      "displayName": "Add contact To List",
+      "dropdown_fields": [
+        "listId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT",
+        "listId": "DROPDOWN"
+      },
+      "props": {
+        "email": {
+          "displayName": "Contact Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "listId": {
+          "displayName": "List ID",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "email",
+        "listId"
+      ]
+    },
+    "create-associations": {
+      "description": "Creates associations between objects",
+      "displayName": "Create Associations",
+      "dropdown_fields": [
+        "associationType",
+        "fromObjectType",
+        "toObjectIds",
+        "toObjectType"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "associationType": "DROPDOWN",
+        "fromObjectId": "SHORT_TEXT",
+        "fromObjectType": "DROPDOWN",
+        "toObjectIds": "MULTI_SELECT_DROPDOWN",
+        "toObjectType": "DROPDOWN"
+      },
+      "props": {
+        "associationType": {
+          "displayName": "Type of the association",
+          "refreshers": [
+            "fromObjectType",
+            "toObjectType"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "fromObjectId": {
+          "description": "The ID of the object being associated.",
+          "displayName": "From Object ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "fromObjectType": {
+          "description": "The type of the object being associated.",
+          "displayName": "From Object Type",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "toObjectIds": {
+          "description": "The ID'sof the objects the from object is being associated with",
+          "displayName": "To Object IDs",
+          "refreshers": [
+            "toObjectType"
+          ],
+          "required": true,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "toObjectType": {
+          "description": "Type of the objects the from object is being associated with.",
+          "displayName": "To Object Type",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "associationType",
+        "fromObjectId",
+        "fromObjectType",
+        "toObjectIds",
+        "toObjectType"
+      ]
+    },
+    "create-blog-post": {
+      "description": "Creates a blog post in you Hubspot COS blog.",
+      "displayName": "Create COS Blog Post",
+      "dropdown_fields": [
+        "authorId",
+        "contentGroupId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "authorId": "DROPDOWN",
+        "body": "LONG_TEXT",
+        "contentGroupId": "DROPDOWN",
+        "imageUrl": "SHORT_TEXT",
+        "meta": "LONG_TEXT",
+        "slug": "SHORT_TEXT",
+        "status": "STATIC_DROPDOWN",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "authorId": {
+          "displayName": "Blog Author",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "body": {
+          "displayName": "Blog Post Content",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "contentGroupId": {
+          "displayName": "Blog URL",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "imageUrl": {
+          "displayName": "Featured Image URL",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "meta": {
+          "displayName": "Meta Description",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "slug": {
+          "description": "The slug of the blog post. This is the URL of the post on your COS blog.",
+          "displayName": "Slug",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "status": {
+          "displayName": "Publish This Post?",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Leave As Draft",
+                "value": "DRAFT"
+              },
+              {
+                "label": "Publish Immediately",
+                "value": "PUBLISHED"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "title": {
+          "displayName": "Blog Post Title",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "authorId",
+        "body",
+        "contentGroupId",
+        "imageUrl",
+        "meta",
+        "slug",
+        "status",
+        "title"
+      ]
+    },
+    "create-company": {
+      "description": "Creates a company in Hubspot.",
+      "displayName": "Create Company",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                            \n                    name, domain, industry, about_us, phone, address, address2, city, state, zip, country, website, type, description, founded_year, hs_createdate, hs_lastmodifieddate, hs_object_id, is_public, timezone, total_money_raised, total_revenue, owneremail, ownername, numberofemployees, annualrevenue, lifecyclestage, createdate, web_technologies\n                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": []
+    },
+    "create-contact": {
+      "description": "Creates a contact in Hubspot.",
+      "displayName": "Create Contact",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    firstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n                                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": []
+    },
+    "create-custome-object": {
+      "description": "Creates a custom object in Hubspot.",
+      "displayName": "Create Custom Object",
+      "dropdown_fields": [
+        "customObjectType"
+      ],
+      "dynamic_fields": [
+        "additionalPropertiesToRetrieve",
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "DYNAMIC",
+        "customObjectType": "DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional Properties to Retrieve",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "customObjectType": {
+          "displayName": "Type of Custom Object",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                            \n                    hs_object_id, hs_lastmodifieddate, hs_createdate   \n\n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Custom Object Properties",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "customObjectType"
+      ]
+    },
+    "create-deal": {
+      "description": "Creates a new deal in Hubspot.",
+      "displayName": "Create Deal",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "pipelineId",
+        "pipelineStageId"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "dealname": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "pipelineId": "DROPDOWN",
+        "pipelineStageId": "DROPDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "dealname": {
+          "displayName": "Deal Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                        \n              dealtype, dealname, amount, description, closedate, createdate, num_associated_contacts, hs_forecast_amount, hs_forecast_probability, hs_manual_forecast_category, hs_next_step, hs_object_id, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n                                                \n              **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "pipelineId": {
+          "displayName": "Deal Pipeline",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "pipelineStageId": {
+          "displayName": "Deal Stage",
+          "refreshers": [
+            "pipelineId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "dealname",
+        "pipelineId",
+        "pipelineStageId"
+      ]
+    },
+    "create-line-item": {
+      "description": "Creates a line item in Hubspot.",
+      "displayName": "Create Line Item",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "productId"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "productId": "DROPDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                            \n                    name, description, price, quantity, amount, discount, tax, createdate, hs_object_id, hs_product_id, hs_images, hs_lastmodifieddate, hs_line_item_currency_code, hs_sku, hs_url, hs_cost_of_goods_sold, hs_discount_percentage, hs_term_in_months           \n                \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "productId": {
+          "displayName": "Line Item Information: Product ID",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "productId"
+      ]
+    },
+    "create-or-update-contact": {
+      "description": "Creates a new contact or updates an existing contact based on email address.",
+      "displayName": "Create or Update Contact",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "email": "SHORT_TEXT",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "email": {
+          "displayName": "Contact Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "email"
+      ]
+    },
+    "create-page": {
+      "description": "Creates a new landing/site page.",
+      "displayName": "Create Page",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "footerHtml": "LONG_TEXT",
+        "headHtml": "LONG_TEXT",
+        "internalPageName": "SHORT_TEXT",
+        "language": "SHORT_TEXT",
+        "metaDescription": "LONG_TEXT",
+        "pageTitle": "SHORT_TEXT",
+        "pageType": "STATIC_DROPDOWN",
+        "slug": "SHORT_TEXT",
+        "state": "STATIC_DROPDOWN",
+        "templatePath": "SHORT_TEXT"
+      },
+      "props": {
+        "footerHtml": {
+          "displayName": "Additional Footer HTML",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "headHtml": {
+          "displayName": "Additional Head HTML",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "internalPageName": {
+          "displayName": "Internal Page Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "language": {
+          "defaultValue": "en-us",
+          "displayName": "Language",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "metaDescription": {
+          "displayName": "Meta Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "pageTitle": {
+          "displayName": "Page Title",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "pageType": {
+          "defaultValue": "landing_page",
+          "displayName": "Page Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Landing Page",
+                "value": "landing_page"
+              },
+              {
+                "label": "Site Page",
+                "value": "site_page"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "slug": {
+          "displayName": "Slug",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "state": {
+          "defaultValue": "DRAFT",
+          "displayName": "State",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Draft",
+                "value": "DRAFT"
+              },
+              {
+                "label": "Publish",
+                "value": "PUBLISHED_OR_SCHEDULED"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "templatePath": {
+          "description": "The path should not include a slash (/) at the start.For example,\"@hubspot/elevate/templates/blank.hubl.html\".",
+          "displayName": "Template Path",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "internalPageName",
+        "pageTitle",
+        "pageType",
+        "slug",
+        "templatePath"
+      ]
+    },
+    "create-product": {
+      "description": "Creates a product in Hubspot.",
+      "displayName": "Create Product",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    createdate, description, name, price, tax, hs_lastmodifieddate\n                                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": []
+    },
+    "create-ticket": {
+      "description": "Creates a ticket in HubSpot.",
+      "displayName": "Create Ticket",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "pipelineId",
+        "pipelineStageId"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "pipelineId": "DROPDOWN",
+        "pipelineStageId": "DROPDOWN",
+        "ticketName": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n            \n            subject, content, source_type, createdate, hs_pipeline, hs_pipeline_stage, hs_resolution, hs_ticket_category, hs_ticket_id, hs_ticket_priority, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n            \n            **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "pipelineId": {
+          "displayName": "Ticket Pipeline",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "pipelineStageId": {
+          "displayName": "Ticket Pipeline Stage",
+          "refreshers": [
+            "pipelineId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "ticketName": {
+          "description": "The name of the ticket to create.",
+          "displayName": "Ticket Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "pipelineId",
+        "pipelineStageId",
+        "ticketName"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": {
+            "authUrl": "https://app.hubspot.com/oauth/authorize",
+            "displayName": "Connection",
+            "required": true,
+            "scope": [
+              "crm.lists.read",
+              "crm.lists.write",
+              "crm.objects.companies.read",
+              "crm.objects.companies.write",
+              "crm.objects.contacts.read",
+              "crm.objects.contacts.write",
+              "crm.objects.custom.read",
+              "crm.objects.custom.write",
+              "crm.objects.deals.read",
+              "crm.objects.deals.write",
+              "crm.objects.line_items.read",
+              "crm.objects.owners.read",
+              "crm.objects.leads.read",
+              "crm.objects.leads.write",
+              "crm.schemas.companies.read",
+              "crm.schemas.contacts.read",
+              "crm.schemas.custom.read",
+              "crm.schemas.deals.read",
+              "crm.schemas.line_items.read",
+              "automation",
+              "e-commerce",
+              "tickets",
+              "content",
+              "settings.currencies.read",
+              "settings.users.read",
+              "settings.users.teams.read",
+              "files",
+              "forms",
+              "scheduler.meetings.meeting-link.read"
+            ],
+            "tokenUrl": "https://api.hubapi.com/oauth/v1/token",
+            "type": "OAUTH2"
+          },
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": {
+            "authUrl": "https://app.hubspot.com/oauth/authorize",
+            "displayName": "Connection",
+            "required": true,
+            "scope": [
+              "crm.lists.read",
+              "crm.lists.write",
+              "crm.objects.companies.read",
+              "crm.objects.companies.write",
+              "crm.objects.contacts.read",
+              "crm.objects.contacts.write",
+              "crm.objects.custom.read",
+              "crm.objects.custom.write",
+              "crm.objects.deals.read",
+              "crm.objects.deals.write",
+              "crm.objects.line_items.read",
+              "crm.objects.owners.read",
+              "crm.objects.leads.read",
+              "crm.objects.leads.write",
+              "crm.schemas.companies.read",
+              "crm.schemas.contacts.read",
+              "crm.schemas.custom.read",
+              "crm.schemas.deals.read",
+              "crm.schemas.line_items.read",
+              "automation",
+              "e-commerce",
+              "tickets",
+              "content",
+              "settings.currencies.read",
+              "settings.users.read",
+              "settings.users.teams.read",
+              "files",
+              "forms",
+              "scheduler.meetings.meeting-link.read"
+            ],
+            "tokenUrl": "https://api.hubapi.com/oauth/v1/token",
+            "type": "OAUTH2"
+          },
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "delete-page": {
+      "description": "Deletes an existing landing/site page.",
+      "displayName": "Delete Page",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "pageId": "SHORT_TEXT",
+        "pageType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "pageId": {
+          "description": "The ID of the page to delete.",
+          "displayName": "Page ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "pageType": {
+          "defaultValue": "landing_page",
+          "displayName": "Page Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Landing Page",
+                "value": "landing_page"
+              },
+              {
+                "label": "Site Page",
+                "value": "site_page"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "pageId",
+        "pageType"
+      ]
+    },
+    "find-associations": {
+      "description": "Finds associations between objects",
+      "displayName": "Find Associations",
+      "dropdown_fields": [
+        "fromObjectType",
+        "toObjectType"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "fromObjectId": "SHORT_TEXT",
+        "fromObjectType": "DROPDOWN",
+        "toObjectType": "DROPDOWN"
+      },
+      "props": {
+        "fromObjectId": {
+          "description": "The ID of the object you want to search the association.",
+          "displayName": "From Object ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "fromObjectType": {
+          "description": "The type of the object you want to search the association.",
+          "displayName": "From Object Type",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "toObjectType": {
+          "description": "Type of the object the from object is being associated with.",
+          "displayName": "To Object Type",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "fromObjectId",
+        "fromObjectType",
+        "toObjectType"
+      ]
+    },
+    "find-company": {
+      "description": "Finds a company by searching.",
+      "displayName": "Find Company",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "firstSearchPropertyName": "DROPDOWN",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DROPDOWN",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                        \n                    name, domain, industry, about_us, phone, address, address2, city, state, zip, country, website, type, description, founded_year, hs_createdate, hs_lastmodifieddate, hs_object_id, is_public, timezone, total_money_raised, total_revenue, owneremail, ownername, numberofemployees, annualrevenue, lifecyclestage, createdate, web_technologies\n\n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "find-contact": {
+      "description": "Finds a contact by searching.",
+      "displayName": "Find Contact",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "firstSearchPropertyName": "DROPDOWN",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DROPDOWN",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    firstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n                                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "find-custom-object": {
+      "description": "Finds a custom object by searching.",
+      "displayName": "Find Custom Object",
+      "dropdown_fields": [
+        "customObjectType"
+      ],
+      "dynamic_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "DYNAMIC",
+        "customObjectType": "DROPDOWN",
+        "firstSearchPropertyName": "DYNAMIC",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DYNAMIC",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional Properties to Retrieve",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "customObjectType": {
+          "displayName": "Type of Custom Object",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    hs_object_id, hs_lastmodifieddate, hs_createdate   \n                                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "customObjectType",
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "find-deal": {
+      "description": "Finds a deal by searching.",
+      "displayName": "Find Deal",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "firstSearchPropertyName": "DROPDOWN",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DROPDOWN",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                \n                      dealtype, dealname, amount, description, closedate, createdate, num_associated_contacts, hs_forecast_amount, hs_forecast_probability, hs_manual_forecast_category, hs_next_step, hs_object_id, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n                                                        \n                      **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "find-line-item": {
+      "description": "Finds a line item by searching.",
+      "displayName": "Find Line Item",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "firstSearchPropertyName": "DROPDOWN",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DROPDOWN",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                            \n                    name, description, price, quantity, amount, discount, tax, createdate, hs_object_id, hs_product_id, hs_images, hs_lastmodifieddate, hs_line_item_currency_code, hs_sku, hs_url, hs_cost_of_goods_sold, hs_discount_percentage, hs_term_in_months           \n        \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "find-product": {
+      "description": "Finds a product by searching.",
+      "displayName": "Find Product",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "firstSearchPropertyName": "DROPDOWN",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DROPDOWN",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                        \n                    createdate, description, name, price, tax, hs_lastmodifieddate       \n\n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "find-ticket": {
+      "description": "Finds a ticket by searching.",
+      "displayName": "Find Ticket",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "firstSearchPropertyName",
+        "secondSearchPropertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "firstSearchPropertyName": "DROPDOWN",
+        "firstSearchPropertyValue": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "secondSearchPropertyName": "DROPDOWN",
+        "secondSearchPropertyValue": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "firstSearchPropertyName": {
+          "displayName": "First search property name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "firstSearchPropertyValue": {
+          "displayName": "First search property value",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                        \n                    subject, content, source_type, createdate, hs_pipeline, hs_pipeline_stage, hs_resolution, hs_ticket_category, hs_ticket_id, hs_ticket_priority, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n                                                                                \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "secondSearchPropertyName": {
+          "displayName": "Second search property name",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "secondSearchPropertyValue": {
+          "displayName": "Second search property value",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "firstSearchPropertyName",
+        "firstSearchPropertyValue"
+      ]
+    },
+    "get-company": {
+      "description": "Gets a company.",
+      "displayName": "Get Company",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "companyId": "SHORT_TEXT",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "companyId": {
+          "description": "The ID of the company to get.",
+          "displayName": "Company ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\n\t\t\t\t\tname, domain, industry, about_us, phone, address, address2, city, state, zip, country, website, type, description, founded_year, hs_createdate, hs_lastmodifieddate, hs_object_id, is_public, timezone, total_money_raised, total_revenue, owneremail, ownername, numberofemployees, annualrevenue, lifecyclestage, createdate, web_technologies\n\t\t\t\t\t\n\t\t\t\t\t**Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "companyId"
+      ]
+    },
+    "get-contact": {
+      "description": "Gets a contact.",
+      "displayName": "Get Contact",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "contactId": "SHORT_TEXT",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "contactId": {
+          "description": "The ID of the contact to get.",
+          "displayName": "Contact ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\t\t\n\t\t\t\t\tfirstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t**Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "contactId"
+      ]
+    },
+    "get-custom-object": {
+      "description": "Gets a custom object.",
+      "displayName": "Get Custom Object",
+      "dropdown_fields": [
+        "customObjectType"
+      ],
+      "dynamic_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "DYNAMIC",
+        "customObjectId": "SHORT_TEXT",
+        "customObjectType": "DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional Properties to Retrieve",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "customObjectId": {
+          "description": "The ID of the custom object to get.",
+          "displayName": "Custom Object ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "customObjectType": {
+          "displayName": "Type of Custom Object",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                  \n                    hs_object_id, hs_lastmodifieddate, hs_createdate   \n      \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "customObjectId",
+        "customObjectType"
+      ]
+    },
+    "get-deal": {
+      "description": "Gets a deal.",
+      "displayName": "Get Deal",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "dealId": "SHORT_TEXT",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "dealId": {
+          "description": "The ID of the deal to get.",
+          "displayName": "Deal ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\tdealtype, dealname, amount, description, closedate, createdate, num_associated_contacts, hs_forecast_amount, hs_forecast_probability, hs_manual_forecast_category, hs_next_step, hs_object_id, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t**Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "dealId"
+      ]
+    },
+    "get-line-item": {
+      "description": "Gets a line item.",
+      "displayName": "Get Line Item",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "lineItemId": "SHORT_TEXT",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "lineItemId": {
+          "description": "The ID of the line item to get.",
+          "displayName": "Line Item ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                            \n                    name, description, price, quantity, amount, discount, tax, createdate, hs_object_id, hs_product_id, hs_images, hs_lastmodifieddate, hs_line_item_currency_code, hs_sku, hs_url, hs_cost_of_goods_sold, hs_discount_percentage, hs_term_in_months           \n\n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "lineItemId"
+      ]
+    },
+    "get-owner-by-email": {
+      "description": "Gets an existing owner by email.",
+      "displayName": "Get Owner by Email",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT"
+      },
+      "props": {
+        "email": {
+          "displayName": "Owner Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "email"
+      ]
+    },
+    "get-owner-by-id": {
+      "description": "Gets an existing owner by ID.",
+      "displayName": "Get Owner by ID",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "ownerId": "SHORT_TEXT"
+      },
+      "props": {
+        "ownerId": {
+          "displayName": "Owner ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "ownerId"
+      ]
+    },
+    "get-page": {
+      "description": "Gets landing/site page Details.",
+      "displayName": "Get Page",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "pageId": "SHORT_TEXT",
+        "pageType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "pageId": {
+          "description": "The ID of the page to get.",
+          "displayName": "Page ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "pageType": {
+          "defaultValue": "landing_page",
+          "displayName": "Page Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Landing Page",
+                "value": "landing_page"
+              },
+              {
+                "label": "Site Page",
+                "value": "site_page"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "pageId",
+        "pageType"
+      ]
+    },
+    "get-pipeline-stage-details": {
+      "description": "Finds and retrieves CRM object pipeline stage details.",
+      "displayName": "Get Pipeline Stage Details",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "objectType": "STATIC_DROPDOWN",
+        "pipelineId": "SHORT_TEXT",
+        "stageId": "SHORT_TEXT"
+      },
+      "props": {
+        "objectType": {
+          "displayName": "Object Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Tickets",
+                "value": "ticket"
+              },
+              {
+                "label": "Deal",
+                "value": "deal"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "pipelineId": {
+          "displayName": "Pipeline ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "stageId": {
+          "displayName": "Stage ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "objectType",
+        "pipelineId",
+        "stageId"
+      ]
+    },
+    "get-product": {
+      "description": "Gets a product.",
+      "displayName": "Get Product",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "productId": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\t\t\t\t\t\t\n                    createdate, description, name, price, tax, hs_lastmodifieddate\t\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t**Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "productId": {
+          "description": "The ID of the product to get.",
+          "displayName": "Product ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "productId"
+      ]
+    },
+    "get-ticket": {
+      "description": "Gets a ticket.",
+      "displayName": "Get Ticket",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "ticketId": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\tsubject, content, source_type, createdate, hs_pipeline, hs_pipeline_stage, hs_resolution, hs_ticket_category, hs_ticket_id, hs_ticket_priority, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t**Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "ticketId": {
+          "description": "The ID of the ticket to get.",
+          "displayName": "Ticket ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "ticketId"
+      ]
+    },
+    "remove-associations": {
+      "description": "Removes associations between objects",
+      "displayName": "Remove Associations",
+      "dropdown_fields": [
+        "associationType",
+        "fromObjectType",
+        "toObjectIds",
+        "toObjectType"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "associationType": "DROPDOWN",
+        "fromObjectId": "SHORT_TEXT",
+        "fromObjectType": "DROPDOWN",
+        "toObjectIds": "MULTI_SELECT_DROPDOWN",
+        "toObjectType": "DROPDOWN"
+      },
+      "props": {
+        "associationType": {
+          "displayName": "Type of the association",
+          "refreshers": [
+            "fromObjectType",
+            "toObjectType"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "fromObjectId": {
+          "description": "The ID of the object you want to remove the association from.",
+          "displayName": "From Object ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "fromObjectType": {
+          "description": "The type of the object you want to remove the association from.",
+          "displayName": "From Object Type",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "toObjectIds": {
+          "description": "The IDs of the currently associated objects that you're removing the association from.",
+          "displayName": "To Object IDs",
+          "refreshers": [
+            "toObjectType"
+          ],
+          "required": true,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "toObjectType": {
+          "description": "Type of the currently associated objects that you're removing the association from.",
+          "displayName": "To Object Type",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "associationType",
+        "fromObjectId",
+        "fromObjectType",
+        "toObjectIds",
+        "toObjectType"
+      ]
+    },
+    "remove-contact-from-list": {
+      "description": "Remove a contact from a specific list.",
+      "displayName": "Remove Contact from List",
+      "dropdown_fields": [
+        "listId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT",
+        "listId": "DROPDOWN"
+      },
+      "props": {
+        "email": {
+          "displayName": "Contact Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "listId": {
+          "displayName": "List ID",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "email",
+        "listId"
+      ]
+    },
+    "remove-email-subscription": {
+      "description": "Removes email subscription.",
+      "displayName": "Remove Email Subscription",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT"
+      },
+      "props": {
+        "email": {
+          "displayName": "Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "email"
+      ]
+    },
+    "update-company": {
+      "description": "Updates a company in Hubspot.",
+      "displayName": "Update Company",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "companyId": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "companyId": {
+          "description": "The ID of the company to update.",
+          "displayName": "Company ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                            \n                    name, domain, industry, about_us, phone, address, address2, city, state, zip, country, website, type, description, founded_year, hs_createdate, hs_lastmodifieddate, hs_object_id, is_public, timezone, total_money_raised, total_revenue, owneremail, ownername, numberofemployees, annualrevenue, lifecyclestage, createdate, web_technologies\n                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "companyId"
+      ]
+    },
+    "update-contact": {
+      "description": "Updates a contact in Hubspot.",
+      "displayName": "Update Contact",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "contactId": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "contactId": {
+          "description": "The ID of the contact to update.",
+          "displayName": "Contact ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    firstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n                                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "contactId"
+      ]
+    },
+    "update-custome-object": {
+      "description": "Updates a custom object in Hubspot.",
+      "displayName": "Update Custom Object",
+      "dropdown_fields": [
+        "customObjectType"
+      ],
+      "dynamic_fields": [
+        "additionalPropertiesToRetrieve",
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "DYNAMIC",
+        "customObjectId": "SHORT_TEXT",
+        "customObjectType": "DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional Properties to Retrieve",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "customObjectId": {
+          "description": "The ID of the custom object to update.",
+          "displayName": "Custom Object ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "customObjectType": {
+          "displayName": "Type of Custom Object",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                            \n                    hs_object_id, hs_lastmodifieddate, hs_createdate   \n\n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Custom Object Properties",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "customObjectId",
+        "customObjectType"
+      ]
+    },
+    "update-deal": {
+      "description": "Updates a deal in HubSpot.",
+      "displayName": "Update Deal",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "pipelineId",
+        "pipelineStageId"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "dealId": "SHORT_TEXT",
+        "dealname": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "pipelineId": "DROPDOWN",
+        "pipelineStageId": "DROPDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "dealId": {
+          "description": "The ID of the deal to update.",
+          "displayName": "Deal ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "dealname": {
+          "displayName": "Deal Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t  dealtype, dealname, amount, description, closedate, createdate, num_associated_contacts, hs_forecast_amount, hs_forecast_probability, hs_manual_forecast_category, hs_next_step, hs_object_id, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t  **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "pipelineId": {
+          "displayName": "Deal Pipeline",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "pipelineStageId": {
+          "displayName": "Deal Stage",
+          "refreshers": [
+            "pipelineId"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "dealId"
+      ]
+    },
+    "update-line-item": {
+      "description": "Updates a line item in Hubspot.",
+      "displayName": "Update Line Item",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "productId"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "lineItemId": "SHORT_TEXT",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "productId": "DROPDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "lineItemId": {
+          "description": "The ID of the line item to update.",
+          "displayName": "Line Item ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                            \n                    name, description, price, quantity, amount, discount, tax, createdate, hs_object_id, hs_product_id, hs_images, hs_lastmodifieddate, hs_line_item_currency_code, hs_sku, hs_url, hs_cost_of_goods_sold, hs_discount_percentage, hs_term_in_months           \n                \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "productId": {
+          "displayName": "Line Item Information: Product ID",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "lineItemId"
+      ]
+    },
+    "update-product": {
+      "description": "Updates a product in Hubspot.",
+      "displayName": "Update Product",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "productId": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    createdate, description, name, price, tax, hs_lastmodifieddate\n                                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "productId": {
+          "description": "The ID of the product to update.",
+          "displayName": "Product ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "productId"
+      ]
+    },
+    "update-ticket": {
+      "description": "Updates a ticket in HubSpot.",
+      "displayName": "Update Ticket",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "pipelineId",
+        "pipelineStageId"
+      ],
+      "dynamic_fields": [
+        "objectProperties"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "objectProperties": "DYNAMIC",
+        "pipelineId": "DROPDOWN",
+        "pipelineStageId": "DROPDOWN",
+        "ticketId": "SHORT_TEXT",
+        "ticketName": "SHORT_TEXT"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n            \n            subject, content, source_type, createdate, hs_pipeline, hs_pipeline_stage, hs_resolution, hs_ticket_category, hs_ticket_id, hs_ticket_priority, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n            \n            **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "objectProperties": {
+          "displayName": "Object Properties",
+          "refreshers": [],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "pipelineId": {
+          "displayName": "Ticket Pipeline",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "pipelineStageId": {
+          "displayName": "Ticket Pipeline Stage",
+          "refreshers": [
+            "pipelineId"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "ticketId": {
+          "description": "The ID of the ticket to update.",
+          "displayName": "Ticket ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "ticketName": {
+          "displayName": "Ticket Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "ticketId"
+      ]
+    },
+    "upload-file": {
+      "description": "Uploads a file to HubSpot File Manager.",
+      "displayName": "Upload File",
+      "dropdown_fields": [
+        "folderId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "accessLevel": "STATIC_DROPDOWN",
+        "file": "FILE",
+        "fileName": "SHORT_TEXT",
+        "folderId": "DROPDOWN"
+      },
+      "props": {
+        "accessLevel": {
+          "displayName": "Access Level",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "PUBLIC_INDEXABLE",
+                "value": "PUBLIC_INDEXABLE"
+              },
+              {
+                "label": "PUBLIC_NOT_INDEXABLE",
+                "value": "PUBLIC_NOT_INDEXABLE"
+              },
+              {
+                "label": "PRIVATE",
+                "value": "PRIVATE"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "file": {
+          "displayName": "File",
+          "required": true,
+          "type": "FILE"
+        },
+        "fileName": {
+          "displayName": "File Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "folderId": {
+          "displayName": "Folder",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "accessLevel",
+        "file",
+        "fileName",
+        "folderId"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "HubSpot",
+  "pieceName": "@activepieces/piece-hubspot",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:07c90d2e3cd2b6c7fddd9839347db4bf1e5a556a4a604680b2384326e354b4ea",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-hubspot",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "deal-stage-updated": {
+      "description": "Triggers when a deal enters a specified stage.",
+      "displayName": "Updated Deal Stage",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "pipelineId",
+        "stageId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN",
+        "pipelineId": "DROPDOWN",
+        "stageId": "DROPDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tdealtype, dealname, amount, description, closedate, createdate, num_associated_contacts, hs_forecast_amount, hs_forecast_probability, hs_manual_forecast_category, hs_next_step, hs_object_id, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id, hs_v2_date_entered_current_stage\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t**Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "pipelineId": {
+          "displayName": "Deal Pipeline",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "stageId": {
+          "displayName": "Deal Stage",
+          "refreshers": [
+            "pipelineId"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "pipelineId",
+        "stageId"
+      ]
+    },
+    "new-blog-article": {
+      "description": "Triggers when a new article is added to your COS blog.",
+      "displayName": "New COS Blog Article",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "articleState": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "articleState": {
+          "displayName": "Article State",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Published Only",
+                "value": "PUBLISHED"
+              },
+              {
+                "label": "Draft Only",
+                "value": "DRAFT"
+              },
+              {
+                "label": "Both",
+                "value": "BOTH"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "articleState"
+      ]
+    },
+    "new-company": {
+      "description": "Trigger when a new company is added.",
+      "displayName": "New Company",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                \n                  name, domain, industry, about_us, phone, address, address2, city, state, zip, country, website, type, description, founded_year, hs_createdate, hs_lastmodifieddate, hs_object_id, is_public, timezone, total_money_raised, total_revenue, owneremail, ownername, numberofemployees, annualrevenue, lifecyclestage, createdate, web_technologies\n                                \n                  **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-company-property-change": {
+      "description": "Triggers when a specified property is updated on a company.",
+      "displayName": "New Company Property Change",
+      "dropdown_fields": [
+        "propertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "propertyName": "DROPDOWN"
+      },
+      "props": {
+        "propertyName": {
+          "displayName": "Property Name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "propertyName"
+      ]
+    },
+    "new-contact": {
+      "description": "Trigger when new contact is available.",
+      "displayName": "New Contact",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                        \n              firstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n                                        \n              **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-contact-in-list": {
+      "description": "Triggers when a new contact is added to the specified list.",
+      "displayName": "New Contact in List",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve",
+        "listId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "listId": "DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "listId": {
+          "displayName": "Contact List",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                         \n                         firstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n                                                 \n                         **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "listId"
+      ]
+    },
+    "new-contact-property-change": {
+      "description": "Triggers when a specified property is updated on a contact.",
+      "displayName": "New Contact Property Change",
+      "dropdown_fields": [
+        "propertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "propertyName": "DROPDOWN"
+      },
+      "props": {
+        "propertyName": {
+          "displayName": "Property Name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "propertyName"
+      ]
+    },
+    "new-custom-object": {
+      "description": "Triggers when new custom object is available.",
+      "displayName": "New Custom Object",
+      "dropdown_fields": [
+        "customObjectType"
+      ],
+      "dynamic_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "DYNAMIC",
+        "customObjectType": "DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional Properties to Retrieve",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "customObjectType": {
+          "displayName": "Type of Custom Object",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                    \n                    hs_object_id, hs_lastmodifieddate, hs_createdate   \n                        \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "customObjectType"
+      ]
+    },
+    "new-custom-object-property-change": {
+      "description": "Triggers when a specified property is updated on a custom object.",
+      "displayName": "New Custom Object Property Change",
+      "dropdown_fields": [
+        "customObjectType"
+      ],
+      "dynamic_fields": [
+        "propertyName"
+      ],
+      "property_types": {
+        "customObjectType": "DROPDOWN",
+        "propertyName": "DYNAMIC"
+      },
+      "props": {
+        "customObjectType": {
+          "displayName": "Type of Custom Object",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "propertyName": {
+          "displayName": "Property Name",
+          "refreshers": [
+            "customObjectType"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "customObjectType",
+        "propertyName"
+      ]
+    },
+    "new-deal": {
+      "description": "Trigger when a new deal is added.",
+      "displayName": "New Deal",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                        \n\t\t\t\t\tdealtype, dealname, amount, description, closedate, createdate, num_associated_contacts, hs_forecast_amount, hs_forecast_probability, hs_manual_forecast_category, hs_next_step, hs_object_id, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n                            \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-deal-property-change": {
+      "description": "Triggers when a specified property is updated on a deal.",
+      "displayName": "New Deal Property Change",
+      "dropdown_fields": [
+        "propertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "propertyName": "DROPDOWN"
+      },
+      "props": {
+        "propertyName": {
+          "displayName": "Property Name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "propertyName"
+      ]
+    },
+    "new-email-event": {
+      "description": "Triggers when all,or specific new email event is available.",
+      "displayName": "New Email Event",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "eventType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "eventType": {
+          "displayName": "Event Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Sent",
+                "value": "SENT"
+              },
+              {
+                "label": "Dropped",
+                "value": "DROPPED"
+              },
+              {
+                "label": "Processed",
+                "value": "PROCESSED"
+              },
+              {
+                "label": "Delivered",
+                "value": "DELIVERED"
+              },
+              {
+                "label": "Deferred",
+                "value": "DEFERRED"
+              },
+              {
+                "label": "Bounce",
+                "value": "BOUNCE"
+              },
+              {
+                "label": "Open",
+                "value": "OPEN"
+              },
+              {
+                "label": "Click",
+                "value": "CLICK"
+              },
+              {
+                "label": "Status Change",
+                "value": "STATUSCHANGE"
+              },
+              {
+                "label": "Spam Report",
+                "value": "SPAMREPORT"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": []
+    },
+    "new-email-subscriptions-timeline": {
+      "description": "Triggers when a new email timeline subscription added for the portal.",
+      "displayName": "New Email Subscriptions Timeline",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new-engagement": {
+      "description": "Triggers when a new engagement is created.",
+      "displayName": "New Engagement",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "eventType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "eventType": {
+          "displayName": "Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Note",
+                "value": "NOTE"
+              },
+              {
+                "label": "Task",
+                "value": "TASK"
+              },
+              {
+                "label": "Meeting",
+                "value": "MEETING"
+              },
+              {
+                "label": "Email",
+                "value": "EMAIL"
+              },
+              {
+                "label": "Call",
+                "value": "CALL"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": []
+    },
+    "new-form-submission": {
+      "description": "Triggers when a form is submitted.",
+      "displayName": "New Form Submission",
+      "dropdown_fields": [
+        "formId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "allowMultipleFiles": "CHECKBOX",
+        "formId": "DROPDOWN"
+      },
+      "props": {
+        "allowMultipleFiles": {
+          "defaultValue": false,
+          "description": "Return all file fields as array",
+          "displayName": "Allow Multiple Files",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "formId": {
+          "displayName": "Form",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "allowMultipleFiles",
+        "formId"
+      ]
+    },
+    "new-line-item": {
+      "description": "Triggers when new line item is available.",
+      "displayName": "New Line Item",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                    \n                    name, description, price, quantity, amount, discount, tax, createdate, hs_object_id, hs_product_id, hs_images, hs_lastmodifieddate, hs_line_item_currency_code, hs_sku, hs_url, hs_cost_of_goods_sold, hs_discount_percentage, hs_term_in_months           \n                        \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-or-updated-company": {
+      "description": "Triggers when a company recently created or updated.",
+      "displayName": "Company Recently Created or Updated",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    name, domain, industry, about_us, phone, address, address2, city, state, zip, country, website, type, description, founded_year, hs_createdate, hs_lastmodifieddate, hs_object_id, is_public, timezone, total_money_raised, total_revenue, owneremail, ownername, numberofemployees, annualrevenue, lifecyclestage, createdate, web_technologies\n                                    \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-or-updated-contact": {
+      "description": "Triggers when a contact recently created or updated.",
+      "displayName": "Contact Recently Created or Updated",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    firstname, lastname, email, company, website, mobilephone, phone, fax, address, city, state, zip, salutation, country, jobtitle, hs_createdate, hs_email_domain, hs_object_id, lastmodifieddate, hs_persona, hs_language, lifecyclestage, createdate, numemployees, annualrevenue, industry\t\t\t\n                                    \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-or-updated-line-item": {
+      "description": "Triggers when a line item recently created or updated.",
+      "displayName": "Line Item Recently Created or Updated",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    name, description, price, quantity, amount, discount, tax, createdate, hs_object_id, hs_product_id, hs_images, hs_lastmodifieddate, hs_line_item_currency_code, hs_sku, hs_url, hs_cost_of_goods_sold, hs_discount_percentage, hs_term_in_months           \n                                    \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-or-updated-product": {
+      "description": "Triggers when a product recently created or updated.",
+      "displayName": "Product Recently Created or Updated",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                    \n                    createdate, description, name, price, tax, hs_lastmodifieddate\n                                    \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-product": {
+      "description": "Triggers when new product is available.",
+      "displayName": "New Product",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                    \n                    createdate, description, name, price, tax, hs_lastmodifieddate\n                        \n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-task": {
+      "description": "Trigger when a new task is added.",
+      "displayName": "New Task",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                        \n\t\t\t\t\ths_task_subject, hs_task_type, hs_task_priority, hubspot_owner_id, hs_timestamp, hs_queue_membership_ids, hs_lastmodifieddate,hs_createdate\n\n                    **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-ticket": {
+      "description": "Trigger when new ticket is available.",
+      "displayName": "New Ticket",
+      "dropdown_fields": [
+        "additionalPropertiesToRetrieve"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "additionalPropertiesToRetrieve": "MULTI_SELECT_DROPDOWN",
+        "markdown": "MARKDOWN"
+      },
+      "props": {
+        "additionalPropertiesToRetrieve": {
+          "displayName": "Additional properties to retrieve",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "markdown": {
+          "description": "### Properties to retrieve:\n                                                        \n              subject, content, source_type, createdate, hs_pipeline, hs_pipeline_stage, hs_resolution, hs_ticket_category, hs_ticket_id, hs_ticket_priority, hs_lastmodifieddate, hubspot_owner_id, hubspot_team_id\n\n              **Specify here a list of additional properties to retrieve**",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": []
+    },
+    "new-ticket-property-change": {
+      "description": "Triggers when a specified property is updated on a ticket.",
+      "displayName": "New Ticket Property Change",
+      "dropdown_fields": [
+        "propertyName"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "propertyName": "DROPDOWN"
+      },
+      "props": {
+        "propertyName": {
+          "displayName": "Property Name",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "propertyName"
+      ]
+    }
+  },
+  "version": "0.8.4"
+}

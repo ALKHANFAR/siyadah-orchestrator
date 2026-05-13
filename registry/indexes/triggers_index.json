@@ -1,0 +1,123 @@
+{
+  "@activepieces/piece-airtable": [
+    "new_record",
+    "updated_record"
+  ],
+  "@activepieces/piece-clickup": [
+    "clickup_trigger_automation_created",
+    "clickup_trigger_folder_created",
+    "clickup_trigger_folder_deleted",
+    "clickup_trigger_folder_updated",
+    "clickup_trigger_goal_created",
+    "clickup_trigger_goal_deleted",
+    "clickup_trigger_goal_updated",
+    "clickup_trigger_key_result_created",
+    "clickup_trigger_key_result_deleted",
+    "clickup_trigger_key_result_updated",
+    "clickup_trigger_list_created",
+    "clickup_trigger_list_deleted",
+    "clickup_trigger_list_updated",
+    "clickup_trigger_space_created",
+    "clickup_trigger_space_deleted",
+    "clickup_trigger_space_updated",
+    "clickup_trigger_task_assignee_updated",
+    "clickup_trigger_task_comment_posted",
+    "clickup_trigger_task_comment_updated",
+    "clickup_trigger_task_created",
+    "clickup_trigger_task_deleted",
+    "clickup_trigger_task_due_date_updated",
+    "clickup_trigger_task_moved",
+    "clickup_trigger_task_priority_updated",
+    "clickup_trigger_task_status_updated",
+    "clickup_trigger_task_tag_updated",
+    "clickup_trigger_task_time_estimate_updated",
+    "clickup_trigger_task_time_tracked_updated",
+    "clickup_trigger_task_updated",
+    "task_tag_updated"
+  ],
+  "@activepieces/piece-gmail": [
+    "gmail_new_email_received",
+    "new_attachment",
+    "new_label",
+    "new_labeled_email"
+  ],
+  "@activepieces/piece-google-calendar": [
+    "event_cancelled",
+    "event_ends",
+    "event_starts_in",
+    "new_calendar",
+    "new_event",
+    "new_event_matching_search",
+    "new_or_updated_event"
+  ],
+  "@activepieces/piece-google-drive": [
+    "new_file",
+    "new_folder"
+  ],
+  "@activepieces/piece-google-sheets": [
+    "google-sheets-new-or-updated-row",
+    "googlesheets_new_row_added",
+    "new-spreadsheet",
+    "new-worksheet"
+  ],
+  "@activepieces/piece-hubspot": [
+    "deal-stage-updated",
+    "new-blog-article",
+    "new-company",
+    "new-company-property-change",
+    "new-contact",
+    "new-contact-in-list",
+    "new-contact-property-change",
+    "new-custom-object",
+    "new-custom-object-property-change",
+    "new-deal",
+    "new-deal-property-change",
+    "new-email-event",
+    "new-email-subscriptions-timeline",
+    "new-engagement",
+    "new-form-submission",
+    "new-line-item",
+    "new-or-updated-company",
+    "new-or-updated-contact",
+    "new-or-updated-line-item",
+    "new-or-updated-product",
+    "new-product",
+    "new-task",
+    "new-ticket",
+    "new-ticket-property-change"
+  ],
+  "@activepieces/piece-slack": [
+    "channel_created",
+    "new-command-in-direct-message",
+    "new-direct-message",
+    "new-mention-in-direct-message",
+    "new-message",
+    "new-message-in-channel",
+    "new-modal-interaction",
+    "new-saved-message",
+    "new-team-custom-emoji",
+    "new-user",
+    "new_command",
+    "new_mention",
+    "new_reaction_added",
+    "new_reaction_removed"
+  ],
+  "@activepieces/piece-stripe": [
+    "canceled_subscription",
+    "checkout_session_completed",
+    "invoice_payment_failed",
+    "new_charge",
+    "new_customer",
+    "new_dispute",
+    "new_invoice",
+    "new_payment",
+    "new_payment_link",
+    "new_refund",
+    "new_subscription",
+    "payment_failed",
+    "updated_subscription"
+  ],
+  "@activepieces/piece-webhook": [
+    "catch_webhook"
+  ]
+}

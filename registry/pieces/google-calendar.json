@@ -1,0 +1,1801 @@
+{
+  "actions": {
+    "create_google_calendar_event": {
+      "description": "Add Event",
+      "displayName": "Create Event",
+      "dropdown_fields": [
+        "calendar_id",
+        "colorId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "attendees": "ARRAY",
+        "calendar_id": "DROPDOWN",
+        "colorId": "DROPDOWN",
+        "create_meet_link": "CHECKBOX",
+        "description": "LONG_TEXT",
+        "end_date_time": "DATE_TIME",
+        "guests_can_invite_others": "CHECKBOX",
+        "guests_can_modify": "CHECKBOX",
+        "guests_can_see_other_guests": "CHECKBOX",
+        "location": "SHORT_TEXT",
+        "send_notifications": "STATIC_DROPDOWN",
+        "start_date_time": "DATE_TIME",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "attendees": {
+          "description": "Emails of the attendees (guests)",
+          "displayName": "Attendees",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "colorId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Color",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "create_meet_link": {
+          "defaultValue": false,
+          "description": "Automatically create a Google Meet video conference link for this event",
+          "displayName": "Create Google Meet Link",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "description": {
+          "description": "Description of the event. You can use HTML tags here.",
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "end_date_time": {
+          "description": "By default it'll be 30 min post start time",
+          "displayName": "End date time of the event",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "guests_can_invite_others": {
+          "defaultValue": false,
+          "displayName": "Guests can invite others",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "guests_can_modify": {
+          "defaultValue": false,
+          "displayName": "Guests can modify",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "guests_can_see_other_guests": {
+          "defaultValue": false,
+          "displayName": "Guests can see other guests",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "location": {
+          "displayName": "Location",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "send_notifications": {
+          "defaultValue": "all",
+          "displayName": "Send Notifications",
+          "options": {
+            "options": [
+              {
+                "label": "Yes, to everyone",
+                "value": "all"
+              },
+              {
+                "label": "To non-Google Calendar guests only",
+                "value": "externalOnly"
+              },
+              {
+                "label": "To no one",
+                "value": "none"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "start_date_time": {
+          "displayName": "Start date time of the event",
+          "required": true,
+          "type": "DATE_TIME"
+        },
+        "title": {
+          "displayName": "Title of the event",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "send_notifications",
+        "start_date_time",
+        "title"
+      ]
+    },
+    "create_quick_event": {
+      "description": "Add Quick Calendar Event",
+      "displayName": "Create Quick Event",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "send_updates": "STATIC_DROPDOWN",
+        "text": "LONG_TEXT"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "send_updates": {
+          "description": "Guests who should receive notifications about the creation of the new event.",
+          "displayName": "Send Updates",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "All",
+                "value": "all"
+              },
+              {
+                "label": "External Only",
+                "value": "externalOnly"
+              },
+              {
+                "label": "none",
+                "value": "none"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "text": {
+          "description": "The text describing the event to be created",
+          "displayName": "Summary",
+          "required": true,
+          "type": "LONG_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "text"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "delete_event": {
+      "description": "Deletes an event from Google Calendar.",
+      "displayName": "Delete Event",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "eventId": "SHORT_TEXT"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "eventId": {
+          "displayName": "Event ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "eventId"
+      ]
+    },
+    "google-calendar-add-attendees": {
+      "description": "Add one or more person to existing event.",
+      "displayName": "Add Attendees to Event",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "attendees": "ARRAY",
+        "calendar_id": "DROPDOWN",
+        "eventId": "SHORT_TEXT"
+      },
+      "props": {
+        "attendees": {
+          "description": "Emails of the attendees (guests)",
+          "displayName": "Attendees",
+          "required": true,
+          "type": "ARRAY"
+        },
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "eventId": {
+          "displayName": "Event ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "attendees",
+        "calendar_id",
+        "eventId"
+      ]
+    },
+    "google_calendar_find_busy_free_periods": {
+      "description": "Finds free/busy calendar details from Google Calendar.",
+      "displayName": "Find Busy/Free Periods in Calendar",
+      "dropdown_fields": [
+        "calendar_ids"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_ids": "MULTI_SELECT_DROPDOWN",
+        "end_date": "DATE_TIME",
+        "start_date": "DATE_TIME"
+      },
+      "props": {
+        "calendar_ids": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "Select the calendars to check for busy periods.",
+          "displayName": "Calendars",
+          "refreshers": [],
+          "required": true,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "end_date": {
+          "description": "The end of the time range to check.",
+          "displayName": "End Time",
+          "required": true,
+          "type": "DATE_TIME"
+        },
+        "start_date": {
+          "description": "The start of the time range to check.",
+          "displayName": "Start Time",
+          "required": true,
+          "type": "DATE_TIME"
+        }
+      },
+      "required_fields": [
+        "calendar_ids",
+        "end_date",
+        "start_date"
+      ]
+    },
+    "google_calendar_get_event_by_id": {
+      "description": "Fetch event details by its unique ID from Google Calendar.",
+      "displayName": "Get Event by ID",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "event_id": "SHORT_TEXT",
+        "max_attendees": "NUMBER",
+        "time_zone": "SHORT_TEXT"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "event_id": {
+          "description": "The unique ID of the event (e.g., \"abc123def456\"). You can find this in the event URL or from other calendar actions.",
+          "displayName": "Event ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "max_attendees": {
+          "description": "Maximum number of attendees to include in the response. If there are more attendees, only the participant is returned.",
+          "displayName": "Max Attendees",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "time_zone": {
+          "description": "Time zone for the response (e.g., \"America/New_York\", \"Europe/London\"). Defaults to the calendar's time zone if not specified.",
+          "displayName": "Time Zone",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "event_id"
+      ]
+    },
+    "google_calendar_get_events": {
+      "description": "Get Events",
+      "displayName": "Get all Events",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "end_date": "DATE_TIME",
+        "event_types": "STATIC_MULTI_SELECT_DROPDOWN",
+        "search": "SHORT_TEXT",
+        "singleEvents": "CHECKBOX",
+        "start_date": "DATE_TIME"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "end_date": {
+          "displayName": "Date to",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "event_types": {
+          "defaultValue": [
+            "default",
+            "focusTime",
+            "outOfOffice"
+          ],
+          "description": "Select event types",
+          "displayName": "Event types",
+          "options": {
+            "options": [
+              {
+                "label": "Default",
+                "value": "default"
+              },
+              {
+                "label": "Out Of Office",
+                "value": "outOfOffice"
+              },
+              {
+                "label": "Focus Time",
+                "value": "focusTime"
+              },
+              {
+                "label": "Working Location",
+                "value": "workingLocation"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_MULTI_SELECT_DROPDOWN"
+        },
+        "search": {
+          "displayName": "Search Term",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "singleEvents": {
+          "defaultValue": false,
+          "description": "Whether to expand recurring events into instances and only return single one-off events and instances of recurring events, but not the underlying recurring events themselves.",
+          "displayName": "Expand Recurring Event?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "start_date": {
+          "displayName": "Date from",
+          "required": false,
+          "type": "DATE_TIME"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "event_types",
+        "singleEvents"
+      ]
+    },
+    "update_event": {
+      "description": "Updates an event in Google Calendar.",
+      "displayName": "Update Event",
+      "dropdown_fields": [
+        "calendar_id",
+        "colorId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "attendees": "ARRAY",
+        "calendar_id": "DROPDOWN",
+        "colorId": "DROPDOWN",
+        "description": "LONG_TEXT",
+        "end_date_time": "DATE_TIME",
+        "eventId": "SHORT_TEXT",
+        "guests_can_invite_others": "CHECKBOX",
+        "guests_can_modify": "CHECKBOX",
+        "guests_can_see_other_guests": "CHECKBOX",
+        "location": "SHORT_TEXT",
+        "start_date_time": "DATE_TIME",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "attendees": {
+          "description": "Emails of the attendees (guests)",
+          "displayName": "Attendees",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "colorId": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Color",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "description": {
+          "description": "Description of the event. You can use HTML tags here.",
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "end_date_time": {
+          "displayName": "End date time of the event",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "eventId": {
+          "displayName": "Event ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "guests_can_invite_others": {
+          "defaultValue": false,
+          "displayName": "Guests can invite others",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "guests_can_modify": {
+          "defaultValue": false,
+          "displayName": "Guests can modify",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "guests_can_see_other_guests": {
+          "defaultValue": false,
+          "displayName": "Guests can see other guests",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "location": {
+          "displayName": "Location",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "start_date_time": {
+          "displayName": "Start date time of the event",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "title": {
+          "displayName": "Title of the event",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "eventId"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "Google Calendar",
+  "pieceName": "@activepieces/piece-google-calendar",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:4b57bc0142b41fbc6f9bf992aefe692df184678b0c25bd6a4a7fec863c64386d",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-google-calendar",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "event_cancelled": {
+      "description": "Fires when an event is canceled or deleted.",
+      "displayName": "Event Cancelled",
+      "dropdown_fields": [
+        "calendar_id",
+        "event_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "cancellation_reason": "STATIC_MULTI_SELECT_DROPDOWN",
+        "event_id": "DROPDOWN",
+        "specific_event": "CHECKBOX"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "cancellation_reason": {
+          "description": "Filter by specific types of cancellations (optional)",
+          "displayName": "Cancellation Reasons",
+          "options": {
+            "options": [
+              {
+                "label": "Event Deleted",
+                "value": "deleted"
+              },
+              {
+                "label": "Attendee Declined",
+                "value": "declined"
+              },
+              {
+                "label": "Event Rescheduled",
+                "value": "rescheduled"
+              },
+              {
+                "label": "Other Cancellations",
+                "value": "other"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_MULTI_SELECT_DROPDOWN"
+        },
+        "event_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Event",
+          "refreshers": [
+            "calendar_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "specific_event": {
+          "defaultValue": false,
+          "description": "Enable to monitor a specific event instead of all events in the calendar.",
+          "displayName": "Target Specific Event",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "calendar_id"
+      ]
+    },
+    "event_ends": {
+      "description": "Fires when an event ends.",
+      "displayName": "Event Ends",
+      "dropdown_fields": [
+        "calendar_id",
+        "event_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "event_id": "DROPDOWN",
+        "specific_event": "CHECKBOX"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "event_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Event",
+          "refreshers": [
+            "calendar_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "specific_event": {
+          "defaultValue": false,
+          "description": "Enable to monitor a specific event instead of all events in the calendar.",
+          "displayName": "Target Specific Event",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "calendar_id"
+      ]
+    },
+    "event_starts_in": {
+      "description": "Fires at a specified amount of time before an event starts (e.g., a reminder).",
+      "displayName": "Event Start (Time Before)",
+      "dropdown_fields": [
+        "calendar_id",
+        "event_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "event_id": "DROPDOWN",
+        "specific_event": "CHECKBOX",
+        "time_unit": "STATIC_DROPDOWN",
+        "time_value": "NUMBER"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "event_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Event",
+          "refreshers": [
+            "calendar_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "specific_event": {
+          "defaultValue": false,
+          "description": "Enable to monitor a specific event instead of all events in the calendar.",
+          "displayName": "Target Specific Event",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "time_unit": {
+          "defaultValue": "minutes",
+          "displayName": "Time Unit",
+          "options": {
+            "options": [
+              {
+                "label": "Minutes",
+                "value": "minutes"
+              },
+              {
+                "label": "Hours",
+                "value": "hours"
+              },
+              {
+                "label": "Days",
+                "value": "days"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "time_value": {
+          "defaultValue": 15,
+          "description": "The amount of time before the event starts.",
+          "displayName": "Time Before",
+          "required": true,
+          "type": "NUMBER"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "time_unit",
+        "time_value"
+      ]
+    },
+    "new_calendar": {
+      "description": "Fires when a new calendar is created or becomes accessible.",
+      "displayName": "New Calendar",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "access_role_filter": "STATIC_MULTI_SELECT_DROPDOWN",
+        "calendar_name_filter": "SHORT_TEXT",
+        "exclude_shared": "CHECKBOX"
+      },
+      "props": {
+        "access_role_filter": {
+          "description": "Only trigger for calendars with specific access roles (optional)",
+          "displayName": "Access Role Filter",
+          "options": {
+            "options": [
+              {
+                "label": "Owner",
+                "value": "owner"
+              },
+              {
+                "label": "Writer",
+                "value": "writer"
+              },
+              {
+                "label": "Reader",
+                "value": "reader"
+              },
+              {
+                "label": "Free/Busy Reader",
+                "value": "freeBusyReader"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_MULTI_SELECT_DROPDOWN"
+        },
+        "calendar_name_filter": {
+          "description": "Only trigger for calendars containing this text in name or description (optional)",
+          "displayName": "Calendar Name Filter",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "exclude_shared": {
+          "defaultValue": false,
+          "description": "Only trigger for calendars you own, not shared calendars",
+          "displayName": "Exclude Shared Calendars",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": []
+    },
+    "new_event": {
+      "description": "Fires when a new event is created in a calendar.",
+      "displayName": "New Event",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "event_types": "STATIC_MULTI_SELECT_DROPDOWN",
+        "exclude_all_day": "CHECKBOX",
+        "search_filter": "SHORT_TEXT"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "event_types": {
+          "description": "Filter by specific event types (leave empty to monitor all event types)",
+          "displayName": "Event Types to Monitor",
+          "options": {
+            "options": [
+              {
+                "label": "Default Events",
+                "value": "default"
+              },
+              {
+                "label": "Birthday Events",
+                "value": "birthday"
+              },
+              {
+                "label": "Focus Time",
+                "value": "focusTime"
+              },
+              {
+                "label": "Out of Office",
+                "value": "outOfOffice"
+              },
+              {
+                "label": "Working Location",
+                "value": "workingLocation"
+              },
+              {
+                "label": "From Gmail",
+                "value": "fromGmail"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_MULTI_SELECT_DROPDOWN"
+        },
+        "exclude_all_day": {
+          "defaultValue": false,
+          "description": "Skip triggering for all-day events",
+          "displayName": "Exclude All-Day Events",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "search_filter": {
+          "description": "Only trigger for events containing this text in title, description, or location (optional)",
+          "displayName": "Search Filter",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id"
+      ]
+    },
+    "new_event_matching_search": {
+      "description": "Fires when a new event is created that matches a specified search term.",
+      "displayName": "New Event Matching Search",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "event_types": "STATIC_MULTI_SELECT_DROPDOWN",
+        "search_fields": "STATIC_MULTI_SELECT_DROPDOWN",
+        "search_term": "SHORT_TEXT"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "event_types": {
+          "description": "Filter by specific event types (optional)",
+          "displayName": "Event Types",
+          "options": {
+            "options": [
+              {
+                "label": "Default Events",
+                "value": "default"
+              },
+              {
+                "label": "Birthday Events",
+                "value": "birthday"
+              },
+              {
+                "label": "Focus Time",
+                "value": "focusTime"
+              },
+              {
+                "label": "Out of Office",
+                "value": "outOfOffice"
+              },
+              {
+                "label": "Working Location",
+                "value": "workingLocation"
+              },
+              {
+                "label": "From Gmail",
+                "value": "fromGmail"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_MULTI_SELECT_DROPDOWN"
+        },
+        "search_fields": {
+          "description": "Specify which fields to search in (leave empty to use Google's default search across all fields)",
+          "displayName": "Search In Fields",
+          "options": {
+            "options": [
+              {
+                "label": "Event Title/Summary",
+                "value": "summary"
+              },
+              {
+                "label": "Event Description",
+                "value": "description"
+              },
+              {
+                "label": "Event Location",
+                "value": "location"
+              },
+              {
+                "label": "Attendee Names/Emails",
+                "value": "attendees"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_MULTI_SELECT_DROPDOWN"
+        },
+        "search_term": {
+          "description": "The keyword(s) to search for in new events (searches across title, description, location, and attendees by default).",
+          "displayName": "Search Term",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "search_term"
+      ]
+    },
+    "new_or_updated_event": {
+      "description": "Triggers when an event is added or updated",
+      "displayName": "New or Updated Event",
+      "dropdown_fields": [
+        "calendar_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "calendar_id": "DROPDOWN",
+        "expandRecurringEvent": "CHECKBOX"
+      },
+      "props": {
+        "calendar_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "pkce": true,
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/calendar.events",
+                "https://www.googleapis.com/auth/calendar.readonly"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access calendars without adding the service account to each one. <br> <br> **Note:** Without a user email, the service account only has access to calendars you explicitly share with it.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate for domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": false,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Calendar",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "expandRecurringEvent": {
+          "defaultValue": false,
+          "description": "If true, the trigger will activate for every occurrence of a recurring event.",
+          "displayName": "Expand Recurring Event?",
+          "required": true,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "calendar_id",
+        "expandRecurringEvent"
+      ]
+    }
+  },
+  "version": "0.9.1"
+}

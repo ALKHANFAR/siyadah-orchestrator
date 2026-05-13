@@ -1,0 +1,1201 @@
+{
+  "actions": {
+    "create_draft_reply": {
+      "description": "Creates a draft reply to an existing email.",
+      "displayName": "Create Draft Reply",
+      "dropdown_fields": [
+        "message_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "attachment": "FILE",
+        "attachment_name": "SHORT_TEXT",
+        "body": "LONG_TEXT",
+        "body_type": "STATIC_DROPDOWN",
+        "include_original_message": "CHECKBOX",
+        "message_id": "DROPDOWN",
+        "reply_type": "STATIC_DROPDOWN",
+        "sender_name": "SHORT_TEXT"
+      },
+      "props": {
+        "attachment": {
+          "description": "Optional file to attach to your draft reply",
+          "displayName": "Attachment",
+          "required": false,
+          "type": "FILE"
+        },
+        "attachment_name": {
+          "description": "Custom name for the attachment",
+          "displayName": "Attachment Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "body": {
+          "description": "Your draft reply message content",
+          "displayName": "Draft Reply Body",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "body_type": {
+          "defaultValue": "plain_text",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Plain text",
+                "value": "plain_text"
+              },
+              {
+                "label": "HTML",
+                "value": "html"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "include_original_message": {
+          "defaultValue": true,
+          "description": "Include the original message content in the draft reply",
+          "displayName": "Include Original Message",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "message_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "Select a message from the list or enter a message ID manually.",
+          "displayName": "Message",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "reply_type": {
+          "defaultValue": "reply",
+          "description": "Choose whether to reply to sender only or to all recipients",
+          "displayName": "Reply Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Reply (to sender only)",
+                "value": "reply"
+              },
+              {
+                "label": "Reply All (to all recipients)",
+                "value": "reply_all"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "sender_name": {
+          "description": "Optional sender name to display",
+          "displayName": "Sender Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "body_type",
+        "include_original_message",
+        "message_id",
+        "reply_type"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "gmail_get_mail": {
+      "description": "Get an email via Id.",
+      "displayName": "Get Email",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "message_id": "SHORT_TEXT"
+      },
+      "props": {
+        "message_id": {
+          "description": "The messageId of the mail to read.",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "message_id"
+      ]
+    },
+    "gmail_search_mail": {
+      "description": "Find emails using advanced search criteria. If no filters are provided, the latest emails are returned.",
+      "displayName": "Find Email",
+      "dropdown_fields": [
+        "label"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "after_date": "DATE_TIME",
+        "attachment_name": "SHORT_TEXT",
+        "before_date": "DATE_TIME",
+        "category": "STATIC_DROPDOWN",
+        "content": "SHORT_TEXT",
+        "from": "SHORT_TEXT",
+        "has_attachment": "CHECKBOX",
+        "include_spam_trash": "CHECKBOX",
+        "label": "DROPDOWN",
+        "max_results": "NUMBER",
+        "subject": "SHORT_TEXT",
+        "to": "SHORT_TEXT"
+      },
+      "props": {
+        "after_date": {
+          "description": "Find emails sent after this date",
+          "displayName": "After Date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "attachment_name": {
+          "description": "Search for emails with specific attachment filename",
+          "displayName": "Attachment Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "before_date": {
+          "description": "Find emails sent before this date",
+          "displayName": "Before Date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "category": {
+          "description": "Optional filteration, leave unselected to filter based on the email category",
+          "displayName": "Category",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Primary",
+                "value": "primary"
+              },
+              {
+                "label": "Social",
+                "value": "social"
+              },
+              {
+                "label": "Promotions",
+                "value": "promotions"
+              },
+              {
+                "label": "Updates",
+                "value": "updates"
+              },
+              {
+                "label": "Forums",
+                "value": "forums"
+              },
+              {
+                "label": "Reservations",
+                "value": "reservations"
+              },
+              {
+                "label": "Purchases",
+                "value": "purchases"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "content": {
+          "description": "Search for specific text within email body",
+          "displayName": "Email Content",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "from": {
+          "defaultValue": "",
+          "description": "Optional filteration, leave empty to filter based on the email sender",
+          "displayName": "Email sender",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "has_attachment": {
+          "defaultValue": false,
+          "description": "Only find emails with attachments",
+          "displayName": "Has Attachment",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "include_spam_trash": {
+          "defaultValue": false,
+          "description": "Include emails from Spam and Trash folders in search results",
+          "displayName": "Include Spam & Trash",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "label": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "defaultValue": "",
+          "description": "Optional filteration, leave unselected to filter based on the email label",
+          "displayName": "Label",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "max_results": {
+          "defaultValue": 10,
+          "description": "Maximum number of emails to return (1-500)",
+          "displayName": "Max Results",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "subject": {
+          "defaultValue": "",
+          "description": "The email subject",
+          "displayName": "Email subject",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "to": {
+          "defaultValue": "",
+          "description": "Optional filteration, leave empty to filter based on the email recipient",
+          "displayName": "Email recipient",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "reply_to_email": {
+      "description": "Reply to an existing email.",
+      "displayName": "Reply to Email",
+      "dropdown_fields": [
+        "message_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "attachment": "FILE",
+        "attachment_name": "SHORT_TEXT",
+        "body": "LONG_TEXT",
+        "body_type": "STATIC_DROPDOWN",
+        "message_id": "DROPDOWN",
+        "reply_type": "STATIC_DROPDOWN",
+        "sender_name": "SHORT_TEXT"
+      },
+      "props": {
+        "attachment": {
+          "description": "Optional file to attach to your reply",
+          "displayName": "Attachment",
+          "required": false,
+          "type": "FILE"
+        },
+        "attachment_name": {
+          "description": "Custom name for the attachment",
+          "displayName": "Attachment Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "body": {
+          "description": "Your reply message content",
+          "displayName": "Reply Body",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "body_type": {
+          "defaultValue": "plain_text",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Plain text",
+                "value": "plain_text"
+              },
+              {
+                "label": "HTML",
+                "value": "html"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "message_id": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "Select a message from the list or enter a message ID manually.",
+          "displayName": "Message",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "reply_type": {
+          "defaultValue": "reply",
+          "description": "Choose whether to reply to sender only or to all recipients",
+          "displayName": "Reply Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Reply (to sender only)",
+                "value": "reply"
+              },
+              {
+                "label": "Reply All (to all recipients)",
+                "value": "reply_all"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "sender_name": {
+          "description": "Optional sender name to display",
+          "displayName": "Sender Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "body",
+        "body_type",
+        "message_id",
+        "reply_type"
+      ]
+    },
+    "request_approval_in_mail": {
+      "description": "Send approval request email and then wait until the email is approved or disapproved",
+      "displayName": "Request Approval in Email",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "bcc": "ARRAY",
+        "body": "SHORT_TEXT",
+        "cc": "ARRAY",
+        "from": "SHORT_TEXT",
+        "in_reply_to": "SHORT_TEXT",
+        "receiver": "SHORT_TEXT",
+        "reply_to": "ARRAY",
+        "sender_name": "SHORT_TEXT",
+        "subject": "SHORT_TEXT"
+      },
+      "props": {
+        "bcc": {
+          "description": "The email addresses of the recipients who will receive a blind carbon copy of the approval request.",
+          "displayName": "BCC Email",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "body": {
+          "description": "Body for the email you want to send",
+          "displayName": "Body",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "cc": {
+          "description": "The email addresses of the recipients who will receive a carbon copy of the approval request.",
+          "displayName": "CC Email",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "from": {
+          "description": "The address must be listed in your GMail account's settings",
+          "displayName": "Sender Email",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "in_reply_to": {
+          "description": "Reply to this Message-ID",
+          "displayName": "In reply to",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "receiver": {
+          "description": "The email address of the recipient who will receive the approval request.",
+          "displayName": "Receiver Email (To)",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "reply_to": {
+          "description": "Email address to set as the \"Reply-To\" header",
+          "displayName": "Reply-To Email",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "sender_name": {
+          "displayName": "Sender Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "subject": {
+          "description": "The subject of the approval request email.",
+          "displayName": "Subject",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "body",
+        "receiver",
+        "subject"
+      ]
+    },
+    "send_email": {
+      "description": "Send an email through a Gmail account",
+      "displayName": "Send Email",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "attachments": "ARRAY",
+        "bcc": "ARRAY",
+        "body": "SHORT_TEXT",
+        "body_type": "STATIC_DROPDOWN",
+        "cc": "ARRAY",
+        "draft": "CHECKBOX",
+        "from": "SHORT_TEXT",
+        "in_reply_to": "SHORT_TEXT",
+        "receiver": "ARRAY",
+        "reply_to": "ARRAY",
+        "sender_name": "SHORT_TEXT",
+        "subject": "SHORT_TEXT"
+      },
+      "props": {
+        "attachments": {
+          "displayName": "Attachments",
+          "properties": {
+            "file": {
+              "description": "File to attach to the email you want to send.",
+              "displayName": "File",
+              "required": true,
+              "type": "FILE"
+            },
+            "name": {
+              "description": "In case you want to change the name of the attachment.",
+              "displayName": "Attachment Name",
+              "required": false,
+              "type": "SHORT_TEXT"
+            }
+          },
+          "required": false,
+          "type": "ARRAY"
+        },
+        "bcc": {
+          "displayName": "BCC Email",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "body": {
+          "description": "Body for the email you want to send",
+          "displayName": "Body",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "body_type": {
+          "defaultValue": "plain_text",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "plain text",
+                "value": "plain_text"
+              },
+              {
+                "label": "html",
+                "value": "html"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "cc": {
+          "displayName": "CC Email",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "draft": {
+          "defaultValue": false,
+          "description": "Create draft without sending the actual email",
+          "displayName": "Create draft",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "from": {
+          "description": "The address must be listed in your GMail account's settings",
+          "displayName": "Sender Email",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "in_reply_to": {
+          "description": "Reply to this Message-ID",
+          "displayName": "In reply to",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "receiver": {
+          "displayName": "Receiver Email (To)",
+          "required": true,
+          "type": "ARRAY"
+        },
+        "reply_to": {
+          "description": "Email address to set as the \"Reply-To\" header",
+          "displayName": "Reply-To Email",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "sender_name": {
+          "displayName": "Sender Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "subject": {
+          "displayName": "Subject",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "body",
+        "body_type",
+        "draft",
+        "receiver",
+        "subject"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "Gmail",
+  "pieceName": "@activepieces/piece-gmail",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:566901c4e3694ecf492e3979e08dc35b4b613ecf03dfd5e50e5d7cadedf47205",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-gmail",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "gmail_new_email_received": {
+      "description": "Triggers when new mail is found in your Gmail inbox",
+      "displayName": "New Email",
+      "dropdown_fields": [
+        "label"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "category": "STATIC_DROPDOWN",
+        "from": "SHORT_TEXT",
+        "label": "DROPDOWN",
+        "subject": "SHORT_TEXT",
+        "to": "SHORT_TEXT"
+      },
+      "props": {
+        "category": {
+          "description": "Optional filteration, leave unselected to filter based on the email category",
+          "displayName": "Category",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Primary",
+                "value": "primary"
+              },
+              {
+                "label": "Social",
+                "value": "social"
+              },
+              {
+                "label": "Promotions",
+                "value": "promotions"
+              },
+              {
+                "label": "Updates",
+                "value": "updates"
+              },
+              {
+                "label": "Forums",
+                "value": "forums"
+              },
+              {
+                "label": "Reservations",
+                "value": "reservations"
+              },
+              {
+                "label": "Purchases",
+                "value": "purchases"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "from": {
+          "defaultValue": "",
+          "description": "Optional filteration, leave empty to filter based on the email sender",
+          "displayName": "Email sender",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "label": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "defaultValue": "",
+          "description": "Optional filteration, leave unselected to filter based on the email label",
+          "displayName": "Label",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "subject": {
+          "defaultValue": "",
+          "description": "The email subject",
+          "displayName": "Email subject",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "to": {
+          "defaultValue": "",
+          "description": "Optional filteration, leave empty to filter based on the email recipient",
+          "displayName": "Email recipient",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "new_attachment": {
+      "description": "Triggers when an email with an attachment arrives.",
+      "displayName": "New Attachment",
+      "dropdown_fields": [
+        "label"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "category": "STATIC_DROPDOWN",
+        "filenameExtension": "SHORT_TEXT",
+        "from": "SHORT_TEXT",
+        "label": "DROPDOWN",
+        "subject": "SHORT_TEXT",
+        "to": "SHORT_TEXT"
+      },
+      "props": {
+        "category": {
+          "description": "Filter by Gmail category.",
+          "displayName": "Category",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "Primary",
+                "value": "primary"
+              },
+              {
+                "label": "Social",
+                "value": "social"
+              },
+              {
+                "label": "Promotions",
+                "value": "promotions"
+              },
+              {
+                "label": "Updates",
+                "value": "updates"
+              },
+              {
+                "label": "Forums",
+                "value": "forums"
+              },
+              {
+                "label": "Reservations",
+                "value": "reservations"
+              },
+              {
+                "label": "Purchases",
+                "value": "purchases"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "filenameExtension": {
+          "description": "Only trigger for attachments with this file extension (e.g., pdf, jpg, docx).",
+          "displayName": "File Extension",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "from": {
+          "defaultValue": "",
+          "description": "Filter by sender email.",
+          "displayName": "From",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "label": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "defaultValue": "",
+          "description": "Filter by Gmail label.",
+          "displayName": "Label",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "subject": {
+          "description": "Only trigger for emails containing this text in the subject.",
+          "displayName": "Subject Contains",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "to": {
+          "defaultValue": "",
+          "description": "Filter by recipient email.",
+          "displayName": "To",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "new_label": {
+      "description": "Triggers when a new label is created.",
+      "displayName": "New Label",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new_labeled_email": {
+      "description": "Triggers when a label is added to an email",
+      "displayName": "New Labeled Email",
+      "dropdown_fields": [
+        "label"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "label": "DROPDOWN"
+      },
+      "props": {
+        "label": {
+          "auth": [
+            {
+              "authUrl": "https://accounts.google.com/o/oauth2/auth",
+              "description": "",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "https://www.googleapis.com/auth/gmail.send",
+                "https://www.googleapis.com/auth/gmail.readonly",
+                "https://www.googleapis.com/auth/gmail.compose",
+                "email"
+              ],
+              "tokenUrl": "https://oauth2.googleapis.com/token",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate via service account from https://console.cloud.google.com/ > IAM & Admin > Service Accounts > Create Service Account > Keys > Add key.  <br> <br> You can optionally use domain-wide delegation (https://support.google.com/a/answer/162106?hl=en#zippy=%2Cset-up-domain-wide-delegation-for-a-client) to access Gmail without adding the service account to each mailbox. <br> <br> **Note:** A user email with domain-wide delegation is required for Gmail service account access.",
+              "displayName": "Service Account (Advanced)",
+              "props": {
+                "serviceAccount": {
+                  "displayName": "Service Account JSON Key",
+                  "required": true,
+                  "type": "LONG_TEXT"
+                },
+                "userEmail": {
+                  "description": "Email address of the user to impersonate. Required for Gmail service account access via domain-wide delegation.",
+                  "displayName": "User Email",
+                  "required": true,
+                  "type": "SHORT_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "defaultValue": "",
+          "description": "Optional filteration, leave unselected to filter based on the email label",
+          "displayName": "Label",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "label"
+      ]
+    }
+  },
+  "version": "0.12.3"
+}

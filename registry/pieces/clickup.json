@@ -1,0 +1,4379 @@
+{
+  "actions": {
+    "create_channel": {
+      "description": "Creates a channel in a ClickUp workspace",
+      "displayName": "Create Channel",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "description": "SHORT_TEXT",
+        "name": "SHORT_TEXT",
+        "topic": "SHORT_TEXT",
+        "visibility": "STATIC_DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "description": {
+          "defaultValue": "",
+          "description": "Description of the channel",
+          "displayName": "Channel Description",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "name": {
+          "defaultValue": "",
+          "description": "Name of the channel",
+          "displayName": "Channel Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "topic": {
+          "defaultValue": "",
+          "description": "Topic of the channel",
+          "displayName": "Channel Topic",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "visibility": {
+          "defaultValue": "public",
+          "description": "Visibility of the channel",
+          "displayName": "Channel Visibility",
+          "options": {
+            "options": [
+              {
+                "label": "Public",
+                "value": "PUBLIC"
+              },
+              {
+                "label": "Private",
+                "value": "PRIVATE"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "name",
+        "visibility",
+        "workspace_id"
+      ]
+    },
+    "create_channel_in_space_folder_list": {
+      "description": "Creates a channel in a ClickUp workspace in a space, folder or list",
+      "displayName": "Create Channel in Space/Folder/List",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "description": "SHORT_TEXT",
+        "locationId": "SHORT_TEXT",
+        "locationType": "STATIC_DROPDOWN",
+        "topic": "SHORT_TEXT",
+        "visibility": "STATIC_DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "description": {
+          "defaultValue": "",
+          "description": "Description of the channel",
+          "displayName": "Channel Description",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "locationId": {
+          "description": "ID of the location",
+          "displayName": "Location ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "locationType": {
+          "defaultValue": "folder",
+          "description": "Type of location",
+          "displayName": "Location Type",
+          "options": {
+            "options": [
+              {
+                "label": "Folder",
+                "value": "folder"
+              },
+              {
+                "label": "Space",
+                "value": "space"
+              },
+              {
+                "label": "List",
+                "value": "list"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "topic": {
+          "defaultValue": "",
+          "description": "Topic of the channel",
+          "displayName": "Channel Topic",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "visibility": {
+          "defaultValue": "public",
+          "description": "Visibility of the channel",
+          "displayName": "Channel Visibility",
+          "options": {
+            "options": [
+              {
+                "label": "Public",
+                "value": "PUBLIC"
+              },
+              {
+                "label": "Private",
+                "value": "PRIVATE"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "locationId",
+        "locationType",
+        "visibility",
+        "workspace_id"
+      ]
+    },
+    "create_folderless_list": {
+      "description": "Create a new folderless list in a ClickUp workspace and space",
+      "displayName": "Create Folderless List",
+      "dropdown_fields": [
+        "space_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "name": "SHORT_TEXT",
+        "space_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "name": {
+          "description": "The name of the list to create",
+          "displayName": "List Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "name",
+        "space_id",
+        "workspace_id"
+      ]
+    },
+    "create_message": {
+      "description": "Creates a message in a ClickUp channel",
+      "displayName": "Create Message",
+      "dropdown_fields": [
+        "channel_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel_id": "DROPDOWN",
+        "content": "LONG_TEXT",
+        "type": "STATIC_DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "channel_id": {
+          "description": "The ID of Clickup Channel",
+          "displayName": "Channel Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "content": {
+          "description": "Content of the message",
+          "displayName": "Message Content",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "type": {
+          "defaultValue": "message",
+          "description": "Type of the message",
+          "displayName": "Message Type",
+          "options": {
+            "options": [
+              {
+                "label": "Message",
+                "value": "message"
+              },
+              {
+                "label": "Post",
+                "value": "post"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "content",
+        "type",
+        "workspace_id"
+      ]
+    },
+    "create_message_reaction": {
+      "description": "Creates a reaction to a message in a ClickUp channel",
+      "displayName": "Create Message Reaction",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "emoji": "SHORT_TEXT",
+        "message_id": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "emoji": {
+          "description": "Emoji to react with",
+          "displayName": "Emoji",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "message_id": {
+          "description": "ID of the message to create reaction for",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "emoji",
+        "message_id",
+        "workspace_id"
+      ]
+    },
+    "create_message_reply": {
+      "description": "Creates a reply to a message in a ClickUp channel",
+      "displayName": "Create Message Reply",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "content": "LONG_TEXT",
+        "message_id": "SHORT_TEXT",
+        "type": "STATIC_DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "content": {
+          "description": "Content of the message",
+          "displayName": "Message Content",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "message_id": {
+          "description": "ID of the message to reply to",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "type": {
+          "defaultValue": "message",
+          "description": "Type of the message",
+          "displayName": "Message Type",
+          "options": {
+            "options": [
+              {
+                "label": "Message",
+                "value": "message"
+              },
+              {
+                "label": "Post",
+                "value": "post"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "content",
+        "message_id",
+        "type",
+        "workspace_id"
+      ]
+    },
+    "create_subtask": {
+      "description": "Creates a subtask in ClickUp",
+      "displayName": "Create Subtask",
+      "dropdown_fields": [
+        "assignee_id",
+        "list_id",
+        "space_id",
+        "status_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [
+        "custom_fields"
+      ],
+      "property_types": {
+        "assignee_id": "MULTI_SELECT_DROPDOWN",
+        "check_required_custom_fields": "CHECKBOX",
+        "custom_fields": "DYNAMIC",
+        "custom_fields_info": "MARKDOWN",
+        "description": "LONG_TEXT",
+        "due_date": "DATE_TIME",
+        "due_date_time": "CHECKBOX",
+        "is_markdown": "CHECKBOX",
+        "list_id": "DROPDOWN",
+        "name": "SHORT_TEXT",
+        "priority_id": "STATIC_DROPDOWN",
+        "space_id": "DROPDOWN",
+        "start_date": "DATE_TIME",
+        "start_date_time": "CHECKBOX",
+        "status_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "time_estimate": "NUMBER",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "assignee_id": {
+          "description": "ID of assignee for Clickup Subtask",
+          "displayName": "Assignee Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "check_required_custom_fields": {
+          "defaultValue": false,
+          "description": "Re-enable required custom fields validation for the subtask",
+          "displayName": "Check Required Custom Fields",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "custom_fields": {
+          "displayName": "Custom Fields",
+          "refreshers": [
+            "list_id",
+            "auth"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "custom_fields_info": {
+          "description": "Select custom fields\n\nFor custom dropdown fields, choose a dropdown value based on the index (in the list, the first option is index 0, second is 1, third is 2, etc.)",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "description": {
+          "description": "The description of the subtask to create",
+          "displayName": "Subtask Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "due_date": {
+          "description": "The due date of the subtask",
+          "displayName": "Due Date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "due_date_time": {
+          "defaultValue": false,
+          "description": "Whether to include time in the due date",
+          "displayName": "Due Date Time",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "is_markdown": {
+          "defaultValue": false,
+          "description": "Is the description in markdown format",
+          "displayName": "Is Markdown",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "name": {
+          "description": "The name of the subtask to create",
+          "displayName": "Subtask Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "priority_id": {
+          "defaultValue": null,
+          "description": "The ID of Clickup Issue Priority",
+          "displayName": "Priority Id",
+          "options": {
+            "options": [
+              {
+                "label": "Urgent",
+                "value": 1
+              },
+              {
+                "label": "High",
+                "value": 2
+              },
+              {
+                "label": "Normal",
+                "value": 3
+              },
+              {
+                "label": "Low",
+                "value": 4
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "start_date": {
+          "description": "The start date of the subtask",
+          "displayName": "Start Date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "start_date_time": {
+          "defaultValue": false,
+          "description": "Whether to include time in the start date",
+          "displayName": "Start Date Time",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "status_id": {
+          "description": "The ID of Clickup Issue Status",
+          "displayName": "Status Id",
+          "refreshers": [
+            "list_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "time_estimate": {
+          "description": "The time estimate for the subtask in milliseconds",
+          "displayName": "Time Estimate",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "custom_fields",
+        "list_id",
+        "name",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ]
+    },
+    "create_task": {
+      "description": "Create a new task in a ClickUp workspace and list",
+      "displayName": "Create Task",
+      "dropdown_fields": [
+        "assignee_id",
+        "list_id",
+        "space_id",
+        "status_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [
+        "custom_fields"
+      ],
+      "property_types": {
+        "assignee_id": "MULTI_SELECT_DROPDOWN",
+        "check_required_custom_fields": "CHECKBOX",
+        "custom_fields": "DYNAMIC",
+        "custom_fields_info": "MARKDOWN",
+        "description": "LONG_TEXT",
+        "due_date": "DATE_TIME",
+        "due_date_time": "CHECKBOX",
+        "is_markdown": "CHECKBOX",
+        "list_id": "DROPDOWN",
+        "name": "SHORT_TEXT",
+        "priority_id": "STATIC_DROPDOWN",
+        "space_id": "DROPDOWN",
+        "start_date": "DATE_TIME",
+        "start_date_time": "CHECKBOX",
+        "status_id": "DROPDOWN",
+        "time_estimate": "NUMBER",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "assignee_id": {
+          "description": "ID of assignee for Clickup Task",
+          "displayName": "Assignee Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "check_required_custom_fields": {
+          "defaultValue": false,
+          "description": "Re-enable required custom fields validation for the task",
+          "displayName": "Check Required Custom Fields",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "custom_fields": {
+          "displayName": "Custom Fields",
+          "refreshers": [
+            "list_id",
+            "auth"
+          ],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "custom_fields_info": {
+          "description": "Select custom fields\n\nFor custom dropdown fields, choose a dropdown value based on the index (in the list, the first option is index 0, second is 1, third is 2, etc.)",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "description": {
+          "description": "The description of task",
+          "displayName": "Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "due_date": {
+          "description": "The due date of the task",
+          "displayName": "Due Date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "due_date_time": {
+          "defaultValue": false,
+          "description": "Whether to include time in the due date",
+          "displayName": "Due Date Time",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "is_markdown": {
+          "defaultValue": false,
+          "description": "Is the description in markdown format",
+          "displayName": "Is Markdown",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "name": {
+          "description": "The name of task",
+          "displayName": "Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "priority_id": {
+          "defaultValue": null,
+          "description": "The ID of Clickup Issue Priority",
+          "displayName": "Priority Id",
+          "options": {
+            "options": [
+              {
+                "label": "Urgent",
+                "value": 1
+              },
+              {
+                "label": "High",
+                "value": 2
+              },
+              {
+                "label": "Normal",
+                "value": 3
+              },
+              {
+                "label": "Low",
+                "value": 4
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "start_date": {
+          "description": "The start date of the task",
+          "displayName": "Start Date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "start_date_time": {
+          "defaultValue": false,
+          "description": "Whether to include time in the start date",
+          "displayName": "Start Date Time",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "status_id": {
+          "description": "The ID of Clickup Issue Status",
+          "displayName": "Status Id",
+          "refreshers": [
+            "list_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "time_estimate": {
+          "description": "The time estimate for the task in milliseconds",
+          "displayName": "Time Estimate",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "custom_fields",
+        "list_id",
+        "name",
+        "space_id",
+        "workspace_id"
+      ]
+    },
+    "create_task_comments": {
+      "description": "Creates a comment on a task in ClickUp",
+      "displayName": "Create Task Comment",
+      "dropdown_fields": [
+        "assignee_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "assignee_id": "DROPDOWN",
+        "comment": "LONG_TEXT",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "assignee_id": {
+          "description": "ID of assignee for Task Comment",
+          "displayName": "Assignee Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "comment": {
+          "description": "Comment to make on the task",
+          "displayName": "Comment",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "comment",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ]
+    },
+    "create_task_from_template": {
+      "description": "Create a new task from Template",
+      "displayName": "Create Task From Template",
+      "dropdown_fields": [
+        "list_id",
+        "space_id",
+        "template_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "list_id": "DROPDOWN",
+        "name": "SHORT_TEXT",
+        "space_id": "DROPDOWN",
+        "template_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "name": {
+          "description": "The name of the task to create",
+          "displayName": "Task Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "template_id": {
+          "description": "The ID of Clickup Task Template",
+          "displayName": "Template Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "list_id",
+        "name",
+        "space_id",
+        "template_id",
+        "workspace_id"
+      ]
+    },
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC"
+      },
+      "props": {
+        "body": {
+          "auth": {
+            "authUrl": "https://app.clickup.com/api",
+            "description": "",
+            "displayName": "Connection",
+            "required": true,
+            "scope": [],
+            "tokenUrl": "https://api.clickup.com/api/v2/oauth/token",
+            "type": "OAUTH2"
+          },
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": {
+            "authUrl": "https://app.clickup.com/api",
+            "description": "",
+            "displayName": "Connection",
+            "required": true,
+            "scope": [],
+            "tokenUrl": "https://api.clickup.com/api/v2/oauth/token",
+            "type": "OAUTH2"
+          },
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url"
+      ]
+    },
+    "delete_message": {
+      "description": "Deletes a message in a ClickUp channel",
+      "displayName": "Delete Message",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "message_id": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "message_id": {
+          "description": "ID of the message to delete",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "message_id",
+        "workspace_id"
+      ]
+    },
+    "delete_message_reaction": {
+      "description": "Deletes a reaction from a message in a ClickUp channel",
+      "displayName": "Delete Message Reaction",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "message_id": "SHORT_TEXT",
+        "reaction_id": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "message_id": {
+          "description": "ID of the message to delete reaction from",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "reaction_id": {
+          "description": "ID of the reaction to delete",
+          "displayName": "Reaction ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "message_id",
+        "reaction_id",
+        "workspace_id"
+      ]
+    },
+    "delete_task": {
+      "description": "Delete a task in a workspace and list",
+      "displayName": "Delete Task",
+      "dropdown_fields": [
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ]
+    },
+    "get_accessible_custom_fields": {
+      "description": "View the Custom Fields available on tasks in a specific List.",
+      "displayName": "Get Accessible Custom Fields",
+      "dropdown_fields": [
+        "list_id",
+        "space_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "list_id",
+        "space_id",
+        "workspace_id"
+      ]
+    },
+    "get_channel": {
+      "description": "Gets a channel in a ClickUp workspace",
+      "displayName": "Get Channel",
+      "dropdown_fields": [
+        "channel_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "channel_id": {
+          "description": "The ID of Clickup Channel",
+          "displayName": "Channel Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "get_channel_messages": {
+      "description": "Gets all messages in a ClickUp channel",
+      "displayName": "Get Channel Messages",
+      "dropdown_fields": [
+        "channel_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel_id": "DROPDOWN",
+        "content_format": "STATIC_DROPDOWN",
+        "limit": "NUMBER",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "channel_id": {
+          "description": "The ID of Clickup Channel",
+          "displayName": "Channel Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "content_format": {
+          "defaultValue": "text/md",
+          "description": "Format the content of the messages",
+          "displayName": "Format Content",
+          "options": {
+            "options": [
+              {
+                "label": "Markdown",
+                "value": "text/md"
+              },
+              {
+                "label": "Plain Text",
+                "value": "text/plain"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "limit": {
+          "defaultValue": 50,
+          "description": "Limit the number of messages returned",
+          "displayName": "Limit",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "get_channels": {
+      "description": "Gets all channels in a ClickUp workspace",
+      "displayName": "Get Channels",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "include_hidden": "CHECKBOX",
+        "limit": "NUMBER",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "include_hidden": {
+          "defaultValue": false,
+          "description": "Include hidden channels",
+          "displayName": "Include Hidden",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "limit": {
+          "defaultValue": 50,
+          "description": "Limit the number of channels returned",
+          "displayName": "Limit",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "get_list": {
+      "description": "Gets a list in a ClickUp",
+      "displayName": "Get List",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "list_id": "SHORT_TEXT"
+      },
+      "props": {
+        "list_id": {
+          "description": "The id of the list to get",
+          "displayName": "List ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "list_id"
+      ]
+    },
+    "get_list_task": {
+      "description": "Gets a task in a ClickUp list",
+      "displayName": "Get Task",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "include_subtasks": "CHECKBOX",
+        "task_id": "SHORT_TEXT"
+      },
+      "props": {
+        "include_subtasks": {
+          "defaultValue": false,
+          "description": "Include subtasks in the response",
+          "displayName": "Include Subtasks",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "task_id": {
+          "description": "The ID of the task to get",
+          "displayName": "Task ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "task_id"
+      ]
+    },
+    "get_message_reactions": {
+      "description": "Gets the reactions of a message in a ClickUp channel",
+      "displayName": "Get Message Reactions",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "message_id": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "message_id": {
+          "description": "ID of the message to get reactions for",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "message_id",
+        "workspace_id"
+      ]
+    },
+    "get_message_replies": {
+      "description": "Gets the replies of a message in a ClickUp channel",
+      "displayName": "Get Message Replies",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "message_id": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "message_id": {
+          "description": "ID of the message to get replies for",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "message_id",
+        "workspace_id"
+      ]
+    },
+    "get_space": {
+      "description": "Gets a space in a ClickUp",
+      "displayName": "Get Space",
+      "dropdown_fields": [
+        "space_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "space_id": "DROPDOWN"
+      },
+      "props": {
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "space_id"
+      ]
+    },
+    "get_spaces": {
+      "description": "Gets spaces in a ClickUp workspace",
+      "displayName": "Get Spaces",
+      "dropdown_fields": [
+        "team_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "team_id": "DROPDOWN"
+      },
+      "props": {
+        "team_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "team_id"
+      ]
+    },
+    "get_task_by_name": {
+      "description": "Fetches a task by name in a ClickUp list",
+      "displayName": "Get Task by Name",
+      "dropdown_fields": [
+        "list_id",
+        "space_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_name": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "task_name": {
+          "description": "The name of the task to find",
+          "displayName": "Task Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "list_id",
+        "space_id",
+        "task_name",
+        "workspace_id"
+      ]
+    },
+    "get_task_comments": {
+      "description": "Gets comments from a task in ClickUp",
+      "displayName": "Get Task Comments",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "task_id": "SHORT_TEXT"
+      },
+      "props": {
+        "task_id": {
+          "description": "The ID of the task to get",
+          "displayName": "Task ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "task_id"
+      ]
+    },
+    "list_workspace_tasks": {
+      "description": "Retrieves the tasks that meet specific criteria from a Workspace.",
+      "displayName": "List Team Tasks",
+      "dropdown_fields": [
+        "assignees",
+        "folder_id",
+        "list_id",
+        "space_id",
+        "tags",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "assignees": "MULTI_SELECT_DROPDOWN",
+        "folder_id": "MULTI_SELECT_DROPDOWN",
+        "include_closed": "CHECKBOX",
+        "list_id": "MULTI_SELECT_DROPDOWN",
+        "order_by": "STATIC_DROPDOWN",
+        "page": "NUMBER",
+        "reverse": "CHECKBOX",
+        "space_id": "MULTI_SELECT_DROPDOWN",
+        "tags": "MULTI_SELECT_DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "assignees": {
+          "description": "ID of assignee for Clickup Task",
+          "displayName": "Assignee Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "include_closed": {
+          "defaultValue": false,
+          "description": "Include or exclude closed tasks. By default, they are excluded.",
+          "displayName": "Include Closed",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "order_by": {
+          "description": "Order by a particular field. By default, tasks are ordered by created.",
+          "displayName": "Order By",
+          "options": {
+            "options": [
+              {
+                "label": "Id",
+                "value": "id"
+              },
+              {
+                "label": "Created at",
+                "value": "created"
+              },
+              {
+                "label": "Last updated",
+                "value": "updated"
+              },
+              {
+                "label": "Due date",
+                "value": "due_date"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "page": {
+          "defaultValue": 0,
+          "description": "Page to fetch (starts at 0).",
+          "displayName": "Page",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "reverse": {
+          "defaultValue": false,
+          "description": "Tasks are displayed in reverse order.",
+          "displayName": "Reverse",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "tags": {
+          "description": "The tags to filter for",
+          "displayName": "Tags",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "list_workspace_time_entries": {
+      "description": "Retrieves time entries filtered by start and end date.",
+      "displayName": "List Time Entries",
+      "dropdown_fields": [
+        "assignee",
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "assignee": "MULTI_SELECT_DROPDOWN",
+        "end_date": "DATE_TIME",
+        "folder_id": "DROPDOWN",
+        "include_location_names": "CHECKBOX",
+        "include_task_tags": "CHECKBOX",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "start_date": "DATE_TIME",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "assignee": {
+          "description": "ID of assignee for Clickup Task",
+          "displayName": "Assignee Id",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "end_date": {
+          "displayName": "End date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "include_location_names": {
+          "defaultValue": false,
+          "description": "Include the names of the List, Folder, and Space along with the list_id, folder_id, and space_id.",
+          "displayName": "Include location names",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "include_task_tags": {
+          "defaultValue": false,
+          "description": "Include task tags in the response for time entries associated with tasks.",
+          "displayName": "Include task tags",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "start_date": {
+          "description": "",
+          "displayName": "Start date",
+          "required": false,
+          "type": "DATE_TIME"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "set_custom_fields_value": {
+      "description": "Add data to a Custom field on a task.",
+      "displayName": "Set Custom Field Value",
+      "dropdown_fields": [
+        "field_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "field_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "value": "LONG_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "field_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp custom field",
+          "displayName": "Field",
+          "refreshers": [
+            "task_id",
+            "list_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "value": {
+          "description": "The new value to be set",
+          "displayName": "Value",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "field_id",
+        "space_id",
+        "task_id",
+        "value",
+        "workspace_id"
+      ]
+    },
+    "update_message": {
+      "description": "Updates a message in a ClickUp channel",
+      "displayName": "Update Message",
+      "dropdown_fields": [
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "content": "LONG_TEXT",
+        "content_format": "STATIC_DROPDOWN",
+        "message_id": "SHORT_TEXT",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "content": {
+          "description": "Content of the message",
+          "displayName": "Message Content",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "content_format": {
+          "description": "Format of the message content",
+          "displayName": "Message Content Format",
+          "options": {
+            "options": [
+              {
+                "label": "Markdown",
+                "value": "text/md"
+              },
+              {
+                "label": "Plain Text",
+                "value": "text/plain"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "message_id": {
+          "description": "ID of the message to update",
+          "displayName": "Message ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "content",
+        "content_format",
+        "message_id",
+        "workspace_id"
+      ]
+    },
+    "update_task": {
+      "description": "Update task in a ClickUp workspace and list",
+      "displayName": "Update Task",
+      "dropdown_fields": [
+        "add_assignee",
+        "list_id",
+        "rem_assignee",
+        "space_id",
+        "status_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "add_assignee": "MULTI_SELECT_DROPDOWN",
+        "description": "LONG_TEXT",
+        "list_id": "DROPDOWN",
+        "name": "SHORT_TEXT",
+        "priority_id": "STATIC_DROPDOWN",
+        "rem_assignee": "MULTI_SELECT_DROPDOWN",
+        "space_id": "DROPDOWN",
+        "status_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "add_assignee": {
+          "description": "assignee(s) you want to add for the task",
+          "displayName": "Add Assignees",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "description": {
+          "description": "The description of the task to update",
+          "displayName": "Task Description",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "name": {
+          "description": "The name of the task to update",
+          "displayName": "Task Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "priority_id": {
+          "defaultValue": null,
+          "description": "The ID of Clickup Issue Priority",
+          "displayName": "Priority Id",
+          "options": {
+            "options": [
+              {
+                "label": "Urgent",
+                "value": 1
+              },
+              {
+                "label": "High",
+                "value": 2
+              },
+              {
+                "label": "Normal",
+                "value": 3
+              },
+              {
+                "label": "Low",
+                "value": 4
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "rem_assignee": {
+          "description": "assignee(s) you want to remove from the task",
+          "displayName": "Remove Assignees",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "status_id": {
+          "description": "The ID of Clickup Issue Status",
+          "displayName": "Status Id",
+          "refreshers": [
+            "list_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "ClickUp",
+  "pieceName": "@activepieces/piece-clickup",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:3340296fa5e9939ce25471429f912dc60a1445f47717622870c927ebd72f174a",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-clickup",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "clickup_trigger_automation_created": {
+      "description": "Triggered when a new automation is created.",
+      "displayName": "Automation Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_folder_created": {
+      "description": "Triggered when a new folder is created.",
+      "displayName": "Folder Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_folder_deleted": {
+      "description": "Triggered when a folder is deleted.",
+      "displayName": "Folder Deleted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_folder_updated": {
+      "description": "Triggered when a folder is updated.",
+      "displayName": "Folder Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_goal_created": {
+      "description": "Triggered when a new goal is created.",
+      "displayName": "Goal Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_goal_deleted": {
+      "description": "Triggered when a goal is deleted.",
+      "displayName": "Goal Deleted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_goal_updated": {
+      "description": "Triggered when a goal is updated.",
+      "displayName": "Goal Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_key_result_created": {
+      "description": "Triggered when a new key result is created.",
+      "displayName": "Key Result Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_key_result_deleted": {
+      "description": "Triggered when a key result is deleted.",
+      "displayName": "Key Result Deleted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_key_result_updated": {
+      "description": "Triggered when a key result is updated.",
+      "displayName": "Key Result Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_list_created": {
+      "description": "Triggered when a new list is created.",
+      "displayName": "List Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_list_deleted": {
+      "description": "Triggered when a list is deleted.",
+      "displayName": "List Deleted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_list_updated": {
+      "description": "Triggered when a list is updated.",
+      "displayName": "List Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_space_created": {
+      "description": "Triggered when a new space is created.",
+      "displayName": "Space Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_space_deleted": {
+      "description": "Triggered when a space is deleted.",
+      "displayName": "Space Deleted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_space_updated": {
+      "description": "Triggered when a space is updated.",
+      "displayName": "Space Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_assignee_updated": {
+      "description": "Triggered when a task assignee is updated.",
+      "displayName": "Task Assignee Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_comment_posted": {
+      "description": "Triggered when a task comment is posted.",
+      "displayName": "Task Comment Posted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_comment_updated": {
+      "description": "Triggered when a task comment is updated.",
+      "displayName": "Task Comment Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_created": {
+      "description": "Triggered when a new task is created.",
+      "displayName": "Task Created",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_deleted": {
+      "description": "Triggered when a task is deleted.",
+      "displayName": "Task Deleted",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_due_date_updated": {
+      "description": "Triggered when a task due date is updated.",
+      "displayName": "Task Due Date Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_moved": {
+      "description": "Triggered when a task is moved.",
+      "displayName": "Task Moved",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_priority_updated": {
+      "description": "Triggered when a task priority is updated.",
+      "displayName": "Task Priority Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_status_updated": {
+      "description": "Triggered when a task status is updated.",
+      "displayName": "Task Status Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_tag_updated": {
+      "description": "Triggered when a task tag is updated.",
+      "displayName": "Task Tag Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_time_estimate_updated": {
+      "description": "Triggered when a task time estimate is updated.",
+      "displayName": "Task Time Estimate Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_time_tracked_updated": {
+      "description": "Triggered when a task time tracked is updated.",
+      "displayName": "Task Time Tracked Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "clickup_trigger_task_updated": {
+      "description": "Triggered when a task is updated.",
+      "displayName": "Task Updated",
+      "dropdown_fields": [
+        "folder_id",
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "folder_id": "DROPDOWN",
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "folder_id": {
+          "description": "The ID of the ClickUp folder",
+          "displayName": "Folder Id",
+          "refreshers": [
+            "space_id",
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "workspace_id"
+      ]
+    },
+    "task_tag_updated": {
+      "description": "Triggered when a tag is added or removed or renamed on a task.",
+      "displayName": "Task Tag Updated",
+      "dropdown_fields": [
+        "list_id",
+        "space_id",
+        "task_id",
+        "workspace_id"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "list_id": "DROPDOWN",
+        "space_id": "DROPDOWN",
+        "task_id": "DROPDOWN",
+        "workspace_id": "DROPDOWN"
+      },
+      "props": {
+        "list_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "List",
+          "refreshers": [
+            "space_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "space_id": {
+          "description": "The ID of the ClickUp space to create the task in",
+          "displayName": "Space",
+          "refreshers": [
+            "workspace_id"
+          ],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "task_id": {
+          "defaultValue": null,
+          "description": "The ID of the ClickUp task",
+          "displayName": "Task Id",
+          "refreshers": [
+            "space_id",
+            "list_id",
+            "workspace_id",
+            "folder_id"
+          ],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "workspace_id": {
+          "description": "The ID of the ClickUp workspace",
+          "displayName": "Workspace",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "space_id",
+        "workspace_id"
+      ]
+    }
+  },
+  "version": "0.7.4"
+}

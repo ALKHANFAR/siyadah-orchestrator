@@ -1,0 +1,3677 @@
+{
+  "actions": {
+    "custom_api_call": {
+      "description": "Make a custom API call to a specific endpoint",
+      "displayName": "Custom API Call",
+      "dropdown_fields": [],
+      "dynamic_fields": [
+        "body",
+        "url"
+      ],
+      "property_types": {
+        "body": "DYNAMIC",
+        "body_type": "STATIC_DROPDOWN",
+        "failsafe": "CHECKBOX",
+        "followRedirects": "CHECKBOX",
+        "headers": "OBJECT",
+        "method": "STATIC_DROPDOWN",
+        "queryParams": "OBJECT",
+        "response_is_binary": "CHECKBOX",
+        "timeout": "NUMBER",
+        "url": "DYNAMIC",
+        "useUserToken": "CHECKBOX"
+      },
+      "props": {
+        "body": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Body",
+          "refreshers": [
+            "body_type"
+          ],
+          "required": false,
+          "type": "DYNAMIC"
+        },
+        "body_type": {
+          "defaultValue": "none",
+          "displayName": "Body Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "None",
+                "value": "none"
+              },
+              {
+                "label": "JSON",
+                "value": "json"
+              },
+              {
+                "label": "Form Data",
+                "value": "form_data"
+              },
+              {
+                "label": "Raw",
+                "value": "raw"
+              }
+            ]
+          },
+          "required": false,
+          "type": "STATIC_DROPDOWN"
+        },
+        "failsafe": {
+          "displayName": "No Error on Failure",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "followRedirects": {
+          "defaultValue": false,
+          "displayName": "Follow redirects",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "headers": {
+          "description": "Authorization headers are injected automatically from your connection.",
+          "displayName": "Headers",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "method": {
+          "displayName": "Method",
+          "options": {
+            "options": [
+              {
+                "label": "GET",
+                "value": "GET"
+              },
+              {
+                "label": "POST",
+                "value": "POST"
+              },
+              {
+                "label": "PATCH",
+                "value": "PATCH"
+              },
+              {
+                "label": "PUT",
+                "value": "PUT"
+              },
+              {
+                "label": "DELETE",
+                "value": "DELETE"
+              },
+              {
+                "label": "HEAD",
+                "value": "HEAD"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        },
+        "queryParams": {
+          "displayName": "Query Parameters",
+          "required": true,
+          "type": "OBJECT"
+        },
+        "response_is_binary": {
+          "defaultValue": false,
+          "description": "Enable for files like PDFs, images, etc.",
+          "displayName": "Response is Binary ?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "timeout": {
+          "displayName": "Timeout (in seconds)",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "url": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "",
+          "refreshers": [],
+          "required": true,
+          "type": "DYNAMIC"
+        },
+        "useUserToken": {
+          "defaultValue": false,
+          "description": "Use user token instead of bot token",
+          "displayName": "Use user token",
+          "required": true,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "headers",
+        "method",
+        "queryParams",
+        "url",
+        "useUserToken"
+      ]
+    },
+    "delete-message": {
+      "description": "Deletes a specific message from a channel using the message's timestamp.",
+      "displayName": "Delete Message",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "ts": "SHORT_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "ts": {
+          "description": "Please provide the timestamp of the message you wish to retrieve, such as `1710304378.475129`. Alternatively, you can easily obtain the message link by clicking on the three dots next to the message and selecting the `Copy link` option.",
+          "displayName": "Message Timestamp",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "ts"
+      ]
+    },
+    "find-user-by-id": {
+      "description": "Finds a user by their ID.",
+      "displayName": "Find User by ID",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "id": "SHORT_TEXT"
+      },
+      "props": {
+        "id": {
+          "displayName": "ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "id"
+      ]
+    },
+    "get-file": {
+      "description": "Return information about a given file ID.",
+      "displayName": "Get File",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "fileId": "SHORT_TEXT"
+      },
+      "props": {
+        "fileId": {
+          "description": "You can pass the file ID from the New Message Trigger payload.",
+          "displayName": "File ID",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "fileId"
+      ]
+    },
+    "get-message": {
+      "description": "Retrieves a specific message from a channel history using the message's timestamp.",
+      "displayName": "Get Message by Timestamp",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "ts": "SHORT_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "ts": {
+          "description": "Please provide the timestamp of the message you wish to retrieve, such as `1710304378.475129`. Alternatively, you can easily obtain the message link by clicking on the three dots next to the message and selecting the `Copy link` option.",
+          "displayName": "Message Timestamp",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "ts"
+      ]
+    },
+    "getChannelHistory": {
+      "description": "Retrieve all messages from a specific channel (\"conversation\") between specified timestamps",
+      "displayName": "Get channel history",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "includeAllMetadata": "CHECKBOX",
+        "inclusive": "CHECKBOX",
+        "info": "MARKDOWN",
+        "latest": "NUMBER",
+        "oldest": "NUMBER"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "includeAllMetadata": {
+          "defaultValue": false,
+          "description": "Return all metadata associated with each message",
+          "displayName": "Include all metadata",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "inclusive": {
+          "defaultValue": false,
+          "description": "Include messages with oldest or latest timestamps in results. Ignored unless either timestamp is specified",
+          "displayName": "Inclusive",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "latest": {
+          "description": "Only messages before this timestamp will be included in results. Default is the current time",
+          "displayName": "Latest",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "oldest": {
+          "description": "Only messages after this timestamp will be included in results",
+          "displayName": "Oldest",
+          "required": false,
+          "type": "NUMBER"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "includeAllMetadata",
+        "inclusive"
+      ]
+    },
+    "get_group_by_handle": {
+      "description": "Finds a Slack user group by its handle (e.g., @user-group) and returns its details. To mention this group in a message, map the returned ID using the syntax <!subteam^ID>. Read more: https://api.slack.com/reference/surfaces/formatting#mentioning-groups",
+      "displayName": "Get User Group by Handle",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "handle": "SHORT_TEXT"
+      },
+      "props": {
+        "handle": {
+          "description": "Group handle without the leading @",
+          "displayName": "Group Handle",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "handle"
+      ]
+    },
+    "invite-user-to-channel": {
+      "description": "Invites an existing User to an existing channel.",
+      "displayName": "Invite User to Channel",
+      "dropdown_fields": [
+        "channel",
+        "userId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "userId": "DROPDOWN"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "userId": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "userId"
+      ]
+    },
+    "listUsers": {
+      "description": "List all users of the workspace",
+      "displayName": "List users",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "includeBots": "CHECKBOX",
+        "includeDisabled": "CHECKBOX"
+      },
+      "props": {
+        "includeBots": {
+          "defaultValue": false,
+          "displayName": "Include bots?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "includeDisabled": {
+          "defaultValue": false,
+          "displayName": "Include disabled users?",
+          "required": true,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "includeBots",
+        "includeDisabled"
+      ]
+    },
+    "markdownToSlackFormat": {
+      "description": "Convert Markdown-formatted text to Slack's pseudo - markdown syntax",
+      "displayName": "Markdown to Slack format",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "markdown": "LONG_TEXT"
+      },
+      "props": {
+        "markdown": {
+          "displayName": "Markdown text",
+          "required": true,
+          "type": "LONG_TEXT"
+        }
+      },
+      "required_fields": [
+        "markdown"
+      ]
+    },
+    "request_action_direct_message": {
+      "description": "Send a message to a user and wait until the user selects an action",
+      "displayName": "Request Action from A User",
+      "dropdown_fields": [
+        "userId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "actions": "ARRAY",
+        "mentionOriginFlow": "CHECKBOX",
+        "profilePicture": "SHORT_TEXT",
+        "text": "LONG_TEXT",
+        "userId": "DROPDOWN",
+        "username": "SHORT_TEXT"
+      },
+      "props": {
+        "actions": {
+          "displayName": "Action Buttons",
+          "properties": {
+            "label": {
+              "displayName": "Label",
+              "required": true,
+              "type": "SHORT_TEXT"
+            },
+            "style": {
+              "defaultValue": null,
+              "displayName": "Style",
+              "options": {
+                "options": [
+                  {
+                    "label": "Default",
+                    "value": null
+                  },
+                  {
+                    "label": "Primary",
+                    "value": "primary"
+                  },
+                  {
+                    "label": "Danger",
+                    "value": "danger"
+                  }
+                ]
+              },
+              "required": false,
+              "type": "STATIC_DROPDOWN"
+            }
+          },
+          "required": true,
+          "type": "ARRAY"
+        },
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "profilePicture": {
+          "description": "The profile picture of the bot",
+          "displayName": "Profile Picture",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "text": {
+          "displayName": "Message",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "userId": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "username": {
+          "description": "The username of the bot",
+          "displayName": "Username",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "actions",
+        "text",
+        "userId"
+      ]
+    },
+    "request_action_message": {
+      "description": "Send a message in a channel and wait until an action is selected",
+      "displayName": "Request Action in A Channel",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "actions": "ARRAY",
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "mentionOriginFlow": "CHECKBOX",
+        "profilePicture": "SHORT_TEXT",
+        "replyBroadcast": "CHECKBOX",
+        "text": "LONG_TEXT",
+        "threadTs": "SHORT_TEXT",
+        "username": "SHORT_TEXT"
+      },
+      "props": {
+        "actions": {
+          "displayName": "Action Buttons",
+          "properties": {
+            "label": {
+              "displayName": "Label",
+              "required": true,
+              "type": "SHORT_TEXT"
+            },
+            "style": {
+              "defaultValue": null,
+              "displayName": "Style",
+              "options": {
+                "options": [
+                  {
+                    "label": "Default",
+                    "value": null
+                  },
+                  {
+                    "label": "Primary",
+                    "value": "primary"
+                  },
+                  {
+                    "label": "Danger",
+                    "value": "danger"
+                  }
+                ]
+              },
+              "required": false,
+              "type": "STATIC_DROPDOWN"
+            }
+          },
+          "required": true,
+          "type": "ARRAY"
+        },
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "profilePicture": {
+          "description": "The profile picture of the bot",
+          "displayName": "Profile Picture",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "replyBroadcast": {
+          "defaultValue": false,
+          "description": "When replying to a thread, also make the message visible to everyone in the channel (only applicable when Thread Timestamp is provided)",
+          "displayName": "Broadcast reply to channel",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "text": {
+          "displayName": "Message",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "threadTs": {
+          "description": "Provide the ts (timestamp) or link value of the **parent** message to make this message a reply. Do not use the ts value of the reply itself; use its parent instead. For example `1710304378.475129`.Alternatively, you can easily obtain the message link by clicking on the three dots next to the parent message and selecting the `Copy link` option.",
+          "displayName": "Reply to Thread (Thread Message Link/Timestamp)",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "username": {
+          "description": "The username of the bot",
+          "displayName": "Username",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "actions",
+        "channel",
+        "text"
+      ]
+    },
+    "request_approval_direct_message": {
+      "description": "Send approval message to a user and then wait until the message is approved or disapproved",
+      "displayName": "Request Approval from A User",
+      "dropdown_fields": [
+        "userId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "mentionOriginFlow": "CHECKBOX",
+        "profilePicture": "SHORT_TEXT",
+        "text": "LONG_TEXT",
+        "userId": "DROPDOWN",
+        "username": "SHORT_TEXT"
+      },
+      "props": {
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "profilePicture": {
+          "description": "The profile picture of the bot",
+          "displayName": "Profile Picture",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "text": {
+          "displayName": "Message",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "userId": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "username": {
+          "description": "The username of the bot",
+          "displayName": "Username",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "text",
+        "userId"
+      ]
+    },
+    "request_approval_message": {
+      "description": "Send approval message to a channel and then wait until the message is approved or disapproved",
+      "displayName": "Request Approval in a Channel",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "mentionOriginFlow": "CHECKBOX",
+        "profilePicture": "SHORT_TEXT",
+        "text": "LONG_TEXT",
+        "username": "SHORT_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "profilePicture": {
+          "description": "The profile picture of the bot",
+          "displayName": "Profile Picture",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "text": {
+          "displayName": "Message",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "username": {
+          "description": "The username of the bot",
+          "displayName": "Username",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "text"
+      ]
+    },
+    "retrieveThreadMessages": {
+      "description": "Retrieves thread messages by channel and thread timestamp.",
+      "displayName": "Retrieve Thread Messages",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "threadTs": "SHORT_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "threadTs": {
+          "description": "Provide the ts (timestamp) value of the **parent** message to retrieve replies of this message. Do not use the ts value of the reply itself; use its parent instead. For example `1710304378.475129`.Alternatively, you can easily obtain the message link by clicking on the three dots next to the parent message and selecting the `Copy link` option.",
+          "displayName": "Thread ts",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "threadTs"
+      ]
+    },
+    "searchMessages": {
+      "description": "Searches for messages matching a query",
+      "displayName": "Search messages",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "query": "SHORT_TEXT"
+      },
+      "props": {
+        "query": {
+          "displayName": "Search query",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "query"
+      ]
+    },
+    "send_channel_message": {
+      "description": "Send message to a channel",
+      "displayName": "Send Message To A Channel",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "blocks": "JSON",
+        "channel": "DROPDOWN",
+        "file": "FILE",
+        "iconEmoji": "SHORT_TEXT",
+        "info": "MARKDOWN",
+        "mentionOriginFlow": "CHECKBOX",
+        "profilePicture": "SHORT_TEXT",
+        "replyBroadcast": "CHECKBOX",
+        "sendAsBot": "CHECKBOX",
+        "text": "LONG_TEXT",
+        "threadTs": "SHORT_TEXT",
+        "unfurlLinks": "CHECKBOX",
+        "username": "SHORT_TEXT"
+      },
+      "props": {
+        "blocks": {
+          "defaultValue": [],
+          "description": "See https://api.slack.com/block-kit for specs",
+          "displayName": "Block Kit blocks",
+          "required": false,
+          "type": "JSON"
+        },
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "file": {
+          "displayName": "Attachment",
+          "required": false,
+          "type": "FILE"
+        },
+        "iconEmoji": {
+          "description": "The icon emoji of the bot",
+          "displayName": "Icon Emoji",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "profilePicture": {
+          "description": "The profile picture of the bot",
+          "displayName": "Profile Picture",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "replyBroadcast": {
+          "defaultValue": false,
+          "description": "When replying to a thread, also make the message visible to everyone in the channel (only applicable when Thread Timestamp is provided)",
+          "displayName": "Broadcast reply to channel",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "sendAsBot": {
+          "defaultValue": true,
+          "displayName": "Send as a bot?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "text": {
+          "description": "The text of your message. When using Block Kit blocks, this is used as a fallback for notifications.",
+          "displayName": "Message",
+          "required": false,
+          "type": "LONG_TEXT"
+        },
+        "threadTs": {
+          "description": "Provide the ts (timestamp) or link value of the **parent** message to make this message a reply. Do not use the ts value of the reply itself; use its parent instead. For example `1710304378.475129`.Alternatively, you can easily obtain the message link by clicking on the three dots next to the parent message and selecting the `Copy link` option.",
+          "displayName": "Reply to Thread (Thread Message Link/Timestamp)",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "unfurlLinks": {
+          "defaultValue": true,
+          "description": "Enable link unfurling for this message",
+          "displayName": "Unfurl Links",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "username": {
+          "description": "The username of the bot",
+          "displayName": "Username",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "sendAsBot"
+      ]
+    },
+    "send_direct_message": {
+      "description": "Send message to a user",
+      "displayName": "Send Message To A User",
+      "dropdown_fields": [
+        "userId"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "blocks": "JSON",
+        "iconEmoji": "SHORT_TEXT",
+        "mentionOriginFlow": "CHECKBOX",
+        "profilePicture": "SHORT_TEXT",
+        "text": "LONG_TEXT",
+        "unfurlLinks": "CHECKBOX",
+        "userId": "DROPDOWN",
+        "username": "SHORT_TEXT"
+      },
+      "props": {
+        "blocks": {
+          "defaultValue": [],
+          "description": "See https://api.slack.com/block-kit for specs",
+          "displayName": "Block Kit blocks",
+          "required": false,
+          "type": "JSON"
+        },
+        "iconEmoji": {
+          "description": "The icon emoji of the bot",
+          "displayName": "Icon Emoji",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "profilePicture": {
+          "description": "The profile picture of the bot",
+          "displayName": "Profile Picture",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "text": {
+          "displayName": "Message",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "unfurlLinks": {
+          "defaultValue": true,
+          "description": "Enable link unfurling for this message",
+          "displayName": "Unfurl Links",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "userId": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "username": {
+          "description": "The username of the bot",
+          "displayName": "Username",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "text",
+        "userId"
+      ]
+    },
+    "set-channel-topic": {
+      "description": "Sets the topic on a selected channel.",
+      "displayName": "Set Channel Topic",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "topic": "LONG_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "topic": {
+          "displayName": "Topic",
+          "required": true,
+          "type": "LONG_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "topic"
+      ]
+    },
+    "slack-add-reaction-to-message": {
+      "description": "Add an emoji reaction to a message.",
+      "displayName": "Add Reaction to Message",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "reactAsUser": "CHECKBOX",
+        "reaction": "SHORT_TEXT",
+        "ts": "SHORT_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "reactAsUser": {
+          "defaultValue": false,
+          "description": "If enabled, the reaction will be added as the authenticated user instead of the bot.",
+          "displayName": "React as user?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "reaction": {
+          "description": "e.g.`thumbsup`",
+          "displayName": "Reaction (emoji) name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "ts": {
+          "description": "Please provide the timestamp of the message you wish to react, such as `1710304378.475129`. Alternatively, you can easily obtain the message link by clicking on the three dots next to the message and selecting the `Copy link` option.",
+          "displayName": "Message Timestamp",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "reactAsUser",
+        "reaction",
+        "ts"
+      ]
+    },
+    "slack-create-channel": {
+      "description": "Creates a new channel.",
+      "displayName": "Create Channel",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "channelName": "SHORT_TEXT",
+        "isPrivate": "CHECKBOX"
+      },
+      "props": {
+        "channelName": {
+          "displayName": "Channel Name",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "isPrivate": {
+          "defaultValue": false,
+          "displayName": "Is Private?",
+          "required": false,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "channelName"
+      ]
+    },
+    "slack-find-user-by-email": {
+      "description": "Finds a user by matching against their email address.",
+      "displayName": "Find User by Email",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT"
+      },
+      "props": {
+        "email": {
+          "displayName": "Email",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "email"
+      ]
+    },
+    "slack-find-user-by-handle": {
+      "description": "Finds a user by matching against their Slack handle.",
+      "displayName": "Find User by Handle",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "handle": "SHORT_TEXT"
+      },
+      "props": {
+        "handle": {
+          "description": "User handle (display name), without the leading @",
+          "displayName": "Handle",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "handle"
+      ]
+    },
+    "slack-set-user-status": {
+      "description": "Sets a user's custom status",
+      "displayName": "Set User Status",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "emoji": "SHORT_TEXT",
+        "expiration": "NUMBER",
+        "text": "SHORT_TEXT"
+      },
+      "props": {
+        "emoji": {
+          "description": "Emoji shortname (standard or custom), e.g. :tada: or :train:",
+          "displayName": "Emoji",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "expiration": {
+          "description": "Unix timestamp - if not set, the status will not expire",
+          "displayName": "Expires at",
+          "required": false,
+          "type": "NUMBER"
+        },
+        "text": {
+          "displayName": "Text",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "text"
+      ]
+    },
+    "slack-update-profile": {
+      "description": "Update basic profile field such as name or title.",
+      "displayName": "Update Profile",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "email": "SHORT_TEXT",
+        "firstName": "SHORT_TEXT",
+        "lastName": "SHORT_TEXT",
+        "userId": "SHORT_TEXT"
+      },
+      "props": {
+        "email": {
+          "description": "Changing a user's email address will send an email to both the old and new addresses, and also post a slackbot message to the user informing them of the change.",
+          "displayName": "Email",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "firstName": {
+          "displayName": "First Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "lastName": {
+          "displayName": "Last Name",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "userId": {
+          "description": "ID of user to change. This argument may only be specified by admins on paid teams.You can use **Find User by Email** action to retrieve ID.",
+          "displayName": "User",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": []
+    },
+    "updateMessage": {
+      "description": "Update an existing message",
+      "displayName": "Update message",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "blocks": "JSON",
+        "channel": "DROPDOWN",
+        "info": "MARKDOWN",
+        "mentionOriginFlow": "CHECKBOX",
+        "text": "LONG_TEXT",
+        "ts": "SHORT_TEXT"
+      },
+      "props": {
+        "blocks": {
+          "defaultValue": [],
+          "description": "See https://api.slack.com/block-kit for specs",
+          "displayName": "Block Kit blocks",
+          "required": false,
+          "type": "JSON"
+        },
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "mentionOriginFlow": {
+          "defaultValue": false,
+          "description": "If checked, adds a mention at the end of the Slack message to indicate which flow sent the notification, with a link to said flow.",
+          "displayName": "Mention flow of origin?",
+          "required": false,
+          "type": "CHECKBOX"
+        },
+        "text": {
+          "description": "The updated text of your message",
+          "displayName": "Message",
+          "required": true,
+          "type": "LONG_TEXT"
+        },
+        "ts": {
+          "description": "Please provide the timestamp of the message you wish to update, such as `1710304378.475129`. Alternatively, you can easily obtain the message link by clicking on the three dots next to the message and selecting the `Copy link` option.",
+          "displayName": "Message Timestamp",
+          "required": true,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "text",
+        "ts"
+      ]
+    },
+    "update_group_users": {
+      "description": "Add users to or overwrite the member list of a Slack user group.",
+      "displayName": "Update User Group Members",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "appendUsers": "CHECKBOX",
+        "handle": "SHORT_TEXT",
+        "userIds": "ARRAY"
+      },
+      "props": {
+        "appendUsers": {
+          "defaultValue": true,
+          "description": "If checked, these users will be added to the current group. If unchecked, the current group members will be completely replaced by these users.",
+          "displayName": "Append to existing members?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "handle": {
+          "description": "Group handle without the leading @",
+          "displayName": "Group Handle",
+          "required": true,
+          "type": "SHORT_TEXT"
+        },
+        "userIds": {
+          "description": "The list of Slack User IDs to update this group with. Leave empty to clear the group (if not appending).",
+          "displayName": "User IDs",
+          "required": false,
+          "type": "ARRAY"
+        }
+      },
+      "required_fields": [
+        "appendUsers",
+        "handle"
+      ]
+    },
+    "uploadFile": {
+      "description": "Upload file without sharing it to a channel or user",
+      "displayName": "Upload file",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "file": "FILE",
+        "filename": "SHORT_TEXT",
+        "title": "SHORT_TEXT"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        },
+        "file": {
+          "displayName": "Attachment",
+          "required": true,
+          "type": "FILE"
+        },
+        "filename": {
+          "displayName": "Filename",
+          "required": false,
+          "type": "SHORT_TEXT"
+        },
+        "title": {
+          "displayName": "Title",
+          "required": false,
+          "type": "SHORT_TEXT"
+        }
+      },
+      "required_fields": [
+        "file"
+      ]
+    }
+  },
+  "auth": {
+    "required": true,
+    "type": "OAUTH2"
+  },
+  "displayName": "Slack",
+  "pieceName": "@activepieces/piece-slack",
+  "registry_format_version": 1,
+  "schema_hash": "sha256:69a5d9b0a4ae125b45091052ae219ec9898fb612f5c0e3828342b10cfa600074",
+  "source_url": "https://cloud.activepieces.com/api/v1/pieces/@activepieces/piece-slack",
+  "synced_at": "2026-05-13T11:35:42Z",
+  "triggers": {
+    "channel_created": {
+      "description": "Triggers when a channel is created",
+      "displayName": "Channel created",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new-command-in-direct-message": {
+      "description": "Triggers when a specific command is sent to the bot (e.g., @bot command arg1 arg2) via Direct Message.",
+      "displayName": "New Command in Direct Message",
+      "dropdown_fields": [
+        "user"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "commands": "ARRAY",
+        "ignoreBots": "CHECKBOX",
+        "ignoreSelfMessages": "CHECKBOX",
+        "user": "DROPDOWN"
+      },
+      "props": {
+        "commands": {
+          "defaultValue": [
+            "help"
+          ],
+          "description": "List of valid commands that the bot should respond to (e.g., help, ocr, remind)",
+          "displayName": "Commands",
+          "required": true,
+          "type": "ARRAY"
+        },
+        "ignoreBots": {
+          "defaultValue": true,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "ignoreSelfMessages": {
+          "defaultValue": false,
+          "displayName": "Ignore Message from Yourself ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "user": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "commands",
+        "ignoreBots",
+        "ignoreSelfMessages",
+        "user"
+      ]
+    },
+    "new-direct-message": {
+      "description": "Triggers when a message was posted in a direct message channel.",
+      "displayName": "New Direct Message",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "ignoreBots": "CHECKBOX",
+        "ignoreSelfMessages": "CHECKBOX"
+      },
+      "props": {
+        "ignoreBots": {
+          "defaultValue": false,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "ignoreSelfMessages": {
+          "defaultValue": false,
+          "displayName": "Ignore Message from Yourself ?",
+          "required": true,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "ignoreBots",
+        "ignoreSelfMessages"
+      ]
+    },
+    "new-mention-in-direct-message": {
+      "description": "Triggers when a username is mentioned in a direct message channel.",
+      "displayName": "New Mention in Direct Message",
+      "dropdown_fields": [
+        "user"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "ignoreBots": "CHECKBOX",
+        "ignoreSelfMessages": "CHECKBOX",
+        "user": "DROPDOWN"
+      },
+      "props": {
+        "ignoreBots": {
+          "defaultValue": false,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "ignoreSelfMessages": {
+          "defaultValue": false,
+          "displayName": "Ignore Message from Yourself ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "user": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "ignoreBots",
+        "ignoreSelfMessages",
+        "user"
+      ]
+    },
+    "new-message": {
+      "description": "Triggers when a new message is posted to any channel.",
+      "displayName": "New Public Message Posted Anywhere",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "ignoreBots": "CHECKBOX"
+      },
+      "props": {
+        "ignoreBots": {
+          "defaultValue": false,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        }
+      },
+      "required_fields": [
+        "ignoreBots"
+      ]
+    },
+    "new-message-in-channel": {
+      "description": "Triggers when a new message is posted to a specific #channel you choose.",
+      "displayName": "New Message Posted to Channel",
+      "dropdown_fields": [
+        "channel"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channel": "DROPDOWN",
+        "ignoreBots": "CHECKBOX",
+        "info": "MARKDOWN"
+      },
+      "props": {
+        "channel": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "You can get the Channel ID by right-clicking on the channel and selecting 'View Channel Details.'",
+          "displayName": "Channel",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        },
+        "ignoreBots": {
+          "defaultValue": false,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly.\n  ",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        }
+      },
+      "required_fields": [
+        "channel",
+        "ignoreBots"
+      ]
+    },
+    "new-modal-interaction": {
+      "description": "Triggers when a user interacts with a modal.",
+      "displayName": "New Modal Interaction",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {
+        "interactionType": "STATIC_DROPDOWN"
+      },
+      "props": {
+        "interactionType": {
+          "defaultValue": "view_submission",
+          "description": "Select the type of modal interaction to trigger on.",
+          "displayName": "Interaction Type",
+          "options": {
+            "disabled": false,
+            "options": [
+              {
+                "label": "View Submission",
+                "value": "view_submission"
+              },
+              {
+                "label": "View Closed",
+                "value": "view_closed"
+              }
+            ]
+          },
+          "required": true,
+          "type": "STATIC_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "interactionType"
+      ]
+    },
+    "new-saved-message": {
+      "description": "Triggers when you save a message.",
+      "displayName": "New Saved Message",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new-team-custom-emoji": {
+      "description": "Triggers when a custom emoji has been added to a team.",
+      "displayName": "New Team Custom Emoji",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new-user": {
+      "description": "Triggers when a new user is created / first joins your org.",
+      "displayName": "New User",
+      "dropdown_fields": [],
+      "dynamic_fields": [],
+      "property_types": {},
+      "props": {},
+      "required_fields": []
+    },
+    "new_command": {
+      "description": "Triggers when a specific command is sent to the bot (e.g., @bot command arg1 arg2)",
+      "displayName": "New Command in Channel",
+      "dropdown_fields": [
+        "channels",
+        "user"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channels": "MULTI_SELECT_DROPDOWN",
+        "commands": "ARRAY",
+        "ignoreBots": "CHECKBOX",
+        "info": "MARKDOWN",
+        "user": "DROPDOWN"
+      },
+      "props": {
+        "channels": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "If no channel is selected, the flow will be triggered for commands in all channels",
+          "displayName": "Channels",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "commands": {
+          "defaultValue": [
+            "help"
+          ],
+          "description": "List of valid commands that the bot should respond to (e.g., help, ocr, remind)",
+          "displayName": "Commands",
+          "required": true,
+          "type": "ARRAY"
+        },
+        "ignoreBots": {
+          "defaultValue": true,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly in an array like this: `{`{ ['your_channel_id_1', 'your_channel_id_2', ...] `}`}",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "user": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": true,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "commands",
+        "ignoreBots",
+        "user"
+      ]
+    },
+    "new_mention": {
+      "description": "Triggers when a user or user group is mentioned.",
+      "displayName": "New Mention in Channel",
+      "dropdown_fields": [
+        "channels",
+        "usergroups",
+        "users"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channels": "MULTI_SELECT_DROPDOWN",
+        "ignoreBots": "CHECKBOX",
+        "info": "MARKDOWN",
+        "removeMention": "CHECKBOX",
+        "usergroups": "MULTI_SELECT_DROPDOWN",
+        "users": "MULTI_SELECT_DROPDOWN"
+      },
+      "props": {
+        "channels": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "If no channel is selected, the flow will be triggered for username mentions in all channels",
+          "displayName": "Channels",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "ignoreBots": {
+          "defaultValue": false,
+          "displayName": "Ignore Bot Messages ?",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly in an array like this: `{`{ ['your_channel_id_1', 'your_channel_id_2', ...] `}`}",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "removeMention": {
+          "defaultValue": false,
+          "description": "If enabled, provides a clean_text field with the user and user group mentions removed from the message.",
+          "displayName": "Remove Mention from Message",
+          "required": true,
+          "type": "CHECKBOX"
+        },
+        "usergroups": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User Groups",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "users": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "Users",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        }
+      },
+      "required_fields": [
+        "ignoreBots",
+        "removeMention"
+      ]
+    },
+    "new_reaction_added": {
+      "description": "Triggers when a new reaction is added to a message",
+      "displayName": "New Reaction",
+      "dropdown_fields": [
+        "channels",
+        "user"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channels": "MULTI_SELECT_DROPDOWN",
+        "emojis": "ARRAY",
+        "info": "MARKDOWN",
+        "user": "DROPDOWN"
+      },
+      "props": {
+        "channels": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "If no channel is selected, the flow will be triggered for reactions in all channels the app has access to",
+          "displayName": "Channels",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "emojis": {
+          "description": "Select emojis to trigger on",
+          "displayName": "Emojis (E.g fire, smile)",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly in an array like this: `{`{ ['your_channel_id_1', 'your_channel_id_2', ...] `}`}",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "user": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": []
+    },
+    "new_reaction_removed": {
+      "description": "Triggers when a reaction is removed from a message",
+      "displayName": "Reaction Removed",
+      "dropdown_fields": [
+        "channels",
+        "user"
+      ],
+      "dynamic_fields": [],
+      "property_types": {
+        "channels": "MULTI_SELECT_DROPDOWN",
+        "emojis": "ARRAY",
+        "info": "MARKDOWN",
+        "user": "DROPDOWN"
+      },
+      "props": {
+        "channels": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "description": "If no channel is selected, the flow will be triggered for reactions removed in all channels the app has access to",
+          "displayName": "Channels",
+          "refreshers": [],
+          "required": false,
+          "type": "MULTI_SELECT_DROPDOWN"
+        },
+        "emojis": {
+          "description": "Select emojis to trigger on",
+          "displayName": "Emojis (E.g fire, smile)",
+          "required": false,
+          "type": "ARRAY"
+        },
+        "info": {
+          "description": "\n\tPlease make sure add the bot to the channel by following these steps:\n\t  1. Type /invite in the channel's chat.\n\t  2. Click on Add apps to this channel.\n\t  3. Search for and add the bot.\n  \n**Note**: If you can't find the channel in the dropdown list (which fetches up to 2000 channels), please click on the **(F)** and type the channel ID directly in an array like this: `{`{ ['your_channel_id_1', 'your_channel_id_2', ...] `}`}",
+          "displayName": "Markdown",
+          "required": false,
+          "type": "MARKDOWN",
+          "variant": "INFO"
+        },
+        "user": {
+          "auth": [
+            {
+              "authUrl": "https://slack.com/oauth/v2/authorize?user_scope=search:read,users.profile:write,reactions:read,reactions:write,im:history,stars:read,channels:write,groups:write,im:write,mpim:write,channels:write.invites,groups:write.invites,channels:history,groups:history,chat:write,users:read,usergroups:write",
+              "description": "Authenticate via a Slack OAuth flow.",
+              "displayName": "Connection",
+              "required": true,
+              "scope": [
+                "channels:read",
+                "channels:manage",
+                "channels:history",
+                "chat:write",
+                "groups:read",
+                "groups:write",
+                "groups:history",
+                "reactions:read",
+                "mpim:read",
+                "mpim:write",
+                "mpim:history",
+                "im:write",
+                "im:read",
+                "im:history",
+                "users:read",
+                "files:write",
+                "files:read",
+                "users:read.email",
+                "reactions:write",
+                "usergroups:read",
+                "usergroups:write",
+                "chat:write.customize",
+                "links:read",
+                "links:write",
+                "emoji:read",
+                "users.profile:read",
+                "channels:write.invites",
+                "groups:write.invites",
+                "channels:join",
+                "conversations.connect:write"
+              ],
+              "tokenUrl": "https://slack.com/api/oauth.v2.access",
+              "type": "OAUTH2"
+            },
+            {
+              "description": "Authenticate using a Slack bot token (and optional user token).",
+              "displayName": "Bot Token",
+              "props": {
+                "botToken": {
+                  "description": "The bot token for your Slack app (starts with xoxb-)",
+                  "displayName": "Bot Token",
+                  "required": true,
+                  "type": "SECRET_TEXT"
+                },
+                "userToken": {
+                  "description": "Optional user token for actions that require user-level access (starts with xoxp-)",
+                  "displayName": "User Token",
+                  "required": false,
+                  "type": "SECRET_TEXT"
+                }
+              },
+              "required": true,
+              "type": "CUSTOM_AUTH"
+            }
+          ],
+          "displayName": "User",
+          "refreshers": [],
+          "required": false,
+          "type": "DROPDOWN"
+        }
+      },
+      "required_fields": []
+    }
+  },
+  "version": "0.17.0"
+}
