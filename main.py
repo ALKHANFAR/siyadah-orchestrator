@@ -26,6 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from services.registry_reader import validate_action_against_registry
+from services.recipe_builder import build_recipe
 from tenacity import (
     AsyncRetrying,
     retry_if_exception,
@@ -4875,6 +4876,18 @@ async def v2_mcp_tools():
              "project_id": {"type": "string"},
              "connection_ids": {"type": "object"},
          }, "required": ["template"]}},
+        {"name": "build_recipe_flow",
+         "description": "Build a deterministic no-LLM recipe flow from approved recipes",
+         "parameters": {"type": "object", "properties": {
+             "recipe": {
+                 "type": "string",
+                 "enum": ["webhook_to_google_sheets_and_gmail"]
+             },
+             "config": {"type": "object"},
+             "display_name": {"type": "string"},
+             "project_id": {"type": "string"},
+             "connection_ids": {"type": "object"},
+         }, "required": ["recipe", "config"]}},
         {"name": "build_dynamic_flow",
          "description": "Build a custom automation using any combination of pieces",
          "parameters": {"type": "object", "properties": {
@@ -5092,6 +5105,22 @@ async def _mcp_dispatch(e: SiyadahEngine, tool: str, p: dict,
         wh = (f"{AP_BASE}/api/v1/webhooks/{result['flow_id']}"
               if not tpl.startswith("scheduled") else None)
         return {**result, "webhook_url": wh, "template": tpl}
+
+    if tool == "build_recipe_flow":
+        recipe = p.get("recipe", "")
+        config = p.get("config", {}) or {}
+        built = build_recipe(recipe, config)
+
+        p2 = {
+            "display_name": built.get("display_name", p.get("display_name", "سيادة — Recipe Flow")),
+            "trigger": built["trigger"],
+            "actions": built["actions"],
+            "connection_ids": p.get("connection_ids", {}),
+        }
+
+        # Reuse the same deterministic build path as build_dynamic_flow.
+        p = p2
+        tool = "build_dynamic_flow"
 
     if tool == "build_dynamic_flow":
         # Honor explicit trigger/actions verbatim. Mirror /v2/build-dynamic's
