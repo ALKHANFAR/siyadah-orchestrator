@@ -115,7 +115,14 @@ def get_piece_action_schema(piece: str, action_name: str) -> Dict[str, Any]:
         )
 
     actions = piece_record.get("actions") or {}
+    # اللحام الذكي: البحث المرن عن الأكشن
     action_schema = actions.get(action_name)
+    if not action_schema:
+        normalized_req = action_name.replace('_', '-').lower()
+        for actual_name in actions.keys():
+            if actual_name.replace('_', '-').lower() == normalized_req:
+                action_schema = actions[actual_name]
+                break
 
     if not action_schema:
         raise _error(
